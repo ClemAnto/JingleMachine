@@ -1,12 +1,12 @@
 /**
- * Configurazione Firebase del progetto.
+ * Project Firebase configuration.
  *
- * NOTA: questi valori NON sono segreti. La config web di Firebase è pensata per
- * stare nel client; la sicurezza reale è data dalle Security Rules di
- * Firestore/Storage e dalla configurazione di Authentication.
+ * NOTE: these values are NOT secrets. The Firebase web config is meant to live
+ * in the client; real security comes from the Firestore/Storage Security Rules
+ * and the Authentication configuration.
  *
- * Sostituisci i placeholder con i dati del tuo progetto Firebase
- * (Console Firebase → Impostazioni progetto → Le tue app → SDK setup and config).
+ * Replace the placeholders with your Firebase project's values
+ * (Firebase Console → Project settings → Your apps → SDK setup and config).
  */
 export const environment = {
   production: false,

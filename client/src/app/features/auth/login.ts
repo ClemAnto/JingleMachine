@@ -76,7 +76,7 @@ export class Login {
     }
   }
 
-  /** Traduce i codici di errore Firebase più comuni in messaggi leggibili. */
+  /** Maps the most common Firebase error codes to readable messages. */
   private describe(err: unknown): string {
     if (err instanceof FirebaseError) {
       switch (err.code) {

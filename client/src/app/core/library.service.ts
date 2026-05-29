@@ -38,12 +38,12 @@ export class LibraryService {
   private requireUid(): string {
     const uid = this.auth.user()?.uid;
     if (!uid) {
-      throw new Error('Utente non autenticato.');
+      throw new Error('User not authenticated.');
     }
     return uid;
   }
 
-  /** Carica un MP3 su Storage e salva i metadati su Firestore. */
+  /** Uploads an MP3 to Storage and saves its metadata to Firestore. */
   async save(blob: Blob, name: string, durationSec: number): Promise<void> {
     const uid = this.requireUid();
     const safeName = name.replace(/[^\w.-]+/g, '_');
@@ -64,7 +64,7 @@ export class LibraryService {
     });
   }
 
-  /** Elenca i jingle dell'utente corrente, dal più recente. */
+  /** Lists the current user's jingles, most recent first. */
   async list(): Promise<Jingle[]> {
     const uid = this.requireUid();
     const q = query(
@@ -76,7 +76,7 @@ export class LibraryService {
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Jingle, 'id'>) }));
   }
 
-  /** Elimina un jingle (file su Storage + documento su Firestore). */
+  /** Deletes a jingle (Storage file + Firestore document). */
   async remove(item: Jingle): Promise<void> {
     await deleteObject(ref(this.storage, item.storagePath)).catch(() => undefined);
     await deleteDoc(doc(this.db, this.COLLECTION, item.id));

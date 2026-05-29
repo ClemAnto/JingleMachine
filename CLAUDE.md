@@ -2,6 +2,32 @@
 
 Promemoria per lavorare bene su questo progetto. Leggi prima di iniziare un task.
 
+## 🔚 Comando «chiudo» (rituale di fine sessione) — ISTRUZIONE PERMANENTE
+
+Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di rispondere:
+
+1. **Analizza la chat corrente** ed estrai ciò che sarà utile al *me* futuro per **decidere meglio e più in fretta**:
+   - decisioni prese **+ il perché**; opzioni **scartate** e il motivo (per non riproporle);
+   - **preferenze e stile di lavoro** dell'utente emersi;
+   - **fatti verificati** (con data, perché deperibili) e link/fonti;
+   - trappole/insidie incontrate e come evitarle.
+2. **Scrivi** queste indicazioni nel file giusto (senza duplicare ciò che c'è già):
+   - **`MEMO.md`** → decisioni tecniche/architetturali, vincoli, fatti verificati, trucchi operativi;
+   - **`ROADMAP.md`** → avanzamento (spunta gli item fatti) e prossimi passi;
+   - **`CLAUDE.md`** (questo) → convenzioni di lavoro, preferenze dell'utente, come prendere le decisioni.
+3. **Riassumi** in chat cosa hai scritto e dove.
+
+> Obiettivo: ogni sessione lascia il progetto più "pronto" della precedente. Conciso e azionabile, niente muri di testo.
+
+### Preferenze dell'utente (aggiornare qui col tempo)
+- Vuole soluzioni **gratuite e senza carta di credito**; rifiuta i piani a pagamento se evitabili.
+- Vuole **semplicità e leggibilità**, best practice dei framework; **niente over-engineering**.
+- Si fida quando **verifico i fatti online** (specie cose che cambiano nel tempo) invece di andare a memoria.
+- Fa **domande di pianificazione** prima di codare: meglio chiarire architettura/costi/rischi prima.
+  Asseconda: sviscera alternative/costi/rischi **prima** di scrivere codice, senza fretta di codare.
+- **Principiante sul backend** → spiegare i concetti in modo **elementare**, con analogie, e indicare il "perché" delle scelte.
+- Segnalare sempre **refusi/errori** in italiano e inglese (anche fuori task) — vedi istruzioni globali.
+
 ## Cos'è il progetto
 Webapp Angular per tagliare porzioni di audio ed esportarle in MP3, con **libreria condivisa**.
 Deploy su GitHub Pages. Dettagli completi in `MEMO.md`.
@@ -33,7 +59,10 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 
 ## Convenzioni di codice
 - Angular **standalone** (niente NgModule), **signals** per lo stato, `inject()` per la DI.
-- Lingua dei testi UI e dei commenti: **italiano**.
+- **LINGUA: codice, commenti, log e identificatori SEMPRE in inglese.** I testi **UI** visibili all'utente
+  restano in **italiano** (pubblico italiano). La documentazione (`.md`) resta in italiano.
+  > ⚠️ Il codice scritto nella Fase 0 ha commenti in italiano: vanno tradotti in inglese quando si tocca quel file
+  > (o in una passata dedicata).
 - Service Firebase: iniettare i token `AUTH` / `FIRESTORE` / `STORAGE` da `client/src/app/core/firebase.providers.ts`
   (NON usare `@angular/fire`: incompatibile con Angular 21).
 - UI con **ng-zorro-antd**; utility di layout con **Tailwind**. Nuove icone NgZorro → registrarle in `client/src/app/app.config.ts`.

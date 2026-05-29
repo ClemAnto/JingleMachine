@@ -35,6 +35,12 @@ JingleMachine/
 > **helper locale** per estrarre da YouTube. ⚠️ Le parti di questo MEMO che citano **Firebase Storage** sono
 > **superate** (lo Storage ora richiede Blaze+carta): saranno aggiornate quando implementeremo la migrazione a Cloudinary.
 
+## 🎨 Riferimenti di design
+
+- **Mockup Figma** (di DiNardo) — fonte di verità per la **UI**, da seguire quando costruiamo le schermate.
+  File **pubblico** (accessibile a tutti): <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>
+  > Nota: l'attuale UI (login + editor) è una prima bozza funzionale; andrà allineata al mockup (Fase 5).
+
 ---
 
 ## 2. Stack & versioni
@@ -197,7 +203,7 @@ Dopo analisi di costi/affidabilità (vedi storico decisioni sotto):
 |---|---|---|
 | Login | **Firebase Auth** (piano Spark, gratis, **no carta**) | già integrato |
 | Metadati jingle | **Firebase Firestore** (Spark, gratis, **no carta**) | già integrato |
-| **File MP3 (condivisi)** | **Cloudinary** (free 25 crediti/mese, **no carta**) | Firebase Storage ora richiede Blaze+carta; Cloudinary no |
+| **File MP3 (condivisi)** | **Cloudinary** (free 25 crediti/mese, **no carta**) | Firebase Storage richiede Blaze+carta (**dal 3 feb 2026**); Cloudinary no |
 | **Estrazione da YouTube** | **Helper locale** Node + yt-dlp + ffmpeg, sul PC di chi carica | IP residenziale → niente blocchi YouTube; gratis |
 | Webapp ↔ helper | **HTTP su `localhost`** | richiesta/risposta; l'MP3 va diretto helper→browser |
 
@@ -236,9 +242,13 @@ ascoltano" la **banda di lettura è la voce di consumo principale**, non lo stor
 
 Automatico via GitHub Actions ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
+> **Stato**: repo già creato e pushato → **https://github.com/ClemAnto/JingleMachine** (pubblico, account `ClemAnto`).
+> ⚠️ Pages **non ancora abilitato**: finché non si fa il punto 2 qui sotto, lo step di deploy del workflow **fallisce**
+> (la build invece passa). Lo abiliteremo nella Fase 6, quando l'app sarà pronta.
+
 Una tantum:
-1. Crea il repo su GitHub e fai push su `main`.
-2. Repo → **Settings → Pages → Build and deployment → Source = GitHub Actions**.
+1. Crea il repo su GitHub e fai push su `main`.  ✅ (fatto)
+2. Repo → **Settings → Pages → Build and deployment → Source = GitHub Actions**.  ⬅️ ANCORA DA FARE
 3. Ogni push su `main` builda e pubblica. Il workflow imposta `--base-href=/<nome-repo>/` e crea
    un `404.html` (fallback SPA per i deep-link).
 

@@ -1,6 +1,6 @@
-/* Tailwind v4 — utilities, base reset (preflight) e componenti.
-   Gli stili di NgZorro vengono caricati DOPO questo file (vedi angular.json),
-   così i componenti Ant Design mantengono il loro look anche con il preflight di Tailwind. */
+/* Tailwind v4 — utilities, base reset (preflight) and components.
+   NgZorro styles are loaded AFTER this file (see angular.json),
+   so Ant Design components keep their look even with Tailwind's preflight. */
 @import 'tailwindcss';
 
 html,

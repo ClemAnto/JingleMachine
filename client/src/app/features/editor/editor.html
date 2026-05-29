@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-6">
-  <!-- 1. Caricamento -->
+  <!-- 1. Upload -->
   <nz-card nzTitle="1. Carica un file audio">
     <nz-upload
       nzType="drag"
@@ -21,7 +21,7 @@
     }
   </nz-card>
 
-  <!-- 2. Selezione intervallo -->
+  <!-- 2. Range selection -->
   @if (sourceUrl()) {
     <nz-card nzTitle="2. Scegli la porzione">
       <audio
@@ -80,7 +80,7 @@
     </nz-card>
   }
 
-  <!-- 3. Risultato -->
+  <!-- 3. Result -->
   @if (resultUrl()) {
     <nz-card nzTitle="3. Risultato">
       <audio class="w-full" controls [src]="resultUrl()"></audio>
@@ -97,7 +97,7 @@
     </nz-card>
   }
 
-  <!-- 4. Libreria -->
+  <!-- 4. Library -->
   <nz-card nzTitle="La tua libreria">
     <nz-spin [nzSpinning]="loadingLibrary()">
       @if (jingles().length === 0) {

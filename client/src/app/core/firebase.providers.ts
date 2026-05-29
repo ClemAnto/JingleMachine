@@ -7,10 +7,10 @@ import { FirebaseStorage, getStorage } from 'firebase/storage';
 import { environment } from '../../environments/environment';
 
 /**
- * Token DI per le istanze dei servizi Firebase.
- * Iniettali nei tuoi service con `inject(AUTH)`, `inject(FIRESTORE)`, ecc.
- * In questo modo usiamo l'SDK Firebase JS direttamente senza dipendere da
- * @angular/fire (che non supporta ancora ufficialmente Angular 21).
+ * DI tokens for the Firebase service instances.
+ * Inject them in your services with `inject(AUTH)`, `inject(FIRESTORE)`, etc.
+ * This way we use the Firebase JS SDK directly without depending on
+ * @angular/fire (which does not officially support Angular 21 yet).
  */
 export const FIREBASE_APP = new InjectionToken<FirebaseApp>('FIREBASE_APP');
 export const AUTH = new InjectionToken<Auth>('FIREBASE_AUTH');

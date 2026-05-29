@@ -3,31 +3,31 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 /**
- * Wrapper attorno a ffmpeg.wasm (core SINGLE-THREAD).
+ * Wrapper around ffmpeg.wasm (SINGLE-THREAD core).
  *
- * Usiamo il core single-thread perché quello multi-thread richiede
- * `SharedArrayBuffer`, che a sua volta richiede gli header COOP/COEP
- * (cross-origin isolation) NON impostabili su GitHub Pages.
- * Single-thread è più lento ma funziona ovunque senza header speciali.
+ * We use the single-thread core because the multi-thread one requires
+ * `SharedArrayBuffer`, which in turn requires the COOP/COEP headers
+ * (cross-origin isolation) that CANNOT be set on GitHub Pages.
+ * Single-thread is slower but works everywhere without special headers.
  *
- * I file del core vengono scaricati da CDN al primo utilizzo e messi in cache.
+ * The core files are downloaded from a CDN on first use and cached by the browser.
  */
 @Injectable({ providedIn: 'root' })
 export class FfmpegService {
   private readonly CORE_BASE = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
-  // Worker della classe FFmpeg caricato da CDN: evita i problemi di bundling del
-  // worker con esbuild. ATTENZIONE: se aggiorni @ffmpeg/ffmpeg, il nome del file
-  // del worker (814.ffmpeg.js) può cambiare — vedi node_modules/@ffmpeg/ffmpeg/dist/umd.
+  // FFmpeg class worker loaded from a CDN: avoids worker bundling issues with
+  // esbuild. WARNING: if you bump @ffmpeg/ffmpeg, the worker file name
+  // (814.ffmpeg.js) may change — see node_modules/@ffmpeg/ffmpeg/dist/umd.
   private readonly FFMPEG_BASE = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/umd';
 
   private ffmpeg: FFmpeg | null = null;
   private loadPromise: Promise<void> | null = null;
 
-  /** 0 → 1, progresso dell'operazione corrente (utile per una progress bar). */
+  /** 0 → 1, progress of the current operation (useful for a progress bar). */
   readonly progress = signal(0);
   readonly loading = signal(false);
 
-  /** Carica il core ffmpeg una sola volta (idempotente). */
+  /** Loads the ffmpeg core only once (idempotent). */
   private async ensureLoaded(): Promise<FFmpeg> {
     if (this.ffmpeg) {
       return this.ffmpeg;
@@ -52,8 +52,8 @@ export class FfmpegService {
   }
 
   /**
-   * Taglia la porzione [startSec, endSec] del file audio in input e la
-   * codifica in MP3. Restituisce il Blob risultante.
+   * Trims the [startSec, endSec] portion of the input audio file and
+   * encodes it to MP3. Returns the resulting Blob.
    */
   async trimToMp3(file: File | Blob, startSec: number, endSec: number): Promise<Blob> {
     const ffmpeg = await this.ensureLoaded();
@@ -64,7 +64,7 @@ export class FfmpegService {
     this.progress.set(0);
     await ffmpeg.writeFile(inputName, await fetchFile(file));
 
-    // -ss prima di -i = seek veloce; -t = durata; -vn scarta eventuale video; lame a 192k.
+    // -ss before -i = fast seek; -t = duration; -vn drops any video; lame at 192k.
     await ffmpeg.exec([
       '-ss', String(startSec),
       '-i', inputName,
@@ -77,12 +77,12 @@ export class FfmpegService {
 
     const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
 
-    // Pulizia del filesystem virtuale.
+    // Clean up the virtual filesystem.
     await ffmpeg.deleteFile(inputName).catch(() => undefined);
     await ffmpeg.deleteFile(outputName).catch(() => undefined);
 
     this.progress.set(1);
-    // Copia in un Uint8Array con ArrayBuffer "normale" (non Shared) per il tipo BlobPart.
+    // Copy into a Uint8Array backed by a "plain" (non-Shared) ArrayBuffer for the BlobPart type.
     return new Blob([new Uint8Array(data)], { type: 'audio/mpeg' });
   }
 }

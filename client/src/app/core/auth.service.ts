@@ -12,9 +12,9 @@ import {
 import { AUTH } from './firebase.providers';
 
 /**
- * Stato di autenticazione esposto tramite signal.
- * `user` è `undefined` finché Firebase non ha determinato lo stato iniziale,
- * poi `User | null`. Usa `ready` per sapere quando è stato risolto.
+ * Authentication state exposed via signals.
+ * `user` is `undefined` until Firebase has determined the initial state,
+ * then `User | null`. Use `ready` to know when it has been resolved.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -26,7 +26,7 @@ export class AuthService {
   readonly ready = computed(() => this.userSignal() !== undefined);
   readonly isLoggedIn = computed(() => !!this.userSignal());
 
-  /** Risolve quando Firebase ha determinato lo stato di autenticazione iniziale. */
+  /** Resolves once Firebase has determined the initial authentication state. */
   readonly whenReady: Promise<void>;
 
   constructor() {

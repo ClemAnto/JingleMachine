@@ -40,19 +40,19 @@ export class Editor implements OnDestroy {
   private readonly library = inject(LibraryService);
   private readonly message = inject(NzMessageService);
 
-  // --- Sorgente ---
+  // --- Source ---
   protected readonly file = signal<File | null>(null);
   protected readonly sourceUrl = signal<string | null>(null);
   protected readonly duration = signal(0);
   protected readonly range = signal<[number, number]>([0, 0]);
   protected readonly name = signal('');
 
-  // --- Risultato ---
+  // --- Result ---
   protected readonly resultUrl = signal<string | null>(null);
   protected resultBlob: Blob | null = null;
   protected readonly processing = signal(false);
 
-  // --- Libreria ---
+  // --- Library ---
   protected readonly jingles = signal<Jingle[]>([]);
   protected readonly loadingLibrary = signal(false);
   protected readonly saving = signal(false);
@@ -68,7 +68,7 @@ export class Editor implements OnDestroy {
     this.refreshLibrary();
   }
 
-  /** Intercetta il file scelto da nz-upload senza caricarlo automaticamente. */
+  /** Intercepts the file chosen by nz-upload without auto-uploading it. */
   protected readonly beforeUpload = (uploaded: NzUploadFile): boolean => {
     const file = uploaded as unknown as File;
     this.loadFile(file);
@@ -166,7 +166,7 @@ export class Editor implements OnDestroy {
     }
   }
 
-  /** mm:ss a partire dai secondi. */
+  /** mm:ss from a number of seconds. */
   protected format(seconds: number): string {
     const s = Math.floor(seconds % 60).toString().padStart(2, '0');
     const m = Math.floor(seconds / 60).toString();

@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
-/** Consente l'accesso alla rotta solo se l'utente è autenticato, altrimenti reindirizza al login. */
+/** Allows access to the route only if the user is authenticated, otherwise redirects to login. */
 export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -13,7 +13,7 @@ export const authGuard: CanActivateFn = async () => {
   return auth.isLoggedIn() ? true : router.createUrlTree(['/login']);
 };
 
-/** Impedisce di vedere il login se già autenticati (manda all'editor). */
+/** Prevents seeing the login page when already authenticated (sends to the editor). */
 export const guestGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);

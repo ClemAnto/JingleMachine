@@ -11,6 +11,9 @@ Webapp online (GitHub Pages) dove un gruppo di colleghi condivide una **libreria
 ognuno può **caricare** un jingle (anche estraendolo da YouTube) e **tutti** possono ascoltarli.
 Stack **100% gratuito e senza carta di credito**.
 
+**Design:** la UI segue il **mockup Figma** di DiNardo → <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>
+(l'attuale UI è una prima bozza, da allineare al mockup nella Fase 5).
+
 **Architettura decisa:**
 - **Firebase Auth + Firestore** → login + metadati (piano Spark, gratis, no carta)
 - **Cloudinary** → file MP3 condivisi (free 25 crediti/mese, no carta)
@@ -44,7 +47,9 @@ Stack **100% gratuito e senza carta di credito**.
 - [ ] **Auto-aggiornamento di yt-dlp** (così non si rompe a ogni cambio di YouTube)
 - [ ] **CORS** ristretto all'origine GitHub Pages + header **Local Network Access** (preflight)
 - [ ] **Sicurezza**: ascolto solo su `127.0.0.1` + token di abbinamento
-- [ ] Confezionamento in **eseguibile** (`.exe`) da doppio clic
+
+> In questa fase l'helper gira come **script Node** (`npm start`) → multipiattaforma, zero grane.
+> L'impacchettamento in **eseguibile Win + Mac** è uno step a sé → **Fase 7** (obbligatorio per il prodotto finale).
 
 ---
 
@@ -89,6 +94,7 @@ Stack **100% gratuito e senza carta di credito**.
 
 ## 🔒 Fase 5 — Sicurezza & rifiniture
 
+- [ ] **Allineare la UI al mockup Figma** di DiNardo (login, editor, libreria)
 - [ ] Verifica finale Firestore security rules (libreria condivisa)
 - [ ] Gestione errori chiara (helper offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX
@@ -105,16 +111,35 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
+## 📦 Fase 7 — Packaging helper in eseguibili (Win + Mac) — STEP FINALE
+
+> Requisito del prodotto finale: i colleghi scaricano un'app da doppio clic, senza installare Node.
+
+- [ ] Scegliere lo strumento: **Electron** (app con icona/tray, comodo per signing+auto-update, ma pesante ~100-200 MB) **oppure** **pkg/@yao-pkg/pkg** (eseguibile leggero ~40-80 MB, headless)
+- [ ] Includere i binari per-OS (yt-dlp / ffmpeg / Deno) — bundle o download al primo avvio
+- [ ] **Build multipiattaforma** via GitHub Actions (matrice Windows + macOS, gratis su repo pubblico)
+- [ ] **Windows**: gestire l'avviso SmartScreen (eventuale firma del codice)
+- [ ] **macOS**: notarizzazione (Apple Developer ~99$/anno) **oppure** istruzioni "clic destro → Apri" se restiamo gratis
+- [ ] (Opz.) **Auto-update** dell'app + tray con stato "🟢 Helper attivo / Esci"
+
+---
+
 ## 🔭 Eventuali evoluzioni future (NON ora)
 
 - [ ] "Sempre online" senza PC acceso → server + **proxy residenziale** a pagamento (pochi €/mese) o **PC + Cloudflare Tunnel**
 - [ ] Mitigazioni anti-blocco YouTube se necessario: **cookie** (account usa-e-getta) o **PO token** (`bgutil-ytdlp-pot-provider`)
-- [ ] Helper multipiattaforma (macOS/Linux) e firma del codice (per evitare avvisi di sicurezza)
+- [ ] Supporto anche **Linux** per l'helper
 - [ ] Paginazione / ricerca nella libreria se cresce molto
 
 ---
 
-## 👉 Prossimo passo
+## 👉 Dove eravamo / Prossimo passo
 
-**Fase 1, primo mattoncino**: inizializzare `server/` e creare il server Express con `GET /health`,
-da aprire nel browser per vederlo rispondere. Poi subito l'endpoint `/extract` per provare l'estrazione reale.
+**Stato (fine sessione di pianificazione):**
+- Repo GitHub creato e pushato: `ClemAnto/JingleMachine` (pubblico).
+- Fase 0 completa; commenti del codice client tradotti in **inglese** (regola lingua).
+- Tutte le decisioni architetturali prese e messe a verbale (vedi `MEMO.md` §8).
+- ⚠️ Modifiche più recenti (traduzione commenti + aggiornamenti `.md`) **non ancora committate**.
+
+**Prossimo passo — Fase 1, primo mattoncino**: inizializzare `server/` e creare il server Express con
+`GET /health`, da aprire nel browser per vederlo rispondere. Poi l'endpoint `/extract` per provare l'estrazione reale.
