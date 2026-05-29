@@ -35,13 +35,21 @@ const app = express();
 app.use(cors({ origin: config.allowedOrigins }));
 app.use(express.json());
 
-// Serve the Angular app if the dist has been bundled (pkg build) or copied here.
+// Mini test page always at /helper (explicit, before Angular static so it
+// doesn't get shadowed by Angular's own index.html).
+app.use("/helper", express.static(config.publicDir));
+
+// Serve the Angular app at / if the dist has been bundled (pkg build).
 if (existsSync(config.angularDir)) {
   app.use(express.static(config.angularDir));
+  // SPA fallback: unknown routes → Angular's index.html.
+  app.get("*", (req, res) => {
+    res.sendFile(join(config.angularDir, "index.html"));
+  });
+} else {
+  // Dev mode: serve mini test page at root too.
+  app.use(express.static(config.publicDir));
 }
-
-// Always serve the built-in mini test page (health check, manual extract).
-app.use(express.static(config.publicDir));
 
 // Keep the most recent log lines in memory so the mini page can show them.
 const recentLogs = [];

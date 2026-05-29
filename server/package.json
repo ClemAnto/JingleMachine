@@ -1,6 +1,6 @@
 {
   "name": "jingle-machine-helper",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "Local helper that extracts audio from YouTube for Jingle Machine",
   "type": "module",
