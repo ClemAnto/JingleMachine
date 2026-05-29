@@ -155,10 +155,10 @@ app.listen(config.port, config.host, async () => {
   await mkdir(config.tmpDir, { recursive: true });
 
   const url = `http://${config.host}:${config.port}`;
-  addLog(`Helper listening on ${url}`);
+  addLog(`Helper listening on ${url}/helper`);
 
   if (config.isPkg) {
-    askToOpenBrowser(url);
+    askToOpenBrowser(`${url}/helper`);
   } else {
     addLog("Open that address in the browser for the mini test page.");
   }
