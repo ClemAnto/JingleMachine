@@ -1,12 +1,13 @@
 // Downloads the latest successful build artifacts (exe + dmg) from GitHub Actions.
-// Runs via: yarn download  (from the server/ folder)
+// Files are saved in dist/{version}/ where version comes from the run's git tag,
+// falling back to the version field in package.json.
+// Usage: yarn download  (from the server/ folder)
 import { execSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 
 const REPO = "ClemAnto/JingleMachine";
 const WORKFLOW = "build-packages.yml";
 const ARTIFACT = "jingle-machine-packages";
-const OUT_DIR = "dist";
 
 // On Windows, gh is often not in PATH — fall back to the known install location.
 const GH =
@@ -14,8 +15,8 @@ const GH =
     ? '"C:\\Program Files\\GitHub CLI\\gh.exe"'
     : "gh";
 
-function run(cmd, opts = {}) {
-  return execSync(cmd, { encoding: "utf8", stdio: ["pipe", "pipe", "inherit"], ...opts }).trim();
+function run(cmd) {
+  return execSync(cmd, { encoding: "utf8", stdio: ["pipe", "pipe", "inherit"] }).trim();
 }
 
 // Find the latest successful run for the build workflow.
@@ -28,14 +29,22 @@ if (!runId) {
   process.exit(1);
 }
 
-console.log(`Latest successful run: ${runId}`);
-console.log(`Downloading '${ARTIFACT}' → ${OUT_DIR}/`);
+// Determine version: prefer the git tag that triggered the run, fall back to package.json.
+const headBranch = run(
+  `${GH} run view ${runId} --repo ${REPO} --json headBranch -q ".headBranch"`
+);
+const localVersion = `v${JSON.parse(readFileSync("package.json", "utf8")).version}`;
+const version = headBranch.startsWith("v") ? headBranch : localVersion;
 
-mkdirSync(OUT_DIR, { recursive: true });
+const outDir = `dist/${version}`;
+console.log(`Run: ${runId}  →  version: ${version}`);
+console.log(`Downloading '${ARTIFACT}' → ${outDir}/`);
+
+mkdirSync(outDir, { recursive: true });
 
 execSync(
-  `${GH} run download ${runId} --repo ${REPO} --name ${ARTIFACT} --dir ${OUT_DIR}`,
+  `${GH} run download ${runId} --repo ${REPO} --name ${ARTIFACT} --dir ${outDir}`,
   { stdio: "inherit" }
 );
 
-console.log(`\nDone! Files saved in server/${OUT_DIR}/`);
+console.log(`\nDone! Files saved in server/${outDir}/`);
