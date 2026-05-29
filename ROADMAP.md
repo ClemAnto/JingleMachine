@@ -35,7 +35,7 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
-## 🔌 Fase 1 — Helper locale (`server/`)  ⬅️ SI PARTE DA QUI
+## 🔌 Fase 1 — Helper locale (`server/`)  ✅ QUASI COMPLETA (mancano i 2 punti di sicurezza)
 
 > Piccola app sul PC di chi vuole estrarre da YouTube. Obiettivo della fase: **provarlo subito in locale**.
 
@@ -58,7 +58,7 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
-## 🔗 Fase 2 — Integrazione webapp ↔ helper
+## 🔗 Fase 2 — Integrazione webapp ↔ helper  ⬅️ PROSSIMA
 
 > Collegare la webapp all'helper. All'inizio basta "estrai → ascolta/scarica nel browser", senza ancora salvare.
 
@@ -140,11 +140,13 @@ Stack **100% gratuito e senza carta di credito**.
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (fine sessione di pianificazione):**
-- Repo GitHub creato e pushato: `ClemAnto/JingleMachine` (pubblico).
-- Fase 0 completa; commenti del codice client tradotti in **inglese** (regola lingua).
-- Tutte le decisioni architetturali prese e messe a verbale (vedi `MEMO.md` §8).
-- ⚠️ Modifiche più recenti (traduzione commenti + aggiornamenti `.md`) **non ancora committate**.
+**Stato (fine sessione 2026-05-29):**
+- Fase 0 completa; commenti client in inglese.
+- **Fase 1 quasi completa**: helper `server/` implementato e **testato end-to-end** (info + extract → MP3).
+  Funziona auto-download binari + auto-update yt-dlp + mini pagina di test con log. Dettagli in `MEMO.md` §10.
+- Tutto committato e pushato su `ClemAnto/JingleMachine`.
 
-**Prossimo passo — Fase 1, primo mattoncino**: inizializzare `server/` e creare il server Express con
-`GET /health`, da aprire nel browser per vederlo rispondere. Poi l'endpoint `/extract` per provare l'estrazione reale.
+**Prossimo passo — opzioni:**
+1. Chiudere la Fase 1: header **Local Network Access** + **token di abbinamento** (vedi `MEMO.md` §10 "Ancora da fare").
+2. **Fase 2**: integrare l'helper nella webapp Angular (sezione "Estrai da YouTube", pallino 🟢/🔴 via `/health`,
+   flusso incolla URL → `/info` → scegli intervallo → `/extract` → ascolta/scarica).

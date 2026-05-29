@@ -54,11 +54,15 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 | `firebase/firestore.rules` | Quando tocchi lo schema dati Firestore o la sicurezza delle query. |
 | `firebase/storage.rules` | Quando tocchi upload/download dei file o i loro path. |
 | `CLAUDE.md` (questo) | All'inizio, per orientarti e per le convenzioni. |
+| `server/README.md` | Quando lavori sull'**helper locale** (`server/`): come avviarlo, endpoint, comandi di test. |
 
 > Se aggiungi un nuovo `.md`, **aggiungilo a questa tabella**.
 
 ## Convenzioni di codice
 - Angular **standalone** (niente NgModule), **signals** per lo stato, `inject()` per la DI.
+- **Usare sempre i pattern più recenti consigliati** del framework; se in dubbio, **consultare prima la documentazione ufficiale online** (l'utente preferisce questo a soluzioni a memoria/datate).
+- **Nomi variabili "puliti"**: niente caratteri come `@` `_` `$`, solo camelCase. Per gli Observable **niente suffisso `$`** → usare nomi espliciti tipo `userStream` o `userQueue` (preferenza esplicita dell'utente).
+- Codice **semplice e leggibile**, commenti solo dove servono davvero (senza esagerare).
 - **LINGUA: codice, commenti, log e identificatori SEMPRE in inglese.** I testi **UI** visibili all'utente
   restano in **italiano** (pubblico italiano). La documentazione (`.md`) resta in italiano.
   > ⚠️ Il codice scritto nella Fase 0 ha commenti in italiano: vanno tradotti in inglese quando si tocca quel file

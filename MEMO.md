@@ -267,10 +267,36 @@ Una tantum:
 
 ---
 
-## 10. Limiti noti / TODO
+## 10. Helper locale (`server/`) — IMPLEMENTATO (Fase 1)
+
+Server Express 5 che gira sul PC di chi estrae. **Testato end-to-end il 2026-05-29** (info + extract su
+video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](server/README.md).
+
+- **Avvio**: `cd server && npm install && npm start` → `http://127.0.0.1:4321` (mini pagina di test con textbox log).
+- **Endpoint**: `GET /health`, `GET /info?url=...`, `POST /extract {url,start?,end?}`, `GET /logs`.
+- **Binari**: scaricati automaticamente al primo avvio in `server/bin/` (gitignored) e `yt-dlp` si auto-aggiorna (`-U`).
+- **Taglio**: fatto da `yt-dlp --download-sections "*start-end" --force-keyframes-at-cuts` (usa ffmpeg sotto), bitrate 128k.
+
+### Fatti verificati (2026-05-29, deperibili)
+- yt-dlp **standalone single-binary** (no Python): asset `yt-dlp.exe` (Win), `yt-dlp_macos` (mac). Versione testata **2026.03.17**.
+- **Deno** richiesto da yt-dlp per YouTube: testato **2.8.1** (zip per-OS da denoland/deno releases).
+- ffmpeg/ffprobe static: **BtbN** (Win), **evermeet.cx** (mac). Express **5.2.x** stable.
+
+### ⚠️ Trappole risolte (non riproporre)
+- **Unzip**: NON usare il `tar` di sistema per gli `.zip` → il `tar` di **Git for Windows è GNU tar** e NON estrae zip
+  (solo il `tar.exe` nativo di Windows lo fa). Usiamo la libreria **`adm-zip`** (cross-platform). Inoltre passare a `tar`
+  un path Windows con `:` (drive) lo fa interpretare come host remoto.
+
+### Ancora da fare (sicurezza Fase 1)
+- Header **Local Network Access** per il preflight del browser (le origini CORS sono già ristrette).
+- **Token di abbinamento** webapp↔helper (l'ascolto è già solo su `127.0.0.1`).
+
+---
+
+## 11. Limiti noti / TODO
 
 - [ ] **Migrare lo storage file da Firebase Storage → Cloudinary** (riscrivere `LibraryService`; rimuovere `firebase/storage.rules`). Vedi §8.
-- [ ] **Helper locale** Node + yt-dlp + ffmpeg con endpoint `/health` e `/extract` (HTTP localhost). Vedi §8.
+- [x] **Helper locale** Node + yt-dlp + ffmpeg con endpoint `/health`, `/info`, `/extract` (HTTP localhost). Vedi §10.
 - [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8.
 - [ ] Scarico da YouTube via helper (vedi §8).
 - [ ] Taglio molto preciso al millisecondo: lo slider ha step 0.1s.
