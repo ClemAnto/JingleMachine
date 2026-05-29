@@ -1,6 +1,6 @@
 <div class="flex flex-col gap-6">
   <!-- 1. Upload -->
-  <nz-card nzTitle="1. Carica un file audio">
+  <nz-card nzTitle="1. Load an audio file">
     <nz-upload
       nzType="drag"
       [nzBeforeUpload]="beforeUpload"
@@ -10,8 +10,8 @@
       <p class="ant-upload-drag-icon">
         <span nz-icon nzType="upload" class="text-3xl text-indigo-500"></span>
       </p>
-      <p class="ant-upload-text">Trascina qui un file audio o clicca per selezionarlo</p>
-      <p class="ant-upload-hint text-slate-400">MP3, WAV, M4A, OGG… (l'elaborazione avviene nel tuo browser)</p>
+      <p class="ant-upload-text">Drag an audio file here or click to select</p>
+      <p class="ant-upload-hint text-slate-400">MP3, WAV, M4A, OGG… (processing happens in your browser)</p>
     </nz-upload>
 
     @if (file()) {
@@ -23,7 +23,7 @@
 
   <!-- 2. Range selection -->
   @if (sourceUrl()) {
-    <nz-card nzTitle="2. Scegli la porzione">
+    <nz-card nzTitle="2. Choose the clip">
       <audio
         #player
         class="w-full"
@@ -45,15 +45,15 @@
           ></nz-slider>
 
           <div class="flex justify-between text-sm text-slate-500">
-            <span>Inizio: <b>{{ format(range()[0]) }}</b></span>
-            <span>Durata clip: <b>{{ format(clipDuration()) }}</b></span>
-            <span>Fine: <b>{{ format(range()[1]) }}</b></span>
+            <span>Start: <b>{{ format(range()[0]) }}</b></span>
+            <span>Clip duration: <b>{{ format(clipDuration()) }}</b></span>
+            <span>End: <b>{{ format(range()[1]) }}</b></span>
           </div>
         </div>
 
         <div class="mt-4">
-          <label class="block text-sm text-slate-500 mb-1">Nome del jingle</label>
-          <input nz-input [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Il mio jingle" />
+          <label class="block text-sm text-slate-500 mb-1">Jingle name</label>
+          <input nz-input [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="My jingle" />
         </div>
 
         <button
@@ -65,13 +65,13 @@
           (click)="cut()"
         >
           <span nz-icon nzType="scissor"></span>
-          Taglia ed esporta MP3
+          Cut and export MP3
         </button>
 
         @if (processing() || ffmpeg.loading()) {
           <div class="mt-3">
             <p class="text-xs text-slate-400 mb-1">
-              {{ ffmpeg.loading() ? 'Caricamento del motore audio…' : 'Elaborazione…' }}
+              {{ ffmpeg.loading() ? 'Loading audio engine…' : 'Processing…' }}
             </p>
             <nz-progress [nzPercent]="progressPercent()"></nz-progress>
           </div>
@@ -82,26 +82,26 @@
 
   <!-- 3. Result -->
   @if (resultUrl()) {
-    <nz-card nzTitle="3. Risultato">
+    <nz-card nzTitle="3. Result">
       <audio class="w-full" controls [src]="resultUrl()"></audio>
       <div class="flex flex-wrap gap-3 mt-4">
         <button nz-button nzType="default" (click)="download()">
           <span nz-icon nzType="save"></span>
-          Scarica MP3
+          Download MP3
         </button>
         <button nz-button nzType="primary" [nzLoading]="saving()" (click)="saveToLibrary()">
           <span nz-icon nzType="save"></span>
-          Salva nella libreria
+          Save to library
         </button>
       </div>
     </nz-card>
   }
 
   <!-- 4. Library -->
-  <nz-card nzTitle="La tua libreria">
+  <nz-card nzTitle="Your library">
     <nz-spin [nzSpinning]="loadingLibrary()">
       @if (jingles().length === 0) {
-        <nz-empty nzNotFoundContent="Nessun jingle salvato"></nz-empty>
+        <nz-empty nzNotFoundContent="No jingles saved"></nz-empty>
       } @else {
         <nz-list>
           @for (j of jingles(); track j.id) {

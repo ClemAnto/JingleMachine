@@ -116,16 +116,26 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
-## 📦 Fase 7 — Packaging helper in eseguibili (Win + Mac) — STEP FINALE
+## 📦 Fase 7 — Packaging in eseguibile unico (Win + Mac) — STEP FINALE
 
 > Requisito del prodotto finale: i colleghi scaricano un'app da doppio clic, senza installare Node.
 
-- [ ] Scegliere lo strumento: **Electron** (app con icona/tray, comodo per signing+auto-update, ma pesante ~100-200 MB) **oppure** **pkg/@yao-pkg/pkg** (eseguibile leggero ~40-80 MB, headless)
+**Architettura**: eseguibile unico che racchiude **server + client**. Il server Express serve anche
+la dist Angular come file statici (`express.static`). L'utente apre `http://localhost:4321`
+nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi su Cloudinary + Firestore
+(internet serve solo per quello).
+
+> Accortezza per non chiudersi le porte già in Fase 2: aggiungere al server la route
+> `express.static(path alla dist Angular)` opzionale (una riga). Non serve attivarla ora.
+
+- [ ] Fare la build Angular (`ng build`) e copiare la `dist/` dentro `server/` (o come asset del bundle)
+- [ ] Aggiungere al server Express la route `express.static` che serve la dist Angular
+- [ ] Scegliere lo strumento: **pkg/@yao-pkg/pkg** (eseguibile leggero ~40-80 MB) oppure **Electron** (100-200 MB, comodo per tray/auto-update)
 - [ ] Includere i binari per-OS (yt-dlp / ffmpeg / Deno) — bundle o download al primo avvio
 - [ ] **Build multipiattaforma** via GitHub Actions (matrice Windows + macOS, gratis su repo pubblico)
 - [ ] **Windows**: gestire l'avviso SmartScreen (eventuale firma del codice)
 - [ ] **macOS**: notarizzazione (Apple Developer ~99$/anno) **oppure** istruzioni "clic destro → Apri" se restiamo gratis
-- [ ] (Opz.) **Auto-update** dell'app + tray con stato "🟢 Helper attivo / Esci"
+- [ ] (Opz.) **Auto-update** dell'app + tray con stato "🟢 Avviata / Esci"
 
 ---
 
@@ -140,13 +150,15 @@ Stack **100% gratuito e senza carta di credito**.
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (fine sessione 2026-05-29):**
-- Fase 0 completa; commenti client in inglese.
-- **Fase 1 quasi completa**: helper `server/` implementato e **testato end-to-end** (info + extract → MP3).
-  Funziona auto-download binari + auto-update yt-dlp + mini pagina di test con log. Dettagli in `MEMO.md` §10.
-- Tutto committato e pushato su `ClemAnto/JingleMachine`.
+**Stato (fine sessione 2026-05-29 — seconda parte):**
+- **Tutta la UI** (client Angular + mini pagina server) ora in **inglese** (era italiano per la UI).
+- Server usa **`yarn`**; client usa `npm`.
+- **Mini pagina di test** riscritta: dark theme, sezioni info+extract unite, placeholder visivo,
+  preload MP3 al Test + preview istantanea con seek. Dettagli in `MEMO.md` §10.
+- **Fase 7**: pianificato eseguibile unico client+server (Express serve la dist Angular). Vedi `MEMO.md` §10.
+- Fase 1 resta quasi completa (mancano ancora i 2 punti di sicurezza).
 
 **Prossimo passo — opzioni:**
-1. Chiudere la Fase 1: header **Local Network Access** + **token di abbinamento** (vedi `MEMO.md` §10 "Ancora da fare").
+1. Chiudere la Fase 1: header **Local Network Access** + **token di abbinamento** (vedi `MEMO.md` §10).
 2. **Fase 2**: integrare l'helper nella webapp Angular (sezione "Estrai da YouTube", pallino 🟢/🔴 via `/health`,
    flusso incolla URL → `/info` → scegli intervallo → `/extract` → ascolta/scarica).

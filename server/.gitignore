@@ -3,3 +3,5 @@ node_modules/
 bin/
 # Temporary extracted audio files
 tmp/
+# Yarn internal state (not needed in repo)
+.yarn/

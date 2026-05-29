@@ -40,8 +40,8 @@ Deploy su GitHub Pages. Dettagli completi in `MEMO.md`.
 
 ## Struttura del repo
 Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `package.json`):
-- `client/` → app Angular (esistente). I comandi `npm` vanno lanciati **dentro `client/`**.
-- `server/` → server Node per YouTube → audio (**non ancora creato**; piano in `MEMO.md` §8).
+- `client/` → app Angular (esistente). I comandi usano **`npm`**, lanciati **dentro `client/`**.
+- `server/` → server Node per YouTube → audio. I comandi usano **`yarn`**, lanciati **dentro `server/`**.
 - `firebase/` → security rules. `.github/` → deploy. **Non c'è `package.json` in radice.**
 
 ## Documenti del progetto — quando consultarli
@@ -63,9 +63,8 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 - **Usare sempre i pattern più recenti consigliati** del framework; se in dubbio, **consultare prima la documentazione ufficiale online** (l'utente preferisce questo a soluzioni a memoria/datate).
 - **Nomi variabili "puliti"**: niente caratteri come `@` `_` `$`, solo camelCase. Per gli Observable **niente suffisso `$`** → usare nomi espliciti tipo `userStream` o `userQueue` (preferenza esplicita dell'utente).
 - Codice **semplice e leggibile**, commenti solo dove servono davvero (senza esagerare).
-- **LINGUA: codice, commenti, log e identificatori SEMPRE in inglese.** I testi **UI** visibili all'utente
-  restano in **italiano** (pubblico italiano). La documentazione (`.md`) resta in italiano.
-  > ⚠️ Il codice scritto nella Fase 0 ha commenti in italiano: vanno tradotti in inglese quando si tocca quel file
+- **LINGUA: codice, commenti, log, identificatori e testi UI SEMPRE in inglese.** La documentazione (`.md`) resta in italiano.
+  > ⚠️ Il codice scritto nella Fase 0 ha commenti e testi UI in italiano: vanno tradotti in inglese quando si tocca quel file
   > (o in una passata dedicata).
 - Service Firebase: iniettare i token `AUTH` / `FIRESTORE` / `STORAGE` da `client/src/app/core/firebase.providers.ts`
   (NON usare `@angular/fire`: incompatibile con Angular 21).

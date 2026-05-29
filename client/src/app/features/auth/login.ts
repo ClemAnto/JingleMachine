@@ -83,19 +83,19 @@ export class Login {
         case 'auth/invalid-credential':
         case 'auth/wrong-password':
         case 'auth/user-not-found':
-          return 'Email o password non corretti.';
+          return 'Wrong email or password.';
         case 'auth/email-already-in-use':
-          return 'Questa email è già registrata.';
+          return 'This email is already registered.';
         case 'auth/weak-password':
-          return 'La password deve avere almeno 6 caratteri.';
+          return 'Password must be at least 6 characters.';
         case 'auth/popup-closed-by-user':
-          return 'Accesso con Google annullato.';
+          return 'Google sign-in cancelled.';
         case 'auth/operation-not-allowed':
-          return 'Metodo di accesso non abilitato nella console Firebase.';
+          return 'Sign-in method not enabled in Firebase console.';
         default:
-          return `Errore: ${err.code}`;
+          return `Error: ${err.code}`;
       }
     }
-    return 'Si è verificato un errore imprevisto.';
+    return 'An unexpected error occurred.';
   }
 }

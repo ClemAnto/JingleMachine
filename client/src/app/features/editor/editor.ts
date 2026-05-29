@@ -98,7 +98,7 @@ export class Editor implements OnDestroy {
     }
     const [start, end] = this.range();
     if (end - start <= 0) {
-      this.message.warning('Seleziona un intervallo valido.');
+      this.message.warning('Select a valid range.');
       return;
     }
 
@@ -108,10 +108,10 @@ export class Editor implements OnDestroy {
       this.resultBlob = blob;
       this.revokeResultUrl();
       this.resultUrl.set(URL.createObjectURL(blob));
-      this.message.success('Taglio completato!');
+      this.message.success('Done!');
     } catch (err) {
       console.error(err);
-      this.message.error('Errore durante il taglio audio.');
+      this.message.error('Audio trimming failed.');
     } finally {
       this.processing.set(false);
     }
@@ -134,11 +134,11 @@ export class Editor implements OnDestroy {
     this.saving.set(true);
     try {
       await this.library.save(this.resultBlob, this.name() || 'jingle', this.clipDuration());
-      this.message.success('Salvato nella libreria.');
+      this.message.success('Saved to library.');
       await this.refreshLibrary();
     } catch (err) {
       console.error(err);
-      this.message.error('Salvataggio non riuscito. Controlla la configurazione Firebase.');
+      this.message.error('Save failed. Check your Firebase configuration.');
     } finally {
       this.saving.set(false);
     }
@@ -159,10 +159,10 @@ export class Editor implements OnDestroy {
     try {
       await this.library.remove(item);
       this.jingles.update((list) => list.filter((j) => j.id !== item.id));
-      this.message.success('Eliminato.');
+      this.message.success('Deleted.');
     } catch (err) {
       console.error(err);
-      this.message.error('Eliminazione non riuscita.');
+      this.message.error('Delete failed.');
     }
   }
 

@@ -1,5 +1,5 @@
 <div class="flex justify-center pt-8">
-  <nz-card class="w-full max-w-md shadow-sm" [nzTitle]="mode() === 'login' ? 'Accedi' : 'Crea account'">
+  <nz-card class="w-full max-w-md shadow-sm" [nzTitle]="mode() === 'login' ? 'Sign in' : 'Create account'">
     @if (error()) {
       <nz-alert nzType="error" [nzMessage]="error()!" class="mb-4" nzShowIcon></nz-alert>
     }
@@ -7,37 +7,37 @@
     <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
         <nz-form-label nzRequired>Email</nz-form-label>
-        <nz-form-control nzErrorTip="Inserisci un'email valida.">
-          <input nz-input type="email" formControlName="email" placeholder="nome@esempio.it" autocomplete="email" />
+        <nz-form-control nzErrorTip="Enter a valid email.">
+          <input nz-input type="email" formControlName="email" placeholder="name@example.com" autocomplete="email" />
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
         <nz-form-label nzRequired>Password</nz-form-label>
-        <nz-form-control nzErrorTip="Almeno 6 caratteri.">
+        <nz-form-control nzErrorTip="At least 6 characters.">
           <input nz-input type="password" formControlName="password" placeholder="••••••" autocomplete="current-password" />
         </nz-form-control>
       </nz-form-item>
 
       <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="loading()" type="submit">
-        {{ mode() === 'login' ? 'Accedi' : 'Registrati' }}
+        {{ mode() === 'login' ? 'Sign in' : 'Sign up' }}
       </button>
     </form>
 
-    <div class="my-3 text-center text-xs text-slate-400">oppure</div>
+    <div class="my-3 text-center text-xs text-slate-400">or</div>
 
     <button nz-button nzBlock (click)="google()" [disabled]="loading()" type="button">
       <span nz-icon nzType="google"></span>
-      Continua con Google
+      Continue with Google
     </button>
 
     <div class="mt-4 text-center text-sm">
       @if (mode() === 'login') {
-        <span class="text-slate-500">Non hai un account?</span>
-        <a class="text-indigo-600 ml-1" (click)="toggleMode()">Registrati</a>
+        <span class="text-slate-500">Don't have an account?</span>
+        <a class="text-indigo-600 ml-1" (click)="toggleMode()">Sign up</a>
       } @else {
-        <span class="text-slate-500">Hai già un account?</span>
-        <a class="text-indigo-600 ml-1" (click)="toggleMode()">Accedi</a>
+        <span class="text-slate-500">Already have an account?</span>
+        <a class="text-indigo-600 ml-1" (click)="toggleMode()">Sign in</a>
       }
     </div>
   </nz-card>

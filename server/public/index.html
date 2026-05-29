@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,177 +10,511 @@
         max-width: 760px;
         margin: 2rem auto;
         padding: 0 1rem;
-        color: #1f2430;
+        background: #0d1117;
+        color: #c9d1d9;
       }
-      h1 { font-size: 1.4rem; }
+      h1 { font-size: 1.4rem; color: #e6edf3; }
       section {
-        border: 1px solid #d7dbe3;
+        border: 1px solid #30363d;
         border-radius: 10px;
         padding: 1rem;
         margin-bottom: 1rem;
+        background: #161b22;
       }
-      h2 { font-size: 1rem; margin-top: 0; }
-      label { display: block; font-size: 0.85rem; margin: 0.5rem 0 0.2rem; }
-      input {
+      h2 { font-size: 1rem; margin-top: 0; color: #e6edf3; }
+      label { display: block; font-size: 0.85rem; margin: 0.5rem 0 0.2rem; color: #8b949e; }
+      input[type="text"], input[type="number"], input:not([type]) {
         width: 100%;
         padding: 0.45rem;
-        border: 1px solid #c3c9d4;
+        border: 1px solid #30363d;
         border-radius: 6px;
         box-sizing: border-box;
+        background: #0d1117;
+        color: #c9d1d9;
       }
-      .row { display: flex; gap: 0.75rem; }
-      .row > div { flex: 1; }
+      input::placeholder { color: #484f58; }
       button {
         margin-top: 0.75rem;
         padding: 0.5rem 0.9rem;
         border: 0;
         border-radius: 6px;
-        background: #3b5bdb;
+        background: #1f6feb;
         color: #fff;
         cursor: pointer;
+        white-space: nowrap;
       }
-      button.secondary { background: #5c6573; }
+      button:hover:not(:disabled) { background: #388bfd; }
+      button:disabled { opacity: 0.5; cursor: default; }
+      button.secondary { background: #21262d; color: #c9d1d9; }
+      button.secondary:hover:not(:disabled) { background: #30363d; }
       #status { font-weight: 600; }
-      #thumb { max-width: 240px; border-radius: 6px; margin-top: 0.5rem; }
       #logs {
         width: 100%;
         height: 220px;
         font-family: ui-monospace, monospace;
         font-size: 0.78rem;
         box-sizing: border-box;
+        background: #0d1117;
+        color: #8b949e;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 0.5rem;
       }
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #30363d;
+        border-top-color: #1f6feb;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+        margin-left: 0.4rem;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      section.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      /* URL row */
+      .url-row { display: flex; gap: 0.5rem; align-items: center; }
+      .url-row input { flex: 1; min-width: 0; width: auto; margin: 0; }
+      .url-row button { margin: 0; }
+
+      /* Video info card */
+      .video-card {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        margin-top: 0.75rem;
+      }
+      #thumb { width: 120px; border-radius: 6px; flex-shrink: 0; display: none; }
+      #videoTitle { font-weight: 600; color: #e6edf3; font-size: 0.95rem; }
+      #videoMeta { font-size: 0.82rem; color: #8b949e; margin-top: 0.3rem; }
+      .ph-thumb {
+        width: 120px; height: 68px;
+        background: #21262d; border-radius: 6px; flex-shrink: 0;
+      }
+      .ph-line {
+        height: 11px; background: #21262d; border-radius: 4px; margin-bottom: 0.4rem;
+      }
+      .ph-line.short { width: 55%; }
+
+      /* Dual range slider */
+      .range-wrap {
+        position: relative;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        margin-top: 0.5rem;
+      }
+      #range-track {
+        position: absolute;
+        left: 0; right: 0;
+        height: 4px;
+        background: #30363d;
+        border-radius: 2px;
+      }
+      #range-fill {
+        position: absolute;
+        height: 4px;
+        background: #1f6feb;
+        border-radius: 2px;
+        pointer-events: none;
+      }
+      .range-wrap input[type="range"] {
+        position: absolute;
+        width: 100%;
+        pointer-events: none;
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        height: 28px;
+        margin: 0;
+      }
+      .range-wrap input[type="range"]::-webkit-slider-runnable-track {
+        background: transparent;
+        height: 4px;
+      }
+      .range-wrap input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        pointer-events: all;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #1f6feb;
+        cursor: pointer;
+        border: 2px solid #0d1117;
+        margin-top: -6px;
+      }
+      .range-wrap input[type="range"]::-moz-range-track { background: transparent; height: 4px; }
+      .range-wrap input[type="range"]::-moz-range-thumb {
+        pointer-events: all;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #1f6feb;
+        cursor: pointer;
+        border: 2px solid #0d1117;
+      }
+      .range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #8b949e;
+        margin-top: 0.5rem;
+      }
+      .range-labels b { color: #c9d1d9; }
+
+      /* Inline error */
+      .err { color: #f85149; font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+
+      /* Download link */
+      #player a { font-size: 0.85rem; color: #388bfd; }
     </style>
   </head>
   <body>
-    <h1>🎛️ Helper Jingle Machine — pagina di test</h1>
+    <h1>🎛️ Jingle Machine Helper — test page</h1>
 
+    <!-- 1. Status -->
     <section>
-      <h2>1. Stato (health)</h2>
-      <p>Stato: <span id="status">—</span></p>
-      <button id="checkHealth">Controlla stato</button>
+      <h2>1. Status (health)</h2>
+      <p>Status: <span id="status">—</span><span id="spinner" class="spinner" style="display:none"></span></p>
+      <button id="checkHealth">Check status</button>
     </section>
 
-    <section>
-      <h2>2. Metadati del video (info)</h2>
-      <label for="infoUrl">URL YouTube</label>
-      <input id="infoUrl" placeholder="https://www.youtube.com/watch?v=..." />
-      <button id="getInfo">Leggi metadati</button>
-      <div id="infoResult"></div>
-    </section>
+    <!-- 2. Extract from YouTube (merged info + extract) -->
+    <section id="section-extract" class="disabled">
+      <h2>2. Extract from YouTube</h2>
 
-    <section>
-      <h2>3. Estrai MP3 (extract)</h2>
-      <label for="extractUrl">URL YouTube</label>
-      <input id="extractUrl" placeholder="https://www.youtube.com/watch?v=..." />
-      <div class="row">
-        <div>
-          <label for="start">Inizio (secondi, opz.)</label>
-          <input id="start" type="number" min="0" placeholder="es. 10" />
-        </div>
-        <div>
-          <label for="end">Fine (secondi, opz.)</label>
-          <input id="end" type="number" min="0" placeholder="es. 25" />
+      <div class="url-row">
+        <input id="ytUrl" placeholder="https://www.youtube.com/watch?v=..." />
+        <button id="btnTest">Test</button>
+      </div>
+      <div id="infoError" class="err"></div>
+
+      <div id="videoCard" class="video-card" style="margin-top:0.75rem">
+        <div id="phThumb" class="ph-thumb"></div>
+        <img id="thumb" alt="thumbnail" />
+        <div style="flex:1">
+          <div id="phLines"><div class="ph-line"></div><div class="ph-line short"></div></div>
+          <div id="videoTitle"></div>
+          <div id="videoMeta"></div>
         </div>
       </div>
-      <button id="extract">Estrai e scarica MP3</button>
-      <div id="player"></div>
+
+      <div id="rangeSection" class="disabled" style="margin-top:1rem">
+        <div class="range-wrap">
+          <div id="range-track"></div>
+          <div id="range-fill"></div>
+          <input type="range" id="rangeStart" min="0" value="0" step="1" />
+          <input type="range" id="rangeEnd"   min="0" value="0" step="1" />
+        </div>
+        <div class="range-labels">
+          <span>Start: <b id="lblStart">0s</b></span>
+          <span>Duration: <b id="lblDuration">0s</b></span>
+          <span>End: <b id="lblEnd">0s</b></span>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.75rem">
+          <button id="btnPreview">▶ Preview</button>
+          <button id="btnExtract">Extract MP3</button>
+        </div>
+        <div id="extractError" class="err"></div>
+        <div id="player" style="margin-top:0.75rem"></div>
+      </div>
     </section>
 
+    <!-- 3. Logs -->
     <section>
-      <h2>Log</h2>
+      <h2>Logs</h2>
       <textarea id="logs" readonly></textarea>
-      <button id="refreshLogs" class="secondary">Aggiorna log dal server</button>
-      <button id="clearLogs" class="secondary">Pulisci</button>
+      <button id="refreshLogs" class="secondary">Refresh logs from server</button>
+      <button id="clearLogs" class="secondary">Clear</button>
     </section>
 
     <script>
-      const logsBox = document.getElementById("logs");
+      const logsBox    = document.getElementById("logs");
+      const statusEl   = document.getElementById("status");
+      const spinnerEl  = document.getElementById("spinner");
+      const checkBtn   = document.getElementById("checkHealth");
+      const rangeStart = document.getElementById("rangeStart");
+      const rangeEnd   = document.getElementById("rangeEnd");
+      const rangeFill  = document.getElementById("range-fill");
+      const lblStart   = document.getElementById("lblStart");
+      const lblEnd     = document.getElementById("lblEnd");
+      const lblDuration= document.getElementById("lblDuration");
 
-      // Appends a timestamped line to the log textbox.
+      const interactiveSections = [document.getElementById("section-extract")];
+      let pollTimer = null;
+
+      // ── Logging ──────────────────────────────────────────────────────────
       function log(message) {
         const time = new Date().toLocaleTimeString();
         logsBox.value += `${time}  ${message}\n`;
         logsBox.scrollTop = logsBox.scrollHeight;
       }
 
-      // Pulls the server-side logs and shows them.
       async function refreshLogs() {
         try {
-          const response = await fetch("/logs");
-          const data = await response.json();
+          const data = await (await fetch("/logs")).json();
           logsBox.value = data.lines.join("\n") + "\n";
           logsBox.scrollTop = logsBox.scrollHeight;
-        } catch (error) {
-          log(`Impossibile leggere i log: ${error.message}`);
+        } catch (e) {
+          log(`Could not fetch logs: ${e.message}`);
         }
       }
 
-      document.getElementById("checkHealth").onclick = async () => {
-        log("Controllo stato...");
+      // ── Health / polling ─────────────────────────────────────────────────
+      function setReady(ready) {
+        interactiveSections.forEach(s => s.classList.toggle("disabled", !ready));
+      }
+
+      async function checkHealth(silent = false) {
+        if (!silent) {
+          log("Checking status...");
+          checkBtn.disabled = true;
+          checkBtn.textContent = "Checking…";
+        }
         try {
           const data = await (await fetch("/health")).json();
-          const label = data.ready ? "🟢 pronto" : "🟡 in preparazione";
-          document.getElementById("status").textContent = label;
-          log(`Stato: ${label} — ${JSON.stringify(data.versions)}`);
-        } catch (error) {
-          document.getElementById("status").textContent = "🔴 non raggiungibile";
-          log(`Errore stato: ${error.message}`);
+          if (data.ready) {
+            statusEl.textContent = "🟢 ready";
+            spinnerEl.style.display = "none";
+            setReady(true);
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            if (!silent) log(`Status: 🟢 ready — ${JSON.stringify(data.versions)}`);
+          } else {
+            statusEl.textContent = "🟡 downloading libraries";
+            spinnerEl.style.display = "inline-block";
+            setReady(false);
+            if (!silent) log("Binaries not ready yet, polling...");
+            if (!pollTimer) pollTimer = setInterval(() => checkHealth(true), 1000);
+          }
+        } catch (e) {
+          statusEl.textContent = "🔴 unreachable";
+          spinnerEl.style.display = "none";
+          setReady(false);
+          if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+          if (!silent) log(`Status error: ${e.message}`);
+        } finally {
+          if (!silent) { checkBtn.disabled = false; checkBtn.textContent = "Check status"; }
         }
+      }
+
+      checkBtn.onclick = () => checkHealth(false);
+      checkHealth(true); // auto-check on load
+
+      // ── Dual range slider ────────────────────────────────────────────────
+      function updateRangeUI() {
+        const max = parseFloat(rangeStart.max) || 1;
+        const s   = parseFloat(rangeStart.value);
+        const e   = parseFloat(rangeEnd.value);
+        const pct = v => (v / max) * 100;
+        rangeFill.style.left  = pct(s) + "%";
+        rangeFill.style.width = (pct(e) - pct(s)) + "%";
+        lblStart.textContent    = s + "s";
+        lblEnd.textContent      = e + "s";
+        lblDuration.textContent = (e - s) + "s";
+      }
+
+      rangeStart.oninput = () => {
+        if (parseFloat(rangeStart.value) > parseFloat(rangeEnd.value))
+          rangeStart.value = rangeEnd.value;
+        updateRangeUI();
+      };
+      rangeEnd.oninput = () => {
+        if (parseFloat(rangeEnd.value) < parseFloat(rangeStart.value))
+          rangeEnd.value = rangeStart.value;
+        updateRangeUI();
       };
 
-      document.getElementById("getInfo").onclick = async () => {
-        const url = document.getElementById("infoUrl").value.trim();
-        if (!url) return log("Inserisci un URL per i metadati.");
-        log(`Leggo metadati: ${url}`);
+
+      // ── Test (fetch info) ────────────────────────────────────────────────
+      const videoCard   = document.getElementById("videoCard");
+      const rangeSection= document.getElementById("rangeSection");
+      const phThumb     = document.getElementById("phThumb");
+      const phLines     = document.getElementById("phLines");
+      const thumb       = document.getElementById("thumb");
+      const videoTitle  = document.getElementById("videoTitle");
+      const videoMeta   = document.getElementById("videoMeta");
+
+      function showPlaceholder() {
+        phThumb.style.display  = "block";
+        phLines.style.display  = "block";
+        thumb.style.display    = "none";
+        videoTitle.textContent = "";
+        videoMeta.textContent  = "";
+      }
+
+      function showVideoInfo(data) {
+        phThumb.style.display = "none";
+        phLines.style.display = "none";
+        if (data.thumbnail) { thumb.src = data.thumbnail; thumb.style.display = "block"; }
+        else                 { thumb.style.display = "none"; }
+        videoTitle.textContent = data.title;
+        videoMeta.textContent  = `${data.uploader} · ${data.durationSeconds}s`;
+      }
+
+      showPlaceholder();
+
+      // ── Pre-load full audio in background after a successful Test ────────
+      let fullAudioUrl   = null;
+      let preloadAbort   = null;
+      let previewAudio   = null;
+      const btnPreview   = document.getElementById("btnPreview");
+
+      function stopPreview() {
+        if (previewAudio) {
+          previewAudio.ontimeupdate = null;
+          previewAudio.onended     = null;
+          previewAudio.pause();
+          previewAudio = null;
+        }
+        btnPreview.textContent = "▶ Preview";
+      }
+
+      async function preloadFullAudio(url) {
+        if (preloadAbort) { preloadAbort.abort(); preloadAbort = null; }
+        if (fullAudioUrl) { URL.revokeObjectURL(fullAudioUrl); fullAudioUrl = null; }
+        stopPreview();
+
+        preloadAbort = new AbortController();
+        btnPreview.disabled    = true;
+        btnPreview.textContent = "▶ Preview (loading…)";
+        log("Pre-loading full audio...");
+        try {
+          const resp = await fetch("/extract", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+            signal: preloadAbort.signal,
+          });
+          if (!resp.ok) throw new Error((await resp.json()).error || resp.statusText);
+          fullAudioUrl = URL.createObjectURL(await resp.blob());
+          log("Audio ready.");
+        } catch (e) {
+          if (e.name !== "AbortError") log(`Pre-load failed: ${e.message}`);
+        } finally {
+          preloadAbort = null;
+          btnPreview.disabled    = false;
+          btnPreview.textContent = "▶ Preview";
+        }
+      }
+
+      document.getElementById("btnTest").onclick = async () => {
+        const url     = document.getElementById("ytUrl").value.trim();
+        const infoErr = document.getElementById("infoError");
+        const btn     = document.getElementById("btnTest");
+
+        if (!url) return;
+        infoErr.style.display = "none";
+        rangeSection.classList.add("disabled");
+        showPlaceholder();
+        btn.disabled    = true;
+        btn.textContent = "Loading…";
+
         try {
           const data = await (await fetch("/info?url=" + encodeURIComponent(url))).json();
           if (data.error) throw new Error(data.error);
-          document.getElementById("infoResult").innerHTML =
-            `<p><b>${data.title}</b><br>Autore: ${data.uploader}<br>` +
-            `Durata: ${data.durationSeconds}s</p>` +
-            (data.thumbnail ? `<img id="thumb" src="${data.thumbnail}" />` : "");
-          log("Metadati ricevuti.");
-        } catch (error) {
-          log(`Errore metadati: ${error.message}`);
+
+          showVideoInfo(data);
+
+          const dur = data.durationSeconds;
+          rangeStart.max = dur; rangeStart.value = 0;
+          rangeEnd.max   = dur; rangeEnd.value   = dur;
+          updateRangeUI();
+
+          rangeSection.classList.remove("disabled");
+          document.getElementById("player").innerHTML = "";
+          document.getElementById("extractError").style.display = "none";
+          log(`Metadata received: ${data.title} (${dur}s)`);
+
+          preloadFullAudio(url); // background — don't await
+        } catch (e) {
+          showPlaceholder();
+          rangeSection.classList.add("disabled");
+          infoErr.textContent   = `Error: ${e.message}`;
+          infoErr.style.display = "block";
+          log(`Metadata error: ${e.message}`);
+        } finally {
+          btn.disabled    = false;
+          btn.textContent = "Test";
         }
       };
 
-      document.getElementById("extract").onclick = async () => {
-        const url = document.getElementById("extractUrl").value.trim();
-        if (!url) return log("Inserisci un URL da estrarre.");
-        const start = document.getElementById("start").value;
-        const end = document.getElementById("end").value;
-        const body = { url };
-        if (start !== "" && end !== "") {
-          body.start = Number(start);
-          body.end = Number(end);
+      // ── Preview ──────────────────────────────────────────────────────────
+      btnPreview.onclick = () => {
+        if (previewAudio && !previewAudio.paused) { stopPreview(); return; }
+
+        const extractErr = document.getElementById("extractError");
+        extractErr.style.display = "none";
+
+        const s = parseInt(rangeStart.value);
+        const e = parseInt(rangeEnd.value);
+        log(`Preview: [${s}s–${e}s]`);
+
+        previewAudio = new Audio(fullAudioUrl);
+        previewAudio.currentTime = s;
+        previewAudio.ontimeupdate = () => {
+          if (previewAudio && previewAudio.currentTime >= e) stopPreview();
+        };
+        previewAudio.onended = () => stopPreview();
+        previewAudio.play();
+        btnPreview.textContent = "⏹ Stop";
+        log("Preview playing.");
+
+      };
+
+      async function fetchRange() {
+        const url = document.getElementById("ytUrl").value.trim();
+        const s   = parseInt(rangeStart.value);
+        const e   = parseInt(rangeEnd.value);
+        const response = await fetch("/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, start: s, end: e }),
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || response.statusText);
         }
-        log(`Estraggo: ${url}...`);
+        return URL.createObjectURL(await response.blob());
+      }
+
+      // ── Extract MP3 ──────────────────────────────────────────────────────
+      document.getElementById("btnExtract").onclick = async () => {
+        const extractErr = document.getElementById("extractError");
+        const btn        = document.getElementById("btnExtract");
+
+        extractErr.style.display = "none";
+        btn.disabled    = true;
+        btn.textContent = "Extracting…";
+        log(`Extracting: [${rangeStart.value}s–${rangeEnd.value}s]...`);
+
         try {
-          const response = await fetch("/extract", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-          if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || response.statusText);
-          }
-          const blob = await response.blob();
-          const objectUrl = URL.createObjectURL(blob);
+          const objectUrl = await fetchRange();
           document.getElementById("player").innerHTML =
-            `<audio controls src="${objectUrl}"></audio>` +
-            `<br><a href="${objectUrl}" download="jingle.mp3">Scarica jingle.mp3</a>`;
-          log("MP3 ricevuto.");
-        } catch (error) {
-          log(`Errore estrazione: ${error.message}`);
+            `<audio controls src="${objectUrl}" style="width:100%;margin-bottom:0.4rem"></audio><br>` +
+            `<a href="${objectUrl}" download="jingle.mp3">Download jingle.mp3</a>`;
+          log("MP3 received.");
+        } catch (e) {
+          extractErr.textContent   = `Error: ${e.message}`;
+          extractErr.style.display = "block";
+          log(`Extraction error: ${e.message}`);
+        } finally {
+          btn.disabled    = false;
+          btn.textContent = "Extract MP3";
         }
       };
 
+      // ── Log controls ─────────────────────────────────────────────────────
       document.getElementById("refreshLogs").onclick = refreshLogs;
-      document.getElementById("clearLogs").onclick = () => (logsBox.value = "");
+      document.getElementById("clearLogs").onclick   = () => (logsBox.value = "");
 
-      log("Pagina pronta. Inizia controllando lo stato.");
+      log("Page ready. Start by checking the status.");
     </script>
   </body>
 </html>

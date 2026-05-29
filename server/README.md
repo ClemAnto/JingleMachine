@@ -20,8 +20,8 @@ Al primo avvio scarica da solo i programmi che gli servono (`yt-dlp`, `ffmpeg`,
 
 ```bash
 cd server
-npm install
-npm start        # oppure: npm run dev (riavvio automatico ad ogni modifica)
+yarn install
+yarn start        # oppure: yarn dev (riavvio automatico ad ogni modifica)
 ```
 
 Poi apri **<http://127.0.0.1:4321>** nel browser: c'è una **mini pagina di test**

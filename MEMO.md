@@ -272,10 +272,12 @@ Una tantum:
 Server Express 5 che gira sul PC di chi estrae. **Testato end-to-end il 2026-05-29** (info + extract su
 video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](server/README.md).
 
-- **Avvio**: `cd server && npm install && npm start` → `http://127.0.0.1:4321` (mini pagina di test con textbox log).
+- **Avvio**: `cd server && yarn install && yarn start` → `http://127.0.0.1:4321` (mini pagina di test).
+  > ⚠️ Il server usa **`yarn`**, non `npm`. Il client Angular usa `npm`. Non mescolare.
 - **Endpoint**: `GET /health`, `GET /info?url=...`, `POST /extract {url,start?,end?}`, `GET /logs`.
 - **Binari**: scaricati automaticamente al primo avvio in `server/bin/` (gitignored) e `yt-dlp` si auto-aggiorna (`-U`).
 - **Taglio**: fatto da `yt-dlp --download-sections "*start-end" --force-keyframes-at-cuts` (usa ffmpeg sotto), bitrate 128k.
+- **Mini pagina di test** (`server/public/index.html`): dark theme, testo in inglese. Flusso: inserisci URL → **Test** (recupera metadati + scarica MP3 completo in background) → slider doppio per il range → **▶ Preview** (seek istantaneo sul blob già scaricato, stop via `timeupdate`) → **Extract MP3** (scarica il solo range tagliato). Il pulsante Preview è disabilitato con label `(loading…)` finché il preload non è completato. `AbortController` annulla il preload se si preme Test di nuovo.
 
 ### Fatti verificati (2026-05-29, deperibili)
 - yt-dlp **standalone single-binary** (no Python): asset `yt-dlp.exe` (Win), `yt-dlp_macos` (mac). Versione testata **2026.03.17**.
@@ -290,6 +292,13 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 ### Ancora da fare (sicurezza Fase 1)
 - Header **Local Network Access** per il preflight del browser (le origini CORS sono già ristrette).
 - **Token di abbinamento** webapp↔helper (l'ascolto è già solo su `127.0.0.1`).
+
+### Decisione architetturale — eseguibile unico (Fase 7)
+In Fase 7 l'helper e la webapp Angular saranno confezionati in un **unico eseguibile** (Win + Mac):
+il server Express servirà la dist Angular come file statici. L'utente apre `http://localhost:4321`
+e ha l'intera app; Cloudinary + Firestore vengono usati normalmente via internet.
+**Accortezza in Fase 2**: aggiungere la route `express.static` al server (opzionale e disattivata)
+così il pezzo sarà già pronto per la Fase 7 senza refactor.
 
 ---
 
