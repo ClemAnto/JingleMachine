@@ -46,32 +46,47 @@ jobs:
         run: yarn install
         working-directory: server
 
-      # ── 4. Build executables with yao-pkg ──────────────────────────────
+      # ── 4. Bundle with esbuild (ESM → CJS, all deps inlined) ───────────
+      # yao-pkg cannot resolve exports-map .mjs files at runtime; esbuild
+      # compiles everything to a single CJS file so pkg never needs to.
+      - name: Bundle with esbuild
+        run: >
+          npx --yes esbuild src/index.js
+          --bundle
+          --platform=node
+          --format=cjs
+          --outfile=dist/bundle.cjs
+        working-directory: server
+
+      # ── 5. Build executables with yao-pkg ──────────────────────────────
       - name: Build Windows exe
         run: >
-          npx --yes @yao-pkg/pkg src/index.js
+          npx --yes @yao-pkg/pkg dist/bundle.cjs
           --target node22-win-x64
           --output dist/jingle-machine.exe
           --public
+          --config package.json
         working-directory: server
 
       - name: Build macOS x64
         run: >
-          npx --yes @yao-pkg/pkg src/index.js
+          npx --yes @yao-pkg/pkg dist/bundle.cjs
           --target node22-macos-x64
           --output dist/jingle-machine-macos-x64
           --public
+          --config package.json
         working-directory: server
 
       - name: Build macOS arm64
         run: >
-          npx --yes @yao-pkg/pkg src/index.js
+          npx --yes @yao-pkg/pkg dist/bundle.cjs
           --target node22-macos-arm64
           --output dist/jingle-machine-macos-arm64
           --public
+          --config package.json
         working-directory: server
 
-      # ── 5. Merge into a universal macOS binary ──────────────────────────
+      # ── 6. Merge into a universal macOS binary ──────────────────────────
       - name: Create macOS universal binary
         run: >
           lipo -create
@@ -80,7 +95,7 @@ jobs:
           -output dist/jingle-machine-macos
         working-directory: server
 
-      # ── 6. Package macOS binary into a .dmg ────────────────────────────
+      # ── 7. Package macOS binary into a .dmg ────────────────────────────
       - name: Create macOS dmg
         run: |
           mkdir -p dmg-root
@@ -93,7 +108,7 @@ jobs:
             dist/jingle-machine.dmg
         working-directory: server
 
-      # ── 7. Write version file and upload artifacts ──────────────────────
+      # ── 8. Write version file and upload artifacts ──────────────────────
       - name: Write version file
         run: node -e "const p=require('./package.json');process.stdout.write(p.version)" > dist/version.txt
         working-directory: server
