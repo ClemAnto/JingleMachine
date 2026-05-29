@@ -39,14 +39,19 @@ Stack **100% gratuito e senza carta di credito**.
 
 > Piccola app sul PC di chi vuole estrarre da YouTube. Obiettivo della fase: **provarlo subito in locale**.
 
-- [ ] Inizializzare progetto Node in `server/`
-- [ ] Server Express minimo con endpoint `GET /health` → **primo test nel browser**
-- [ ] Endpoint `POST /extract { url, start, end }` → yt-dlp scarica audio, ffmpeg taglia → restituisce MP3
-- [ ] **Provarlo a mano** (es. con un client REST o curl) e verificare che YouTube risponda dal tuo IP di casa
-- [ ] Bundle dei binari: **yt-dlp** + **ffmpeg** (+ **Deno**, richiesto da yt-dlp per YouTube)
-- [ ] **Auto-aggiornamento di yt-dlp** (così non si rompe a ogni cambio di YouTube)
-- [ ] **CORS** ristretto all'origine GitHub Pages + header **Local Network Access** (preflight)
-- [ ] **Sicurezza**: ascolto solo su `127.0.0.1` + token di abbinamento
+> Decisioni prese (vedi `MEMO.md` §8 "Decisioni di implementazione dell'helper"):
+> **Express** · binari **scaricati automaticamente al primo avvio** · **taglio server-side con ffmpeg nativo**.
+
+- [x] Inizializzare progetto Node in `server/`
+- [x] Server Express minimo con endpoint `GET /health` → **primo test nel browser**
+- [x] Endpoint `GET /info?url=...` → yt-dlp `--dump-single-json` → metadati del video (titolo, durata, autore, thumbnail), **senza scaricare**
+- [x] Endpoint `POST /extract { url, start, end }` → yt-dlp scarica audio, **ffmpeg taglia + converte in MP3 server-side** → restituisce MP3
+- [x] **Provarlo a mano** (testato con curl: info + extract 10-20s su video reale → MP3 128k OK)
+- [x] **Download automatico dei binari al primo avvio**: **yt-dlp** + **ffmpeg** (+ **Deno**, richiesto da yt-dlp per YouTube)
+- [x] **Auto-aggiornamento di yt-dlp** (così non si rompe a ogni cambio di YouTube)
+- [x] **Mini interfaccia di test** servita dall'helper (`/`) con form per i 3 endpoint + textbox dei log (`/logs`)
+- [ ] **CORS**: origini ristrette già impostate; manca l'header **Local Network Access** (preflight)
+- [ ] **Sicurezza**: ascolto solo su `127.0.0.1` ✅ fatto; manca il **token di abbinamento**
 
 > In questa fase l'helper gira come **script Node** (`npm start`) → multipiattaforma, zero grane.
 > L'impacchettamento in **eseguibile Win + Mac** è uno step a sé → **Fase 7** (obbligatorio per il prodotto finale).

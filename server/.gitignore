@@ -1,0 +1,5 @@
+node_modules/
+# Downloaded external binaries (yt-dlp, ffmpeg, ffprobe, deno)
+bin/
+# Temporary extracted audio files
+tmp/

@@ -189,11 +189,22 @@ I free tier su datacenter restano una scommessa.
 > manutenzione continua, non "installa e dimentica".
 
 ### Architettura consigliata quando lo faremo
-- Server **minimale e stateless**: un solo endpoint `POST /extract { url, start?, end? }` → risponde con l'MP3.
+- Server **minimale e stateless**. Endpoint:
+  - `GET /info?url=...` → metadati del video (titolo, durata, autore, thumbnail) via yt-dlp `--dump-single-json`, **senza scaricare**.
+  - `POST /extract { url, start?, end? }` → risponde con l'MP3.
 - Il **taglio** può restare client-side (ffmpeg.wasm già pronto) oppure farlo server-side con ffmpeg nativo (più veloce).
 - **Sicurezza**: il client invia l'ID token Firebase, il server lo verifica + rate limiting + CORS ristretto all'origine di Pages.
 - Il client legge l'URL del server da un env var (`extractorUrl`); se assente, la feature YouTube resta nascosta (come ora).
 - **Confezionamento**: Docker (yt-dlp + Deno + ffmpeg + il server) → gira identico in locale, su tunnel o su un host.
+
+### ✅ Decisioni di implementazione dell'helper (Fase 1)
+Scelte fatte con l'utente prima di scrivere il codice:
+
+| Aspetto | Scelta | Perché |
+|---|---|---|
+| Motore HTTP | **Express** | standard, minimale, ottimo per imparare; bastano 2 endpoint |
+| Binari (yt-dlp / ffmpeg / Deno) | **Download automatico al primo avvio** in una cartella dell'helper | comodo per i colleghi; si sposa con l'auto-update di yt-dlp. In Fase 1 sul PC dello sviluppatore si possono comunque installare a mano |
+| Taglio audio | **Server-side con ffmpeg nativo** | più veloce; `/extract` riceve `start`/`end` e restituisce l'MP3 già pronto. NB: il taglio client-side (ffmpeg.wasm) **resta** per i file caricati a mano |
 
 ### ✅ Decisione finale (architettura definitiva)
 
