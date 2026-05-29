@@ -11,6 +11,23 @@ import { config } from "./config.js";
 import { ensureBinaries, updateYtDlp, binaryVersions } from "./binaries.js";
 import { getInfo, extractMp3 } from "./youtube.js";
 
+// When running as a packaged exe, keep the console open on crash so the user
+// can read the error before the window closes.
+if (config.isPkg) {
+  const onFatalError = (err) => {
+    console.error("\n--- CRASH ---");
+    console.error(err);
+    console.error("\nPress any key to close...");
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.once("data", () => process.exit(1));
+    }
+  };
+  process.on("uncaughtException", onFatalError);
+  process.on("unhandledRejection", onFatalError);
+}
+
 const app = express();
 
 // Restrict cross-origin calls to the known web app origins. The mini test page
