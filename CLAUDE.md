@@ -28,9 +28,10 @@ Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di risponder
 - **Principiante sul backend** → spiegare i concetti in modo **elementare**, con analogie, e indicare il "perché" delle scelte.
 - Segnalare sempre **refusi/errori** in italiano e inglese (anche fuori task) — vedi istruzioni globali.
 - **Versioning delegato a Claude**: bumpa `server/package.json` → `version` autonomamente nello stesso commit della modifica.
-  - **patch** (0.1.x) → bugfix, refactor, modifiche minori
+  - **patch** (0.1.x) → qualsiasi commit che produce una nuova build (bugfix, CI fix, refactor, script)
   - **minor** (0.x.0) → completamento di una Fase o feature rilevante
   - **major** (x.0.0) → solo su indicazione esplicita dell'utente
+  - ⚠️ Ogni volta che si triggera una nuova build (`yarn release` o tag), la versione deve essere già stata bumpata nel commit precedente.
   - Quando si crea un tag git, assicurarsi che corrisponda alla versione nel `package.json`.
 
 ## Cos'è il progetto
