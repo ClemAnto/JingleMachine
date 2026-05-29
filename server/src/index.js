@@ -6,6 +6,7 @@ import { exec } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { unlink } from "node:fs/promises";
+import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { config } from "./config.js";
 import { ensureBinaries, updateYtDlp, binaryVersions } from "./binaries.js";
@@ -42,10 +43,6 @@ app.use("/helper", express.static(config.publicDir));
 // Serve the Angular app at / if the dist has been bundled (pkg build).
 if (existsSync(config.angularDir)) {
   app.use(express.static(config.angularDir));
-  // SPA fallback: unknown routes → Angular's index.html.
-  app.get("*", (req, res) => {
-    res.sendFile(join(config.angularDir, "index.html"));
-  });
 } else {
   // Dev mode: serve mini test page at root too.
   app.use(express.static(config.publicDir));
@@ -121,6 +118,14 @@ app.post("/shutdown", (req, res) => {
   res.json({ ok: true });
   setTimeout(() => process.exit(0), 300);
 });
+
+// SPA fallback: must be registered AFTER all API routes so it only
+// catches truly unknown routes and returns Angular's index.html.
+if (existsSync(config.angularDir)) {
+  app.get("*", (req, res) => {
+    res.sendFile(join(config.angularDir, "index.html"));
+  });
+}
 
 // Opens the browser to the given URL (platform-aware).
 function openBrowser(url) {
