@@ -128,14 +128,25 @@ nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi s
 > Accortezza per non chiudersi le porte già in Fase 2: aggiungere al server la route
 > `express.static(path alla dist Angular)` opzionale (una riga). Non serve attivarla ora.
 
-- [ ] Fare la build Angular (`ng build`) e copiare la `dist/` dentro `server/` (o come asset del bundle)
-- [ ] Aggiungere al server Express la route `express.static` che serve la dist Angular
-- [ ] Scegliere lo strumento: **pkg/@yao-pkg/pkg** (eseguibile leggero ~40-80 MB) oppure **Electron** (100-200 MB, comodo per tray/auto-update)
-- [ ] Includere i binari per-OS (yt-dlp / ffmpeg / Deno) — bundle o download al primo avvio
-- [ ] **Build multipiattaforma** via GitHub Actions (matrice Windows + macOS, gratis su repo pubblico)
-- [ ] **Windows**: gestire l'avviso SmartScreen (eventuale firma del codice)
-- [ ] **macOS**: notarizzazione (Apple Developer ~99$/anno) **oppure** istruzioni "clic destro → Apri" se restiamo gratis
-- [ ] (Opz.) **Auto-update** dell'app + tray con stato "🟢 Avviata / Esci"
+- [x] Scegliere strumento: **yao-pkg** (leggero, headless — no Electron)
+- [x] Binari per-OS: **download al primo avvio** (già funziona, non bundlati nell'exe)
+- [x] `config.js`: rilevamento `process.pkg`, `snapshotRoot` per asset bundlati, `runtimeRoot` per bin/tmp reali
+- [x] `index.js`: `express.static` per dist Angular (se presente) + prompt terminale "Open? [Y/n]" all'avvio
+- [x] `package.json`: campo `main` + sezione `pkg` (targets win/mac-x64/arm64, assets public/+app/)
+- [x] Yarn: passato a **node-modules linker** (`.yarnrc.yml`) — Yarn PnP è incompatibile con yao-pkg
+- [x] **GitHub Actions** (`.github/workflows/build-packages.yml`): macos-latest, Angular build → yao-pkg → lipo universal → hdiutil dmg → artifact
+- [x] Script `yarn release` → `gh workflow run` (richiede gh CLI nel PATH — v. nota sotto)
+- [x] **Primo tag `v0.1.0`** pushato → build avviata su Actions
+- [ ] Verificare che la build Actions sia passata e scaricare gli artefatti
+- [ ] **Windows**: SmartScreen (firma opzionale)
+- [ ] **macOS**: Gatekeeper → istruzioni "tasto destro → Apri" (notarizzazione rimandatata)
+- [ ] Auto-apertura browser intelligente: in Fase 2 l'Angular app manda un heartbeat → il server sa se è già aperta
+- [ ] (Opz.) Tray icon / auto-update — fuori scope per ora
+
+> **Note tecniche (2026-05-29):**
+> - `gh` installato in `C:\Program Files\GitHub CLI\` ma non nel PATH → per ora si triggera con tag git
+> - Yarn PnP (`process.pkg` non sa leggere la cache PnP) → `.yarnrc.yml` con `nodeLinker: node-modules`
+> - Angular dist copiata in `server/app/` dal workflow CI (non committata, gitignored)
 
 ---
 
@@ -150,15 +161,15 @@ nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi s
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (fine sessione 2026-05-29 — seconda parte):**
-- **Tutta la UI** (client Angular + mini pagina server) ora in **inglese** (era italiano per la UI).
-- Server usa **`yarn`**; client usa `npm`.
-- **Mini pagina di test** riscritta: dark theme, sezioni info+extract unite, placeholder visivo,
-  preload MP3 al Test + preview istantanea con seek. Dettagli in `MEMO.md` §10.
-- **Fase 7**: pianificato eseguibile unico client+server (Express serve la dist Angular). Vedi `MEMO.md` §10.
-- Fase 1 resta quasi completa (mancano ancora i 2 punti di sicurezza).
+**Stato (fine sessione 2026-05-29 — terza parte):**
+- Tutta la UI in inglese; mini pagina server riscritta (dark theme, preload + preview).
+- **Fase 7 avviata**: yao-pkg configurato, GitHub Actions pronto, tag `v0.1.0` pushato.
+  Verificare che la build sia passata su Actions e scaricare `.exe` + `.dmg`.
+- Fase 1 resta quasi completa (2 punti sicurezza aperti).
+- Versioning delegato a Claude (patch/minor autonomo).
 
 **Prossimo passo — opzioni:**
-1. Chiudere la Fase 1: header **Local Network Access** + **token di abbinamento** (vedi `MEMO.md` §10).
-2. **Fase 2**: integrare l'helper nella webapp Angular (sezione "Estrai da YouTube", pallino 🟢/🔴 via `/health`,
-   flusso incolla URL → `/info` → scegli intervallo → `/extract` → ascolta/scarica).
+1. Verificare artefatti build Actions → testare `.exe` su Windows.
+2. Chiudere la Fase 1: header **Local Network Access** + **token di abbinamento**.
+3. **Fase 2**: integrare l'helper nella webapp Angular (sezione "Estrai da YouTube",
+   modale con istruzioni Win/Mac, polling `/health`, flusso URL → info → slider → extract).

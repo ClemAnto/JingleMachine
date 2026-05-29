@@ -293,12 +293,24 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 - Header **Local Network Access** per il preflight del browser (le origini CORS sono già ristrette).
 - **Token di abbinamento** webapp↔helper (l'ascolto è già solo su `127.0.0.1`).
 
-### Decisione architetturale — eseguibile unico (Fase 7)
-In Fase 7 l'helper e la webapp Angular saranno confezionati in un **unico eseguibile** (Win + Mac):
-il server Express servirà la dist Angular come file statici. L'utente apre `http://localhost:4321`
-e ha l'intera app; Cloudinary + Firestore vengono usati normalmente via internet.
-**Accortezza in Fase 2**: aggiungere la route `express.static` al server (opzionale e disattivata)
-così il pezzo sarà già pronto per la Fase 7 senza refactor.
+### Packaging — Fase 7 (avviata il 2026-05-29)
+
+**Strumento**: **yao-pkg** (no Electron — non serve tray icon).
+**Binari esterni** (yt-dlp/ffmpeg/Deno): download al primo avvio, NON bundlati nell'exe.
+**Dist Angular**: copiata in `server/app/` dal CI → bundlata come pkg asset → gitignored.
+**Output CI**: `jingle-machine.exe` (Win x64) + `jingle-machine.dmg` (macOS universal via lipo).
+
+**Path nel bundle pkg** (`process.pkg` è definito):
+- `snapshotRoot` = `dirname(import.meta.url)/../` → asset bundlati (public/, app/)
+- `runtimeRoot` = `dirname(process.execPath)` → cartelle reali su disco (bin/, tmp/)
+
+**Auto-apertura browser**: al primo avvio (solo in pkg) chiede in terminale `Open? [Y/n]`.
+Il check "già aperta" arriva in Fase 2 con heartbeat dall'Angular app.
+
+**⚠️ Trappola**: Yarn PnP incompatibile con yao-pkg → usare `nodeLinker: node-modules` in `.yarnrc.yml`.
+
+**Triggering build**: `git tag vX.Y.Z && git push origin vX.Y.Z` (oppure `yarn release` se `gh` nel PATH).
+`gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default; aggiungilo manualmente o usa il tag.
 
 ---
 
