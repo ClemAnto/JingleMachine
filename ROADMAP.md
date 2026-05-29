@@ -137,16 +137,15 @@ nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi s
 - [x] **GitHub Actions** (`.github/workflows/build-packages.yml`): macos-latest, Angular build → yao-pkg → lipo universal → hdiutil dmg → artifact
 - [x] Script `yarn release` → `gh workflow run` (richiede gh CLI nel PATH — v. nota sotto)
 - [x] **Primo tag `v0.1.0`** pushato → build avviata su Actions
-- [ ] Verificare che la build Actions sia passata e scaricare gli artefatti
+- [x] Build CI verificata e artefatti scaricati (v0.1.10)
+- [x] Mini pagina test su `/helper`; Angular SPA su `/` con SPA fallback dopo le route API
+- [x] `yarn download` salva in `dist/{versione}/` da `version.txt` nell'artifact
 - [ ] **Windows**: SmartScreen (firma opzionale)
 - [ ] **macOS**: Gatekeeper → istruzioni "tasto destro → Apri" (notarizzazione rimandatata)
 - [ ] Auto-apertura browser intelligente: in Fase 2 l'Angular app manda un heartbeat → il server sa se è già aperta
 - [ ] (Opz.) Tray icon / auto-update — fuori scope per ora
 
-> **Note tecniche (2026-05-29):**
-> - `gh` installato in `C:\Program Files\GitHub CLI\` ma non nel PATH → per ora si triggera con tag git
-> - Yarn PnP (`process.pkg` non sa leggere la cache PnP) → `.yarnrc.yml` con `nodeLinker: node-modules`
-> - Angular dist copiata in `server/app/` dal workflow CI (non committata, gitignored)
+> **Note tecniche:** vedi `MEMO.md` §10 "Trappole risolte nel packaging" per tutte le insidie incontrate.
 
 ---
 
@@ -161,11 +160,11 @@ nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi s
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (fine sessione 2026-05-29 — terza parte):**
-- Tutta la UI in inglese; mini pagina server riscritta (dark theme, preload + preview).
-- **Fase 7 avviata**: yao-pkg configurato, GitHub Actions pronto, tag `v0.1.0` pushato.
-  Verificare che la build sia passata su Actions e scaricare `.exe` + `.dmg`.
-- Fase 1 resta quasi completa (2 punti sicurezza aperti).
+**Stato (fine sessione 2026-05-30):**
+- **Fase 7 completata**: exe Win + dmg macOS prodotti e testati (v0.1.10).
+  Pipeline CI: esbuild → yao-pkg → lipo → hdiutil. Trappole documentate in `MEMO.md` §10.
+- Mini pagina test su `http://127.0.0.1:4321/helper`; Angular SPA su `/`.
+- Fase 1 resta quasi completa (2 punti sicurezza aperti: Local Network Access + token).
 - Versioning delegato a Claude (patch/minor autonomo).
 
 **Prossimo passo — opzioni:**

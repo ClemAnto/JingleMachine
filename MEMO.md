@@ -293,24 +293,40 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 - Header **Local Network Access** per il preflight del browser (le origini CORS sono già ristrette).
 - **Token di abbinamento** webapp↔helper (l'ascolto è già solo su `127.0.0.1`).
 
-### Packaging — Fase 7 (avviata il 2026-05-29)
+### Packaging — Fase 7 (completata il 2026-05-30, v0.1.10)
 
 **Strumento**: **yao-pkg** (no Electron — non serve tray icon).
 **Binari esterni** (yt-dlp/ffmpeg/Deno): download al primo avvio, NON bundlati nell'exe.
 **Dist Angular**: copiata in `server/app/` dal CI → bundlata come pkg asset → gitignored.
 **Output CI**: `jingle-machine.exe` (Win x64) + `jingle-machine.dmg` (macOS universal via lipo).
+**Download artefatti**: `yarn download` da `server/` → salva in `dist/{versione}/`.
+
+**Pipeline CI** (`.github/workflows/build-packages.yml`):
+1. Angular build (`--base-href /`) → copia dist in `server/app/`
+2. `yarn install` (con Corepack per Yarn 4)
+3. **esbuild** bundle ESM → CJS singolo file (`dist/bundle.cjs`)
+4. **yao-pkg** impacchetta `bundle.cjs` → exe Win + mac-x64 + mac-arm64
+5. `lipo` → universal macOS binary → `hdiutil` → `.dmg`
+6. `version.txt` nell'artifact → `yarn download` usa quella per il nome cartella
 
 **Path nel bundle pkg** (`process.pkg` è definito):
-- `snapshotRoot` = `dirname(import.meta.url)/../` → asset bundlati (public/, app/)
+- `snapshotRoot` (da `__dirname` in CJS) → asset bundlati (public/, app/)
 - `runtimeRoot` = `dirname(process.execPath)` → cartelle reali su disco (bin/, tmp/)
 
+**URL al runtime**: mini pagina test su `/helper`; Angular SPA su `/` con fallback `*`.
+
 **Auto-apertura browser**: al primo avvio (solo in pkg) chiede in terminale `Open? [Y/n]`.
-Il check "già aperta" arriva in Fase 2 con heartbeat dall'Angular app.
 
-**⚠️ Trappola**: Yarn PnP incompatibile con yao-pkg → usare `nodeLinker: node-modules` in `.yarnrc.yml`.
+**Triggering build**: `yarn release` (richiede `gh` nel PATH) oppure tag git.
+`gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default.
 
-**Triggering build**: `git tag vX.Y.Z && git push origin vX.Y.Z` (oppure `yarn release` se `gh` nel PATH).
-`gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default; aggiungilo manualmente o usa il tag.
+### ⚠️ Trappole risolte nel packaging (non riproporre)
+- **Yarn PnP incompatibile con yao-pkg** → `.yarnrc.yml` con `nodeLinker: node-modules`.
+- **ESM `.mjs` non risolvibili da yao-pkg a runtime** (anche in Express 4.x) → usare **esbuild** per bundlare tutto in CJS prima di pkg. NON tentare di aggiungere `.mjs` agli asset.
+- **`import.meta.url` → `undefined` in bundle esbuild CJS** → `config.js` usa `__dirname` quando disponibile, `import.meta.url` solo in ESM nativo.
+- **SPA fallback `app.get("*")` deve stare DOPO tutte le route API** → altrimenti restituisce Angular `index.html` invece del JSON.
+- **Campo `version` in `package.json`** va aggiornato esplicitamente — i messaggi commit non lo fanno. Ricordare: `"version": "X.Y.Z"` nel file, non solo nel testo del commit.
+- **Disk space su runner macOS**: rimuovere Xcode all'inizio (`sudo rm -rf /Applications/Xcode.app`) per liberare ~10 GB prima del build.
 
 ---
 
