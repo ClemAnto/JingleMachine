@@ -1,13 +1,14 @@
 // Downloads the latest successful build artifacts (exe + dmg) from GitHub Actions.
-// Files are saved in dist/{version}/ where version comes from the run's git tag,
-// falling back to the version field in package.json.
+// Files are saved in dist/{version}/ where version is read from the version.txt
+// file included in the artifact itself.
 // Usage: yarn download  (from the server/ folder)
 import { execSync } from "node:child_process";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, rmSync, readdirSync } from "node:fs";
 
 const REPO = "ClemAnto/JingleMachine";
 const WORKFLOW = "build-packages.yml";
 const ARTIFACT = "jingle-machine-packages";
+const TMP_DIR = "dist/.tmp";
 
 // On Windows, gh is often not in PATH — fall back to the known install location.
 const GH =
@@ -29,22 +30,25 @@ if (!runId) {
   process.exit(1);
 }
 
-// Determine version: prefer the git tag that triggered the run, fall back to package.json.
-const headBranch = run(
-  `${GH} run view ${runId} --repo ${REPO} --json headBranch -q ".headBranch"`
-);
-const localVersion = `v${JSON.parse(readFileSync("package.json", "utf8")).version}`;
-const version = headBranch.startsWith("v") ? headBranch : localVersion;
-
-const outDir = `dist/${version}`;
-console.log(`Run: ${runId}  →  version: ${version}`);
-console.log(`Downloading '${ARTIFACT}' → ${outDir}/`);
-
-mkdirSync(outDir, { recursive: true });
-
+// Download to a temp folder first so we can read version.txt.
+console.log(`Run: ${runId} — downloading to temp folder...`);
+mkdirSync(TMP_DIR, { recursive: true });
 execSync(
-  `${GH} run download ${runId} --repo ${REPO} --name ${ARTIFACT} --dir ${outDir}`,
+  `${GH} run download ${runId} --repo ${REPO} --name ${ARTIFACT} --dir ${TMP_DIR}`,
   { stdio: "inherit" }
 );
 
-console.log(`\nDone! Files saved in server/${outDir}/`);
+// Read the version baked into the artifact at build time.
+const version = `v${readFileSync(`${TMP_DIR}/version.txt`, "utf8").trim()}`;
+const outDir = `dist/${version}`;
+console.log(`\nVersion: ${version} → moving files to ${outDir}/`);
+
+mkdirSync(outDir, { recursive: true });
+
+// Move all files except version.txt to the versioned folder.
+for (const file of readdirSync(TMP_DIR).filter((f) => f !== "version.txt")) {
+  renameSync(`${TMP_DIR}/${file}`, `${outDir}/${file}`);
+}
+rmSync(TMP_DIR, { recursive: true });
+
+console.log(`Done! Files saved in server/${outDir}/`);

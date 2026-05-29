@@ -86,7 +86,11 @@ jobs:
             dist/jingle-machine.dmg
         working-directory: server
 
-      # ── 7. Upload artifacts ─────────────────────────────────────────────
+      # ── 7. Write version file and upload artifacts ──────────────────────
+      - name: Write version file
+        run: node -e "const p=require('./package.json');process.stdout.write(p.version)" > dist/version.txt
+        working-directory: server
+
       - uses: actions/upload-artifact@v4
         with:
           name: jingle-machine-packages
@@ -94,3 +98,4 @@ jobs:
           path: |
             server/dist/jingle-machine.exe
             server/dist/jingle-machine.dmg
+            server/dist/version.txt
