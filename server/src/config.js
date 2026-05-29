@@ -9,7 +9,13 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-const snapshotRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+// __dirname is available in CJS (esbuild bundle); import.meta.url in native ESM (dev).
+// eslint-disable-next-line no-undef
+const currentDir = typeof __dirname !== "undefined"
+  ? __dirname
+  : dirname(fileURLToPath(import.meta.url));
+
+const snapshotRoot = join(currentDir, "..");
 const isPkg = typeof process.pkg !== "undefined";
 const runtimeRoot = isPkg ? dirname(process.execPath) : snapshotRoot;
 
