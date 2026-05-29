@@ -32,6 +32,9 @@ jobs:
         run: cp -r client/dist/jingle-machine/browser server/app
 
       # ── 3. Install server dependencies ─────────────────────────────────
+      - name: Enable Corepack (required for Yarn 4)
+        run: corepack enable
+
       - name: Install server dependencies
         run: yarn install
         working-directory: server
