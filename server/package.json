@@ -17,7 +17,9 @@
   "pkg": {
     "assets": [
       "public/**/*",
-      "app/**/*"
+      "app/**/*",
+      "node_modules/**/*.mjs",
+      "node_modules/**/*.json"
     ],
     "targets": [
       "node22-win-x64",
