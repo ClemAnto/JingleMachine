@@ -32,6 +32,7 @@ if (!runId) {
 
 // Download to a temp folder first so we can read version.txt.
 console.log(`Run: ${runId} — downloading to temp folder...`);
+rmSync(TMP_DIR, { recursive: true, force: true });
 mkdirSync(TMP_DIR, { recursive: true });
 execSync(
   `${GH} run download ${runId} --repo ${REPO} --name ${ARTIFACT} --dir ${TMP_DIR}`,
