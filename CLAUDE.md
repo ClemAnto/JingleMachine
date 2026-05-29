@@ -27,6 +27,11 @@ Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di risponder
   Asseconda: sviscera alternative/costi/rischi **prima** di scrivere codice, senza fretta di codare.
 - **Principiante sul backend** → spiegare i concetti in modo **elementare**, con analogie, e indicare il "perché" delle scelte.
 - Segnalare sempre **refusi/errori** in italiano e inglese (anche fuori task) — vedi istruzioni globali.
+- **Versioning delegato a Claude**: bumpa `server/package.json` → `version` autonomamente nello stesso commit della modifica.
+  - **patch** (0.1.x) → bugfix, refactor, modifiche minori
+  - **minor** (0.x.0) → completamento di una Fase o feature rilevante
+  - **major** (x.0.0) → solo su indicazione esplicita dell'utente
+  - Quando si crea un tag git, assicurarsi che corrisponda alla versione nel `package.json`.
 
 ## Cos'è il progetto
 Webapp Angular per tagliare porzioni di audio ed esportarle in MP3, con **libreria condivisa**.
