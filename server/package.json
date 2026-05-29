@@ -11,7 +11,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "release": "gh workflow run build-packages.yml"
+    "release": "gh workflow run build-packages.yml",
+    "download": "node scripts/download-release.js"
   },
   "pkg": {
     "assets": [
