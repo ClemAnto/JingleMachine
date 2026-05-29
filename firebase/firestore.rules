@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// Ogni utente può leggere/scrivere SOLO i propri jingle.
+// Copia queste regole in: Console Firebase -> Firestore Database -> Regole.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /jingles/{docId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+  }
+}

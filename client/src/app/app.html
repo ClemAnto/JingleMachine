@@ -1,0 +1,22 @@
+<div class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+  <header class="flex items-center justify-between gap-4 px-6 py-3 bg-white border-b border-slate-200 shadow-sm">
+    <div class="flex items-center gap-2">
+      <span nz-icon nzType="sound" class="text-xl text-indigo-600"></span>
+      <h1 class="text-lg font-semibold tracking-tight">Jingle Machine</h1>
+    </div>
+
+    @if (auth.isLoggedIn()) {
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-slate-500 hidden sm:inline">{{ auth.user()?.email }}</span>
+        <button nz-button nzType="default" (click)="logout()">
+          <span nz-icon nzType="logout"></span>
+          Esci
+        </button>
+      </div>
+    }
+  </header>
+
+  <main class="flex-1 w-full max-w-3xl mx-auto px-4 py-8">
+    <router-outlet />
+  </main>
+</div>

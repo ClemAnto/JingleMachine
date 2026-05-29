@@ -1,0 +1,42 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# Repo "monorepo": i pattern NON sono ancorati alla radice, così valgono sia in client/ che in server/.
+
+# Dipendenze
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Output di build / cache
+dist/
+tmp/
+out-tsc/
+.angular/
+.sass-cache/
+coverage/
+
+# Server Node
+server/downloads/
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.idea/
+.project
+.classpath
+*.launch
+.settings/
+*.sublime-workspace
+.history/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+
+# File di sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,123 @@
+<div class="flex flex-col gap-6">
+  <!-- 1. Caricamento -->
+  <nz-card nzTitle="1. Carica un file audio">
+    <nz-upload
+      nzType="drag"
+      [nzBeforeUpload]="beforeUpload"
+      [nzShowUploadList]="false"
+      nzAccept="audio/*"
+    >
+      <p class="ant-upload-drag-icon">
+        <span nz-icon nzType="upload" class="text-3xl text-indigo-500"></span>
+      </p>
+      <p class="ant-upload-text">Trascina qui un file audio o clicca per selezionarlo</p>
+      <p class="ant-upload-hint text-slate-400">MP3, WAV, M4A, OGG… (l'elaborazione avviene nel tuo browser)</p>
+    </nz-upload>
+
+    @if (file()) {
+      <p class="mt-3 text-sm text-slate-500 truncate">
+        File: <span class="font-medium text-slate-700">{{ file()!.name }}</span>
+      </p>
+    }
+  </nz-card>
+
+  <!-- 2. Selezione intervallo -->
+  @if (sourceUrl()) {
+    <nz-card nzTitle="2. Scegli la porzione">
+      <audio
+        #player
+        class="w-full"
+        controls
+        [src]="sourceUrl()"
+        (loadedmetadata)="onMetadata(player)"
+      ></audio>
+
+      @if (duration() > 0) {
+        <div class="mt-4">
+          <nz-slider
+            nzRange
+            [nzMin]="0"
+            [nzMax]="duration()"
+            [nzStep]="0.1"
+            [nzTipFormatter]="format"
+            [ngModel]="range()"
+            (ngModelChange)="range.set($event)"
+          ></nz-slider>
+
+          <div class="flex justify-between text-sm text-slate-500">
+            <span>Inizio: <b>{{ format(range()[0]) }}</b></span>
+            <span>Durata clip: <b>{{ format(clipDuration()) }}</b></span>
+            <span>Fine: <b>{{ format(range()[1]) }}</b></span>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm text-slate-500 mb-1">Nome del jingle</label>
+          <input nz-input [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Il mio jingle" />
+        </div>
+
+        <button
+          nz-button
+          nzType="primary"
+          class="mt-4"
+          [nzLoading]="processing()"
+          [disabled]="processing() || clipDuration() <= 0"
+          (click)="cut()"
+        >
+          <span nz-icon nzType="scissor"></span>
+          Taglia ed esporta MP3
+        </button>
+
+        @if (processing() || ffmpeg.loading()) {
+          <div class="mt-3">
+            <p class="text-xs text-slate-400 mb-1">
+              {{ ffmpeg.loading() ? 'Caricamento del motore audio…' : 'Elaborazione…' }}
+            </p>
+            <nz-progress [nzPercent]="progressPercent()"></nz-progress>
+          </div>
+        }
+      }
+    </nz-card>
+  }
+
+  <!-- 3. Risultato -->
+  @if (resultUrl()) {
+    <nz-card nzTitle="3. Risultato">
+      <audio class="w-full" controls [src]="resultUrl()"></audio>
+      <div class="flex flex-wrap gap-3 mt-4">
+        <button nz-button nzType="default" (click)="download()">
+          <span nz-icon nzType="save"></span>
+          Scarica MP3
+        </button>
+        <button nz-button nzType="primary" [nzLoading]="saving()" (click)="saveToLibrary()">
+          <span nz-icon nzType="save"></span>
+          Salva nella libreria
+        </button>
+      </div>
+    </nz-card>
+  }
+
+  <!-- 4. Libreria -->
+  <nz-card nzTitle="La tua libreria">
+    <nz-spin [nzSpinning]="loadingLibrary()">
+      @if (jingles().length === 0) {
+        <nz-empty nzNotFoundContent="Nessun jingle salvato"></nz-empty>
+      } @else {
+        <nz-list>
+          @for (j of jingles(); track j.id) {
+            <nz-list-item>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium truncate">{{ j.name }}</div>
+                <div class="text-xs text-slate-400">{{ format(j.durationSec) }} · {{ (j.size / 1024) | number: '1.0-0' }} KB</div>
+                <audio class="w-full mt-2" controls [src]="j.url"></audio>
+              </div>
+              <button nz-button nzType="text" nzDanger (click)="deleteJingle(j)">
+                <span nz-icon nzType="delete"></span>
+              </button>
+            </nz-list-item>
+          }
+        </nz-list>
+      }
+    </nz-spin>
+  </nz-card>
+</div>
