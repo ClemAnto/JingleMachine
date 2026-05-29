@@ -47,6 +47,8 @@
       button:disabled { opacity: 0.5; cursor: default; }
       button.secondary { background: #21262d; color: #c9d1d9; }
       button.secondary:hover:not(:disabled) { background: #30363d; }
+      button.danger { background: #6e2020; color: #ffa0a0; }
+      button.danger:hover:not(:disabled) { background: #8b2020; }
       #status { font-weight: 600; }
       #logs {
         width: 100%;
@@ -183,7 +185,10 @@
     <section>
       <h2>1. Status (health)</h2>
       <p>Status: <span id="status">—</span><span id="spinner" class="spinner" style="display:none"></span></p>
-      <button id="checkHealth">Check status</button>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
+        <button id="checkHealth">Check status</button>
+        <button id="btnShutdown" class="danger" style="margin-top:0.75rem">Shut down</button>
+      </div>
     </section>
 
     <!-- 2. Extract from YouTube (merged info + extract) -->
@@ -513,6 +518,17 @@
       // ── Log controls ─────────────────────────────────────────────────────
       document.getElementById("refreshLogs").onclick = refreshLogs;
       document.getElementById("clearLogs").onclick   = () => (logsBox.value = "");
+
+      document.getElementById("btnShutdown").onclick = async () => {
+        if (!confirm("Shut down the helper server?")) return;
+        try {
+          await fetch("/shutdown", { method: "POST" });
+          document.body.innerHTML = "<p style='font-family:system-ui;color:#c9d1d9;padding:2rem'>Server stopped. You can close this tab.</p>";
+        } catch {
+          // fetch throws when the server closes the connection — that's expected
+          document.body.innerHTML = "<p style='font-family:system-ui;color:#c9d1d9;padding:2rem'>Server stopped. You can close this tab.</p>";
+        }
+      };
 
       log("Page ready. Start by checking the status.");
     </script>

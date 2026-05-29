@@ -91,6 +91,12 @@ app.post("/extract", async (req, res) => {
   }
 });
 
+// Graceful shutdown: responds first, then exits after a short delay.
+app.post("/shutdown", (req, res) => {
+  res.json({ ok: true });
+  setTimeout(() => process.exit(0), 300);
+});
+
 // Opens the browser to the given URL (platform-aware).
 function openBrowser(url) {
   const cmd =
