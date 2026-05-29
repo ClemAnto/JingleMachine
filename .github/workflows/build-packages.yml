@@ -1,0 +1,93 @@
+name: Build packages (exe + dmg)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      # ── 1. Build Angular app ────────────────────────────────────────────
+      - name: Install client dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Build Angular (base-href /)
+        run: npm run build -- --base-href /
+        working-directory: client
+
+      # ── 2. Copy Angular dist into server for bundling ───────────────────
+      - name: Copy Angular dist → server/app
+        run: cp -r client/dist/jingle-machine/browser server/app
+
+      # ── 3. Install server dependencies ─────────────────────────────────
+      - name: Install server dependencies
+        run: yarn install
+        working-directory: server
+
+      # ── 4. Build executables with yao-pkg ──────────────────────────────
+      - name: Build Windows exe
+        run: >
+          npx --yes @yao-pkg/pkg .
+          --target node22-win-x64
+          --output dist/jingle-machine.exe
+          --compress GZip
+        working-directory: server
+
+      - name: Build macOS x64
+        run: >
+          npx --yes @yao-pkg/pkg .
+          --target node22-macos-x64
+          --output dist/jingle-machine-macos-x64
+          --compress GZip
+        working-directory: server
+
+      - name: Build macOS arm64
+        run: >
+          npx --yes @yao-pkg/pkg .
+          --target node22-macos-arm64
+          --output dist/jingle-machine-macos-arm64
+          --compress GZip
+        working-directory: server
+
+      # ── 5. Merge into a universal macOS binary ──────────────────────────
+      - name: Create macOS universal binary
+        run: >
+          lipo -create
+          dist/jingle-machine-macos-x64
+          dist/jingle-machine-macos-arm64
+          -output dist/jingle-machine-macos
+        working-directory: server
+
+      # ── 6. Package macOS binary into a .dmg ────────────────────────────
+      - name: Create macOS dmg
+        run: |
+          mkdir -p dmg-root
+          cp dist/jingle-machine-macos "dmg-root/Jingle Machine Helper"
+          chmod +x "dmg-root/Jingle Machine Helper"
+          hdiutil create \
+            -volname "Jingle Machine Helper" \
+            -srcfolder dmg-root \
+            -ov -format UDZO \
+            dist/jingle-machine.dmg
+        working-directory: server
+
+      # ── 7. Upload artifacts ─────────────────────────────────────────────
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jingle-machine-packages
+          retention-days: 30
+          path: |
+            server/dist/jingle-machine.exe
+            server/dist/jingle-machine.dmg

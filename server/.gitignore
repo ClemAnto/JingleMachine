@@ -3,5 +3,12 @@ node_modules/
 bin/
 # Temporary extracted audio files
 tmp/
-# Yarn internal state (not needed in repo)
+# Yarn internal state
 .yarn/
+# Angular dist copied here for packaging — built by CI, not committed
+app/
+# Package build output
+dist/
+# PnP artefacts (replaced by node-modules linker)
+.pnp.cjs
+.pnp.loader.mjs
