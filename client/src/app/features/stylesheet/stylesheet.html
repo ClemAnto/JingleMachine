@@ -1,0 +1,236 @@
+<div class="min-h-screen bg-[#00201c] text-white p-10 space-y-16">
+
+  <!-- ── Title ── -->
+  <header>
+    <h1 class="text-4xl font-bold text-[#45fff3] tracking-tight">Jingle Machine — Stylesheet</h1>
+    <p class="mt-1 text-white/45 text-sm">Developer reference — <code class="text-[#45fff3]/70">/stylesheet</code></p>
+  </header>
+
+  <!-- ── Colour Palette ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Colour Palette</h2>
+    <div class="flex flex-wrap gap-4">
+      <div class="swatch" style="background:#00201c"><span>#00201c</span><span class="label">bg outer</span></div>
+      <div class="swatch" style="background:#001714"><span>#001714</span><span class="label">bg inner</span></div>
+      <div class="swatch" style="background:#45fff3; color:#00201c"><span>#45fff3</span><span class="label">primary</span></div>
+      <div class="swatch" style="background:#ff4548"><span>#ff4548</span><span class="label">danger / YT</span></div>
+      <div class="swatch" style="background:rgba(255,255,255,0.85)"><span>#fff 85%</span><span class="label">text</span></div>
+      <div class="swatch" style="background:rgba(255,255,255,0.45)"><span>#fff 45%</span><span class="label">secondary</span></div>
+      <div class="swatch" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2)"><span>#fff 12%</span><span class="label">border</span></div>
+    </div>
+
+    <h3 class="text-sm font-semibold text-white/45 mt-6 mb-2">Jingle card accent colours</h3>
+    <div class="flex gap-3">
+      @for (color of jingleColors; track color) {
+        <div class="w-9 h-9 rounded-full border-2 border-white/20" [style.background]="color"></div>
+      }
+    </div>
+  </section>
+
+  <!-- ── Typography ── -->
+  <section class="space-y-3">
+    <h2 class="section-title">Typography</h2>
+    <p class="text-[30px] font-semibold">I tuoi Jingle — 30px semibold</p>
+    <p class="text-[24px] font-semibold">Titolo modale — 24px semibold</p>
+    <p class="text-[20px] font-semibold">Nome jingle — 20px semibold</p>
+    <p class="text-base">Body text — 14px regular</p>
+    <p class="text-sm text-white/45">Secondary / placeholder — 14px 45%</p>
+    <code class="text-xs text-[#45fff3]/70 font-mono">font-family: Inter, system-ui</code>
+  </section>
+
+  <!-- ── Buttons ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Buttons</h2>
+
+    <h3 class="subsection-title">Custom (Figma)</h3>
+    <div class="flex flex-wrap gap-4 items-center">
+      <!-- Main / primary -->
+      <button class="jm-btn-primary">
+        <span nz-icon nzType="upload"></span> Aggiungi file
+      </button>
+      <!-- YouTube / danger -->
+      <button class="jm-btn-youtube">
+        <span nz-icon nzType="youtube"></span> Carica da Youtube
+      </button>
+      <!-- Neutral -->
+      <button class="jm-btn-neutral">
+        <span nz-icon nzType="search"></span> Cerca
+      </button>
+      <!-- Alert -->
+      <button class="jm-btn-alert">
+        <span nz-icon nzType="delete"></span> Elimina
+      </button>
+    </div>
+
+    <h3 class="subsection-title">NgZorro (NzButton)</h3>
+    <div class="flex flex-wrap gap-4 items-center">
+      <button nz-button nzType="primary">Primary</button>
+      <button nz-button nzType="primary" nzDanger>Danger</button>
+      <button nz-button nzType="default">Default</button>
+      <button nz-button nzType="dashed">Dashed</button>
+      <button nz-button nzType="text">Text</button>
+      <button nz-button nzType="link">Link</button>
+      <button nz-button nzType="primary" [nzLoading]="true">Loading</button>
+      <button nz-button nzType="primary" disabled>Disabled</button>
+    </div>
+
+    <h3 class="subsection-title">Icon Buttons</h3>
+    <div class="flex gap-4 items-center">
+      <button nz-button nzType="primary" nzShape="circle"><span nz-icon nzType="plus"></span></button>
+      <button nz-button nzType="default" nzShape="circle"><span nz-icon nzType="edit"></span></button>
+      <button nz-button nzType="default" nzDanger nzShape="circle"><span nz-icon nzType="delete"></span></button>
+    </div>
+  </section>
+
+  <!-- ── Inputs ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Inputs</h2>
+    <div class="max-w-sm space-y-3">
+      <input nz-input placeholder="Nome jingle..." [(ngModel)]="searchValue" />
+      <nz-input-group [nzPrefix]="prefixSearch">
+        <input nz-input placeholder="Cerca..." [(ngModel)]="searchValue" />
+      </nz-input-group>
+      <ng-template #prefixSearch><span nz-icon nzType="search"></span></ng-template>
+
+      <input nz-input placeholder="Disabled" disabled />
+
+      <nz-select class="w-full" [(ngModel)]="selectValue" nzPlaceHolder="Seleziona tag">
+        @for (tag of mockTags; track tag) {
+          <nz-option [nzValue]="tag" [nzLabel]="tag"></nz-option>
+        }
+      </nz-select>
+
+      <!-- Custom Figma-style search button -->
+      <div class="jm-search-box">
+        <span nz-icon nzType="search" class="text-white/50"></span>
+        <span class="text-white/50 text-[20px] font-semibold">Cerca</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Tags ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Tags</h2>
+    <div class="flex flex-wrap gap-2">
+      @for (tag of mockTags; track tag) {
+        <nz-tag>{{ tag }}</nz-tag>
+      }
+      <nz-tag nzColor="cyan">cyan</nz-tag>
+      <nz-tag nzColor="red">red</nz-tag>
+      <nz-tag nzColor="geekblue">geekblue</nz-tag>
+    </div>
+
+    <h3 class="subsection-title">Custom pill tags (Figma-style)</h3>
+    <div class="flex flex-wrap gap-2">
+      @for (tag of mockTags; track tag) {
+        <span class="jm-tag">{{ tag }}</span>
+      }
+    </div>
+  </section>
+
+  <!-- ── Jingle Cards ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Jingle Card</h2>
+    <div class="flex flex-wrap gap-6">
+
+      <!-- Default state -->
+      <div class="jm-card" style="--card-color: #009e94; background-image: linear-gradient(226deg, rgba(0,158,148,0) 0%, #009e94 100%)">
+        <div class="jm-card-body">
+          <div class="jm-card-meta">
+            <span class="jm-card-name">Rompicoglioni</span>
+            <button class="jm-card-play"><span nz-icon nzType="play-circle" class="text-2xl text-white"></span></button>
+          </div>
+          <div class="flex gap-1 flex-wrap mt-1">
+            <span class="jm-tag text-xs">jingle</span>
+            <span class="jm-tag text-xs">intro</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playing state -->
+      <div class="jm-card jm-card--playing" style="--card-color: #009e94; background-image: linear-gradient(226deg, rgba(0,158,148,0) 0%, #009e94 100%)">
+        <div class="jm-card-progress" style="width: 45%"></div>
+        <div class="jm-card-body">
+          <div class="jm-card-meta">
+            <span class="jm-card-name">Polizia</span>
+            <button class="jm-card-play"><span nz-icon nzType="pause-circle" class="text-2xl text-white"></span></button>
+          </div>
+          <div class="flex gap-1 flex-wrap mt-1">
+            <span class="jm-tag text-xs">effetto</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yellow accent -->
+      <div class="jm-card" style="--card-color: #ffb700; background-image: linear-gradient(226deg, rgba(255,183,0,0) 0%, #ffb700 100%)">
+        <div class="jm-card-body">
+          <div class="jm-card-meta">
+            <span class="jm-card-name">Teng e sord</span>
+            <button class="jm-card-play"><span nz-icon nzType="play-circle" class="text-2xl text-white"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purple accent -->
+      <div class="jm-card" style="--card-color: #9000ff; background-image: linear-gradient(226deg, rgba(144,0,255,0) 0%, #9000ff 100%)">
+        <div class="jm-card-body">
+          <div class="jm-card-meta">
+            <span class="jm-card-name">Nome Jingle</span>
+            <button class="jm-card-play"><span nz-icon nzType="play-circle" class="text-2xl text-white"></span></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Modal ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Modal</h2>
+    <button nz-button nzType="primary" (click)="modalVisible.set(true)">Open modal demo</button>
+
+    <nz-modal
+      [nzVisible]="modalVisible()"
+      nzTitle="Crea nuovo Jingle"
+      (nzOnCancel)="modalVisible.set(false)"
+      (nzOnOk)="modalVisible.set(false)"
+      nzOkText="Crea Jingle"
+    >
+      <ng-container *nzModalContent>
+        <div class="space-y-4 py-2">
+          <div class="flex gap-4">
+            <div class="jm-upload-area flex-1">
+              <span nz-icon nzType="audio" class="text-2xl text-[#45fff3]"></span>
+              <span class="text-sm font-semibold">Carica file audio</span>
+            </div>
+            <div class="jm-upload-area flex-1">
+              <span nz-icon nzType="picture" class="text-2xl text-[#45fff3]"></span>
+              <span class="text-sm font-semibold">Carica immagine</span>
+            </div>
+          </div>
+          <input nz-input placeholder="Nome Jingle" />
+          <div class="space-y-2">
+            <p class="text-sm font-semibold text-white/85">Colore scheda</p>
+            <div class="flex gap-3 flex-wrap">
+              @for (color of jingleColors; track color) {
+                <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all"
+                     [style.background]="color"></div>
+              }
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </nz-modal>
+  </section>
+
+  <!-- ── Spinner ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Loading</h2>
+    <div class="flex gap-8 items-center">
+      <nz-spin nzSimple nzSize="small"></nz-spin>
+      <nz-spin nzSimple></nz-spin>
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+    </div>
+  </section>
+
+</div>

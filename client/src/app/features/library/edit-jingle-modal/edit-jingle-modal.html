@@ -1,0 +1,74 @@
+<nz-modal
+  [nzVisible]="visible()"
+  nzTitle="Modifica Jingle"
+  [nzFooter]="footer"
+  [nzWidth]="600"
+  (nzOnCancel)="close()"
+>
+  <ng-container *nzModalContent>
+    <nz-spin [nzSpinning]="saving()">
+      <div class="space-y-5 py-2">
+
+        <!-- Cover image -->
+        <label class="jm-upload-area cursor-pointer" [class.jm-upload-area--filled]="imageFile()">
+          <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" />
+          <span nz-icon nzType="picture" class="text-2xl" [class.text-white]="imageFile()" [class.text-[#45fff3]]="!imageFile()"></span>
+          <span class="text-sm font-semibold text-center">
+            {{ imageFile() ? imageFile()!.name : 'Sostituisci immagine (opzionale)' }}
+          </span>
+        </label>
+
+        <!-- Name -->
+        <input nz-input placeholder="Nome Jingle" [ngModel]="name()" (ngModelChange)="name.set($event)" />
+
+        <!-- Tags -->
+        <div class="space-y-2">
+          <nz-input-group [nzSuffix]="tagSuffix">
+            <input
+              nz-input
+              placeholder="Aggiungi tag (invio per confermare)"
+              [ngModel]="tagInput()"
+              (ngModelChange)="tagInput.set($event)"
+              (keydown)="onTagKeydown($event)"
+            />
+          </nz-input-group>
+          <ng-template #tagSuffix>
+            <span nz-icon nzType="tag" class="text-white/45 cursor-pointer" (click)="addTag()"></span>
+          </ng-template>
+
+          @if (tags().length) {
+            <div class="flex flex-wrap gap-2">
+              @for (tag of tags(); track tag) {
+                <nz-tag nzMode="closeable" (nzOnClose)="removeTag(tag)">{{ tag }}</nz-tag>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Colour picker -->
+        <div class="space-y-2">
+          <p class="text-sm font-semibold text-white/85">Colore scheda</p>
+          <div class="flex gap-3 flex-wrap">
+            @for (c of colors; track c) {
+              <button
+                class="w-8 h-8 rounded-full border-2 transition-all cursor-pointer"
+                [style.background]="c"
+                [class.border-white]="color() === c"
+                [class.border-transparent]="color() !== c"
+                (click)="selectColor(c)"
+              ></button>
+            }
+          </div>
+        </div>
+
+      </div>
+    </nz-spin>
+  </ng-container>
+</nz-modal>
+
+<ng-template #footer>
+  <button class="jm-btn-primary w-full justify-center" [disabled]="saving()" (click)="save()">
+    <span nz-icon nzType="save"></span>
+    {{ saving() ? 'Salvataggio...' : 'Salva modifiche' }}
+  </button>
+</ng-template>

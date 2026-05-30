@@ -9,9 +9,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login').then((m) => m.Login),
   },
   {
+    path: 'stylesheet',
+    loadComponent: () => import('./features/stylesheet/stylesheet').then((m) => m.Stylesheet),
+  },
+  {
     path: '',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/editor/editor').then((m) => m.Editor),
+    //canActivate: [authGuard],
+    loadComponent: () => import('./features/library/library').then((m) => m.Library),
   },
   { path: '**', redirectTo: '' },
 ];

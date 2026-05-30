@@ -111,25 +111,33 @@ ng g service core/<nome>           # nuovo service
 
 ```
 client/src/
-  environments/environment.ts     # config Firebase (placeholder da compilare)
-  styles.css                       # entry Tailwind (@import "tailwindcss")
+  environments/environment.ts     # config Firebase + Cloudinary (TODO_* da compilare)
+  theme.less                       # tema NgZorro (Less vars + dark base) — entry stili NgZorro
+  styles.css                       # entry Tailwind + classi custom jm-*
   app/
     app.config.ts                  # provider: router, animazioni, NgZorro (i18n it_IT + icone), Firebase
-    app.routes.ts                  # /login (guest) e / (protetta da authGuard)
-    app.ts / app.html              # shell: header con logout + <router-outlet>
+    app.routes.ts                  # /login (guest), / (authGuard → Library), /stylesheet (no guard)
+    app.ts / app.html              # shell minimale: solo <router-outlet />
     core/
-      firebase.providers.ts        # initializeApp + token DI: AUTH, FIRESTORE, STORAGE
+      firebase.providers.ts        # initializeApp + token DI: AUTH, FIRESTORE (no STORAGE)
       auth.service.ts              # stato auth via signal + login/registrazione/logout
       auth.guard.ts                # authGuard (protegge) + guestGuard (solo non loggati)
-      ffmpeg.service.ts            # wrapper ffmpeg.wasm: trimToMp3()
-      library.service.ts          # upload Storage + CRUD metadati Firestore
+      ffmpeg.service.ts            # wrapper ffmpeg.wasm: trimToMp3() — usato in futuro dal YouTube modal
+      cloudinary.service.ts        # upload audio (resource_type=video) e immagini su Cloudinary
+      library.service.ts           # CRUD jingle su Cloudinary + Firestore; library condivisa (tutti vedono tutto)
     features/
       auth/login.ts|html           # form login/registrazione + Google
-      editor/editor.ts|html        # upload -> selezione -> taglio MP3 -> download/salva + libreria
+      library/
+        library.ts|html|scss       # view principale: header + griglia jingle + ricerca
+        jingle-item/               # card jingle: play/pause, progress bar, tags, edit/delete
+        create-jingle-modal/       # modal crea jingle: audio + immagine + nome + tags + colore
+        edit-jingle-modal/         # modal modifica jingle: stesse opzioni tranne l'audio
+      stylesheet/stylesheet.ts|html  # pagina dev /stylesheet: demo di tutti i componenti tematizzati
 ```
 
 **Convenzioni**: componenti standalone, change detection con signals, niente NgModule.
-I service Firebase si iniettano con `inject(AUTH | FIRESTORE | STORAGE)`.
+Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
+**⚠️ authGuard commentato in `app.routes.ts`** durante lo sviluppo — riabilitare prima del deploy.
 
 ---
 
@@ -150,11 +158,21 @@ I service Firebase si iniettano con `inject(AUTH | FIRESTORE | STORAGE)`.
 
 - Tailwind v4 si configura con [`.postcssrc.json`](client/.postcssrc.json) (`@tailwindcss/postcss`) e
   `@import "tailwindcss";` in [`src/styles.css`](client/src/styles.css). **Niente** `tailwind.config.js` necessario.
-- In [`angular.json`](client/angular.json) gli stili sono caricati in quest'ordine: **Tailwind prima**, **CSS di NgZorro dopo**,
-  così il preflight di Tailwind non "resetta" i componenti Ant Design.
+- **NgZorro theming via Less** (non CSS variables): ng-zorro-antd 21 usa internamente Ant Design 4.x,
+  il cui CSS è compilato da Less. Il file `src/theme.less` sovrascrive le variabili Less **prima** di
+  `@import 'ng-zorro-antd/ng-zorro-antd.dark.less'` (Less lazy evaluation: l'ultima definizione vince,
+  quindi va PRIMA dell'import). In `angular.json`, `styles` usa `src/theme.less` (non più `.min.css`),
+  con `stylePreprocessorOptions.includePaths: ["node_modules"]`. `less` è devDep.
 - Le **icone** di NgZorro sono tree-shakable: vanno registrate una per una in `app.config.ts`
   (array `icons`). Se usi una nuova icona nel template (`nzType="..."`), **aggiungila lì** o non comparirà.
 - Locale impostato su **it_IT**.
+- **Classi custom `jm-*`** definite in `styles.css`: `jm-btn-primary`, `jm-btn-youtube`, `jm-btn-neutral`,
+  `jm-btn-alert`, `jm-card`, `jm-tag`, `jm-upload-area`, `jm-search-box`. Usarle nei template.
+
+### Trappole NgZorro (imparate il 2026-05-30)
+- `NzMessageService` è un **service**, non un modulo → **non va in `imports[]`** del componente; si inietta con `inject()`.
+- `NgStyle` va importato esplicitamente nei componenti standalone (`import { NgStyle } from '@angular/common'`).
+- Segnali con tipo `const tuple` troppo stretto (es. `JingleColor`): usare `signal<string>()` invece di `signal<JingleColor>()` per evitare errori TS2345.
 
 ---
 
@@ -330,12 +348,41 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 
 ---
 
-## 11. Limiti noti / TODO
+## 11. Cloudinary — setup e note (Fase 3, iniziata il 2026-05-30)
 
-- [ ] **Migrare lo storage file da Firebase Storage → Cloudinary** (riscrivere `LibraryService`; rimuovere `firebase/storage.rules`). Vedi §8.
+**Credenziali** (inserire in `client/src/environments/environment.ts`):
+- `cloudinary.cloudName` = cloud name del tuo account Cloudinary
+- `cloudinary.uploadPreset` = nome di un **upload preset UNSIGNED** (Settings → Upload presets → Add preset → Signing mode: Unsigned)
+
+**Come funziona l'upload client-side** (nessun backend necessario):
+- Audio MP3: `POST https://api.cloudinary.com/v1_1/{cloudName}/video/upload` (Cloudinary tratta l'audio come "video")
+- Immagine cover: `POST https://api.cloudinary.com/v1_1/{cloudName}/image/upload`
+- `CloudinaryService.uploadAudio(blob, filename)` e `.uploadImage(file)` restituiscono `{ publicId, url, secureUrl }`.
+
+**Eliminazione file**: con unsigned preset il delete client-side non è supportato. I file rimossi dalla libreria restano su Cloudinary. Per il delete reale serve un backend (o la dashboard Cloudinary). Da implementare in futuro se necessario.
+
+**Firestore rules** aggiornate: lettura a tutti gli autenticati (library condivisa), scrittura solo al proprietario del documento.
+
+---
+
+## 12. Flusso YouTube — design deciso (implementazione Fase 2)
+
+1. URL input → validazione via `GET /info?url=...` dell'helper → errore se non valido
+2. Card metadati: titolo, durata, autore, thumbnail
+3. Slider range (start/end sulla durata totale)
+4. **"Preview"** → `POST /extract {url, start, end}` con range breve → riproduce MP3 nel browser
+5. **"Extract"** → `POST /extract` con range finale → upload su Cloudinary → apre modal Crea Jingle pre-compilato
+6. **Preview in tempo reale** (essenziale): Web Audio API + canvas per waveform sull'MP3 di anteprima — da progettare nella Fase 2
+
+---
+
+## 13. Limiti noti / TODO
+
+- [x] **Migrare lo storage file da Firebase Storage → Cloudinary** (✅ fatto il 2026-05-30)
 - [x] **Helper locale** Node + yt-dlp + ffmpeg con endpoint `/health`, `/info`, `/extract` (HTTP localhost). Vedi §10.
 - [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8.
-- [ ] Scarico da YouTube via helper (vedi §8).
-- [ ] Taglio molto preciso al millisecondo: lo slider ha step 0.1s.
+- [ ] **Fase 2**: Scarico da YouTube via helper (vedi §12).
+- [ ] **⚠️ authGuard commentato** in `app.routes.ts` per i test — da riabilitare prima del deploy.
+- [ ] Configurare Cloudinary (`cloudName` + `uploadPreset` in `environment.ts`).
 - [ ] Nessuna paginazione della libreria (ok per pochi elementi).
-- [ ] ffmpeg single-thread: file lunghi sono lenti (limite di GitHub Pages, vedi §6).
+- [ ] ffmpeg.wasm single-thread: file lunghi sono lenti (limite GitHub Pages, vedi §6).

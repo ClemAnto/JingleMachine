@@ -70,18 +70,19 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
-## 📦 Fase 3 — Storage condiviso su Cloudinary
+## 📦 Fase 3 — Storage condiviso su Cloudinary ✅ INFRASTRUTTURA PRONTA
 
 > Far atterrare gli MP3 estratti nella libreria condivisa. Sostituisce Firebase Storage (richiede Blaze+carta).
 
-- [ ] Creare account Cloudinary (no carta) e cloud name
-- [ ] Aggiungere config Cloudinary in `client/src/environments/environment.ts`
-- [ ] Riscrivere `LibraryService`: upload su Cloudinary + lettura via URL CDN
-- [ ] **Rendere la libreria CONDIVISA**: la query Firestore non filtra più per utente → tutti vedono tutti i jingle (oggi è per-utente)
-- [ ] Aggiornare le **Firestore security rules**: lettura a tutti gli autenticati, scrittura/eliminazione solo del proprio documento
-- [ ] Rimuovere `firebase/storage.rules` e i riferimenti a Firebase Storage
-- [ ] Collegare l'estrazione (Fase 2): MP3 estratto → upload su Cloudinary + metadati Firestore
-- [ ] Mostrare l'autore di ogni jingle nella lista
+- [ ] Creare account Cloudinary (no carta) e cloud name → ottenere `cloudName` + upload preset unsigned
+- [ ] Inserire le credenziali Cloudinary in `client/src/environments/environment.ts`
+- [x] `CloudinaryService`: upload audio (resource_type=video) e immagini → `uploadAudio()` / `uploadImage()`
+- [x] Riscrivere `LibraryService`: nuovo modello `Jingle` (color, tags, imageUrl, uploaderEmail), upload su Cloudinary
+- [x] **Libreria CONDIVISA**: query Firestore senza filtro uid → tutti vedono tutti i jingle
+- [x] Aggiornare le **Firestore security rules**: lettura a tutti gli autenticati, scrittura solo al proprietario
+- [x] Rimuovere Firebase Storage (STORAGE token, `firebase/storage.rules`)
+- [ ] Collegare l'estrazione YouTube (Fase 2): MP3 estratto → upload su Cloudinary + metadati Firestore
+- [x] Mostrare l'autore di ogni jingle nella card (`uploaderEmail`)
 
 ---
 
@@ -99,11 +100,12 @@ Stack **100% gratuito e senza carta di credito**.
 
 ## 🔒 Fase 5 — Sicurezza & rifiniture
 
-- [ ] **Allineare la UI al mockup Figma** di DiNardo (login, editor, libreria)
-- [ ] Verifica finale Firestore security rules (libreria condivisa)
+- [x] **UI allineata al mockup Figma**: tema NgZorro Less (dark teal), Library view, JingleItem card, CreateModal, EditModal
+- [x] Verifica finale Firestore security rules (libreria condivisa) ✅
+- [ ] Allineare la UI al mockup Figma aggiornato da DiNardo (tags visibili su card, mockup YouTube)
 - [ ] Gestione errori chiara (helper offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX
-- [ ] (Opz.) Riproduttore audio più curato (waveform, ecc.)
+- [ ] Pagina `/stylesheet` — aggiornare quando il mockup include i tags
 
 ---
 
@@ -160,15 +162,17 @@ nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi s
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (fine sessione 2026-05-30):**
-- **Fase 7 completata**: exe Win + dmg macOS prodotti e testati (v0.1.10).
-  Pipeline CI: esbuild → yao-pkg → lipo → hdiutil. Trappole documentate in `MEMO.md` §10.
-- Mini pagina test su `http://127.0.0.1:4321/helper`; Angular SPA su `/`.
-- Fase 1 resta quasi completa (2 punti sicurezza aperti: Local Network Access + token).
-- Versioning delegato a Claude (patch/minor autonomo).
+**Stato (fine sessione 2026-05-30 — sessione 2):**
+- **Fase 7 completata**: exe Win + dmg macOS prodotti e testati (v0.1.10). ✅ `.exe` verificato ok su Windows.
+- **Fase 3 infrastruttura pronta**: `CloudinaryService`, `LibraryService` riscritto, Firestore rules aggiornate.
+  Manca solo la configurazione Cloudinary reale (`cloudName` + `uploadPreset` in `environment.ts`).
+- **UI Library completata** (Fase 5 parziale): tema NgZorro Less dark teal, Library view Figma-aligned,
+  `JingleItem` (play/pause/progress/tags/edit/delete), `CreateJingleModal`, `EditJingleModal`.
+- **Pagina `/stylesheet`**: dev reference con tutti i componenti tematizzati.
+- Fase 1 ancora con 2 punti sicurezza aperti (Local Network Access + token).
+- ⚠️ `authGuard` commentato in `app.routes.ts` per testing — da riabilitare prima del deploy.
 
-**Prossimo passo — opzioni:**
-1. Verificare artefatti build Actions → testare `.exe` su Windows.
-2. Chiudere la Fase 1: header **Local Network Access** + **token di abbinamento**.
-3. **Fase 2**: integrare l'helper nella webapp Angular (sezione "Estrai da YouTube",
-   modale con istruzioni Win/Mac, polling `/health`, flusso URL → info → slider → extract).
+**Prossimo passo — opzioni (in ordine di priorità):**
+1. **Configurare Cloudinary**: creare account → ottenere `cloudName` + unsigned preset → inserire in `environment.ts` → testare upload.
+2. **Chiudere Fase 1**: header Local Network Access + token di abbinamento.
+3. **Fase 2**: modal YouTube (URL → info → slider → Preview → Extract → Cloudinary).

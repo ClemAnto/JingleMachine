@@ -1,0 +1,65 @@
+.library-shell {
+  display: grid;
+  grid-template-rows: 140px 1fr;
+  min-height: 100vh;
+  background: #00201c;
+}
+
+.library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px;
+}
+
+.library-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.library-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.library-main {
+  display: flex;
+  flex-direction: column;
+  padding: 0 40px 40px;
+}
+
+.library-content {
+  background: #001714;
+  border-radius: 40px;
+  padding: 60px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.library-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jingle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 26px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}

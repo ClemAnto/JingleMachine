@@ -1,23 +1,9 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
-
-import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzIconModule } from 'ng-zorro-antd/icon';
-
-import { AuthService } from './core/auth.service';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NzButtonModule, NzIconModule],
-  templateUrl: './app.html',
-  styleUrl: './app.scss',
+  imports: [RouterOutlet],
+  template: `<router-outlet />`,
 })
-export class App {
-  private readonly router = inject(Router);
-  protected readonly auth = inject(AuthService);
-
-  async logout() {
-    await this.auth.logout();
-    this.router.navigate(['/login']);
-  }
-}
+export class App {}

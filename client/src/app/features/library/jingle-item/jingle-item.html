@@ -1,0 +1,53 @@
+<div class="jm-card" [ngStyle]="cardStyle()" (click)="togglePlay()">
+  <!-- Colour gradient overlay -->
+  <div class="jm-card-overlay" [ngStyle]="overlayStyle()"></div>
+
+  <!-- Progress bar (visible only when playing) -->
+  @if (playing()) {
+    <div class="jm-card-progress" [style.width.%]="progress()"></div>
+  }
+
+  <!-- Content -->
+  <div class="jm-card-body" (click)="$event.stopPropagation()">
+    <!-- Name + play/pause -->
+    <div class="jm-card-meta">
+      <span class="jm-card-name">{{ jingle().name }}</span>
+      <button class="jm-card-play" (click)="togglePlay()">
+        <span nz-icon [nzType]="playing() ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white"></span>
+      </button>
+    </div>
+
+    <!-- Tags -->
+    @if (jingle().tags.length) {
+      <div class="flex flex-wrap gap-1 mt-1">
+        @for (tag of jingle().tags; track tag) {
+          <span class="jm-tag text-xs">{{ tag }}</span>
+        }
+      </div>
+    }
+
+    <!-- Uploader + actions -->
+    <div class="jm-card-footer">
+      <span class="jm-card-uploader">{{ jingle().uploaderEmail }}</span>
+      <div class="flex gap-2">
+        <button class="jm-card-action" (click)="editRequest.emit(jingle())">
+          <span nz-icon nzType="edit" class="text-sm text-white/60"></span>
+        </button>
+        <button class="jm-card-action" (click)="deleteRequest.emit(jingle())">
+          <span nz-icon nzType="delete" class="text-sm text-[#ff4548]/80"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden audio element -->
+  <audio
+    #audioEl
+    [src]="jingle().audioUrl"
+    preload="none"
+    (play)="onPlay()"
+    (pause)="onPause()"
+    (ended)="onEnded()"
+    (timeupdate)="onTimeUpdate($event)"
+  ></audio>
+</div>

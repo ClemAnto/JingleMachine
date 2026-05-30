@@ -1,0 +1,102 @@
+:host {
+  display: block;
+}
+
+.jm-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  border-width: 1px;
+  border-style: solid;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.jm-card-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  pointer-events: none;
+}
+
+.jm-card-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: #fff;
+  transition: width 0.1s linear;
+  z-index: 2;
+}
+
+.jm-card-body {
+  position: relative;
+  z-index: 1;
+  padding: 12px 16px 14px;
+}
+
+.jm-card-meta {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.jm-card-name {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.2;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.jm-card-play {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.jm-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.jm-card-uploader {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+.jm-card-action {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+audio {
+  display: none;
+}

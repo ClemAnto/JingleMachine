@@ -1,12 +1,13 @@
 /**
- * Project Firebase configuration.
+ * Project configuration.
  *
- * NOTE: these values are NOT secrets. The Firebase web config is meant to live
- * in the client; real security comes from the Firestore/Storage Security Rules
- * and the Authentication configuration.
+ * Firebase values are NOT secrets — the web config is meant to live in the
+ * client; security comes from Firestore Security Rules + Authentication.
  *
- * Replace the placeholders with your Firebase project's values
- * (Firebase Console → Project settings → Your apps → SDK setup and config).
+ * Cloudinary upload preset must be UNSIGNED (Settings → Upload presets).
+ * The cloud name and preset are also not secret for unsigned uploads.
+ *
+ * Replace all TODO_* placeholders with real values.
  */
 export const environment = {
   production: false,
@@ -14,8 +15,11 @@ export const environment = {
     apiKey: 'TODO_API_KEY',
     authDomain: 'TODO_PROJECT.firebaseapp.com',
     projectId: 'TODO_PROJECT',
-    storageBucket: 'TODO_PROJECT.appspot.com',
     messagingSenderId: 'TODO_SENDER_ID',
     appId: 'TODO_APP_ID',
+  },
+  cloudinary: {
+    cloudName: 'TODO_CLOUD_NAME',
+    uploadPreset: 'TODO_UPLOAD_PRESET',
   },
 };

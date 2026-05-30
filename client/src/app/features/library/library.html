@@ -1,0 +1,70 @@
+<div class="library-shell">
+
+  <!-- ── Header ── -->
+  <header class="library-header">
+    <div class="library-logo">
+      <span nz-icon nzType="sound" class="text-[#45fff3] text-3xl"></span>
+      <span class="text-[#45fff3] font-bold text-2xl tracking-widest uppercase">Jingle Machine</span>
+    </div>
+
+    <div class="library-actions">
+      <button class="jm-btn-primary" (click)="openCreate()">
+        <span nz-icon nzType="plus"></span>
+        Aggiungi file
+      </button>
+      <button class="jm-btn-youtube" routerLink="/youtube">
+        <span nz-icon nzType="youtube"></span>
+        Carica da Youtube
+      </button>
+      <button class="jm-btn-neutral" (click)="logout()">
+        <span nz-icon nzType="logout" class="text-white/60"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main content ── -->
+  <main class="library-main">
+    <div class="library-content">
+
+      <!-- Title + search -->
+      <div class="library-toolbar">
+        <h1 class="text-[30px] font-semibold text-white">I tuoi Jingle</h1>
+        <div class="jm-search-box">
+          <span nz-icon nzType="search" class="text-white/50"></span>
+          <input
+            class="bg-transparent border-none outline-none text-white placeholder-white/30 text-[18px] font-semibold w-48"
+            placeholder="Cerca..."
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+          />
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <nz-spin [nzSpinning]="loading()">
+        @if (filtered().length === 0 && !loading()) {
+          <div class="flex flex-col items-center justify-center py-20 text-white/25">
+            <span nz-icon nzType="sound" class="text-6xl mb-4"></span>
+            <p class="text-lg">Nessun jingle trovato.</p>
+          </div>
+        } @else {
+          <div class="jingle-grid">
+            @for (jingle of filtered(); track jingle.id) {
+              <app-jingle-item
+                [jingle]="jingle"
+                (editRequest)="openEdit($event)"
+                (deleteRequest)="confirmDelete($event)"
+              />
+            }
+          </div>
+        }
+      </nz-spin>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- Modals -->
+<app-create-jingle-modal (saved)="onSaved()" />
+<app-edit-jingle-modal (saved)="onSaved()" />
