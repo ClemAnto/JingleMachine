@@ -13,14 +13,14 @@ Stack **100% gratuito e senza carta di credito**.
 
 **Due canali di distribuzione** (decisione 2026-06-05):
 - **App desktop standalone (Electron)** → incorpora il server locale, **tutte le funzioni attive** (incluso YouTube).
-- **GitHub Pages** → stessa webapp online ma **senza YouTube** (nessun helper): login + libreria + upload file.
+- **GitHub Pages** → stessa webapp online ma **senza YouTube** (nessun Mixer): login + libreria + upload file.
 
 **Design:** la UI segue il **mockup Figma** di DiNardo → <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>
 
 **Architettura:**
 - **Firebase Auth** → login obbligatorio (sessione 24h) · **Firestore** → metadati (privati per `uid`)
 - **Cloudinary** → file MP3 (storage remoto, free, no carta)
-- **Helper locale** (Node + yt-dlp + ffmpeg) → estrazione YouTube; **embedded in Electron**, separato in dev (`localhost:4321`)
+- **Mixer locale** (Node + yt-dlp + ffmpeg) → estrazione YouTube; **embedded in Electron**, separato in dev (`localhost:4321`)
 
 ---
 
@@ -37,11 +37,11 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
-## 🔌 Fase 1 — Helper locale (`server/`)  ✅ QUASI COMPLETA (mancano i 2 punti di sicurezza)
+## 🔌 Fase 1 — Mixer locale (`server/`)  ✅ QUASI COMPLETA (mancano i 2 punti di sicurezza)
 
 > Piccola app sul PC di chi vuole estrarre da YouTube. Obiettivo della fase: **provarlo subito in locale**.
 
-> Decisioni prese (vedi `MEMO.md` §8 "Decisioni di implementazione dell'helper"):
+> Decisioni prese (vedi `MEMO.md` §8 "Decisioni di implementazione del Mixer"):
 > **Express** · binari **scaricati automaticamente al primo avvio** · **taglio server-side con ffmpeg nativo**.
 
 - [x] Inizializzare progetto Node in `server/`
@@ -51,16 +51,16 @@ Stack **100% gratuito e senza carta di credito**.
 - [x] **Provarlo a mano** (testato con curl: info + extract 10-20s su video reale → MP3 128k OK)
 - [x] **Download automatico dei binari al primo avvio**: **yt-dlp** + **ffmpeg** (+ **Deno**, richiesto da yt-dlp per YouTube)
 - [x] **Auto-aggiornamento di yt-dlp** (così non si rompe a ogni cambio di YouTube)
-- [x] **Mini interfaccia di test** servita dall'helper (`/`) con form per i 3 endpoint + textbox dei log (`/logs`)
+- [x] **Mini interfaccia di test** servita dal Mixer (`/mixer`) con form per i 3 endpoint + textbox dei log (`/logs`)
 - [ ] **CORS**: origini ristrette già impostate; manca l'header **Local Network Access** (preflight)
 - [ ] **Sicurezza**: ascolto solo su `127.0.0.1` ✅ fatto; manca il **token di abbinamento**
 
-> In questa fase l'helper gira come **script Node** (`npm start`) → multipiattaforma, zero grane.
+> In questa fase il Mixer gira come **script Node** (`yarn start`) → multipiattaforma, zero grane.
 > L'impacchettamento in **eseguibile Win + Mac** è uno step a sé → **Fase 7** (obbligatorio per il prodotto finale).
 
 ---
 
-## 🔗 Fase 2 — Integrazione webapp ↔ helper  ✅ FATTA
+## 🔗 Fase 2 — Integrazione webapp ↔ Mixer  ✅ FATTA
 
 > Componente `youtube-import-modal`. Pulsante "Carica da Youtube" visibile solo se `/health` risponde.
 
@@ -68,7 +68,7 @@ Stack **100% gratuito e senza carta di credito**.
 - [x] Modal: incolla URL → `/info` (titolo/durata/autore/thumbnail)
 - [x] Step taglio: slider range (start/end) → **Procedi** → `POST /extract` → blob MP3
 - [x] Blob passato alla CreateJingleModal (`openWithAudio`, nome prefillato) → **Crea** = upload Cloudinary
-- [x] Lifecycle helper: heartbeat 60s + auto-shutdown 150s (kill on close); refresh-safe
+- [x] Lifecycle Mixer: heartbeat 60s + auto-shutdown 150s (kill on close); refresh-safe
 - [ ] (opz.) Anteprima audio/waveform prima dell'estrazione
 
 ---
@@ -106,7 +106,7 @@ Stack **100% gratuito e senza carta di credito**.
 - [x] **UI allineata al mockup Figma**: tema NgZorro Less (dark teal), Library view, JingleItem card, CreateModal, EditModal
 - [x] Verifica finale Firestore security rules (libreria privata per utente) ✅
 - [ ] Allineare la UI al mockup Figma aggiornato da DiNardo (tags visibili su card, mockup YouTube)
-- [ ] Gestione errori chiara (helper offline, blocco YouTube, quota Cloudinary)
+- [ ] Gestione errori chiara (Mixer offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX
 - [ ] Pagina `/stylesheet` — aggiornare quando il mockup include i tags
 
@@ -117,8 +117,8 @@ Stack **100% gratuito e senza carta di credito**.
 - [ ] Domini autorizzati in Firebase Auth (`<utente>.github.io`)
 - [ ] Deploy webapp su GitHub Pages
 - [ ] Test completo (standalone): login → estrai da YouTube → salva → ricompare nella propria libreria
-- [ ] Test GitHub Pages: login + libreria + upload file (YouTube nascosto, nessun helper)
-- [ ] Mini-istruzioni per i colleghi: scaricare/installare l'**app standalone** (l'helper è incluso)
+- [ ] Test GitHub Pages: login + libreria + upload file (YouTube nascosto, nessun Mixer)
+- [ ] Mini-istruzioni per i colleghi: scaricare/installare l'**app standalone** (il Mixer è incluso)
 
 ---
 
@@ -152,7 +152,7 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 
 - [ ] "Sempre online" senza PC acceso → server + **proxy residenziale** a pagamento (pochi €/mese) o **PC + Cloudflare Tunnel**
 - [ ] Mitigazioni anti-blocco YouTube se necessario: **cookie** (account usa-e-getta) o **PO token** (`bgutil-ytdlp-pot-provider`)
-- [ ] Supporto anche **Linux** per l'helper
+- [ ] Supporto anche **Linux** per il Mixer
 - [ ] Paginazione / ricerca nella libreria se cresce molto
 
 ---
@@ -160,7 +160,7 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 ## 👉 Dove eravamo / Prossimo passo
 
 **Stato (sessione 2026-06-05):**
-- **Fase 2 FATTA**: pipeline YouTube completa (modal URL → taglio → extract → create prefillata) + lifecycle helper.
+- **Fase 2 FATTA**: pipeline YouTube completa (modal URL → taglio → extract → create prefillata) + lifecycle Mixer.
 - **Libreria PER-UTENTE** + **authGuard riabilitato** (sessione 24h). Supera la vecchia "libreria condivisa".
 - **Refactor UI**: `app/views` + `app/ui` (`ui-*`), niente `.scss` per-componente, stili in `src/styles/`, icone via CDN.
 - **Packaging → Electron** (sostituisce yao-pkg): NSIS + dmg; GitHub Pages senza YouTube. **Build CI da verificare** (primo run).

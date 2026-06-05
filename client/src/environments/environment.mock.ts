@@ -2,7 +2,7 @@
  * MOCK environment — userless local testing.
  * Used by the `mock` build configuration (`ng serve --configuration mock`).
  * Bypasses Firebase auth and Cloudinary: fake user, in-memory library, audio
- * served via object URLs. The YouTube extraction (helper) stays REAL.
+ * served via object URLs. The YouTube extraction (Mixer) stays REAL.
  * Note: the library is in-memory only → it does NOT survive a page refresh.
  */
 export const environment = {

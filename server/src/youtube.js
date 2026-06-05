@@ -1,4 +1,4 @@
-// Wraps yt-dlp for the two things the helper does: reading a video's metadata
+// Wraps yt-dlp for the two things the Mixer does: reading a video's metadata
 // and extracting a (possibly trimmed) MP3.
 import { execFile } from "node:child_process";
 import { join, delimiter } from "node:path";

@@ -1,5 +1,5 @@
-// Central configuration for the helper. Paths are resolved relative to the
-// project root (the "server" folder), so the helper works no matter where it
+// Central configuration for the Mixer. Paths are resolved relative to the
+// project root (the "server" folder), so the Mixer works no matter where it
 // is launched from.
 //
 // When running inside a pkg bundle (process.pkg is defined):
@@ -39,8 +39,8 @@ export const config = {
   publicDir: join(snapshotRoot, "public"),
   angularDir: join(snapshotRoot, "app"), // Angular dist, copied here by CI
 
-  // Browser origins allowed to call the helper. The mini interface is served
-  // from the helper itself (same origin), so it needs no entry here.
+  // Browser origins allowed to call the Mixer. The mini interface is served
+  // from the Mixer itself (same origin), so it needs no entry here.
   allowedOrigins: [
     "http://localhost:4200",          // Angular dev server
     "http://127.0.0.1:4200",          // Angular dev server (loopback IP variant)
@@ -52,7 +52,7 @@ export const config = {
   audioBitrate: "128K",
 
   // Auto-shutdown: if the web app stops sending heartbeats for this long, the
-  // helper exits. Must be comfortably larger than the client heartbeat interval
+  // Mixer exits. Must be comfortably larger than the client heartbeat interval
   // (60s) so a page refresh does not trigger a shutdown.
   heartbeatTimeoutMs: Number(process.env.HEARTBEAT_TIMEOUT_MS) || 150000,
 };

@@ -13,7 +13,7 @@ Webapp per una **libreria di jingle PRIVATA per utente**. Permette di:
 2. Caricare un file audio (o **estrarlo da YouTube**), tagliarlo in **MP3**, salvarlo nella **propria** libreria.
 3. Storage: **Cloudinary** per i file MP3 (storage remoto) + **Firestore** per i metadati. **Due utenti vedono librerie diverse** (filtro per `uid`).
 
-> **YouTube → MP3**: implementato (Fase 2) via **helper locale** (yt-dlp + ffmpeg, `/info` + `/extract`). Attivo nell'**app standalone (Electron)** e in **dev**; su **GitHub Pages è disattivato** (nessun helper → pulsante nascosto). Contesto storico/ricerca in [§8](#8-youtube--audio-il-nodo-da-sciogliere).
+> **YouTube → MP3**: implementato (Fase 2) via il **Mixer locale** (yt-dlp + ffmpeg, `/info` + `/extract`). Attivo nell'**app standalone (Electron)** e in **dev**; su **GitHub Pages è disattivato** (nessun Mixer → pulsante nascosto). Contesto storico/ricerca in [§8](#8-youtube--audio-il-nodo-da-sciogliere).
 
 ## Struttura del repo (monorepo "semplice")
 
@@ -31,7 +31,7 @@ JingleMachine/
 > Regola d'oro: i comandi `npm ...` vanno lanciati **dentro la cartella giusta** (`client/` per l'app, `server/` per il server). Non c'è un `package.json` in radice.
 
 > 📌 **Architettura attuale**: **Firebase Auth + Firestore** (gratis, no carta) · **Cloudinary** per i file MP3 (gratis, no carta) ·
-> **helper locale** per estrarre da YouTube, **embedded nell'app standalone Electron**. Libreria **privata per utente**.
+> **Mixer locale** per estrarre da YouTube, **embedded nell'app standalone Electron**. Libreria **privata per utente**.
 > ⚠️ **Firebase Storage NON è più usato** (migrazione a Cloudinary completata, Fase 3): eventuali riferimenti residui allo Storage sono storici.
 
 ## 🎨 Riferimenti di design
@@ -108,7 +108,7 @@ ng g service core/<nome>           # nuovo service
 
 ```
 client/src/
-  environments/environment.ts     # config Firebase + Cloudinary + helper.baseUrl (TODO_* da compilare)
+  environments/environment.ts     # config Firebase + Cloudinary + mixer.baseUrl (TODO_* da compilare)
   styles/                          # stili globali (referenziati in angular.json):
     theme.less                     #   tema NgZorro (Less vars + dark base)
     styles.css                     #   entry Tailwind + classi helper jm-*
@@ -116,14 +116,14 @@ client/src/
   app/
     app.config.ts                  # provider: router, http, animazioni, NgZorro (i18n it_IT + CDN icons), Firebase
     app.routes.ts                  # /login (guest), / (authGuard → Library), /stylesheet (no guard)
-    app.ts                         # shell: <router-outlet /> + heartbeat all'helper (template inline)
+    app.ts                         # shell: <router-outlet /> + heartbeat al Mixer (template inline)
     core/
       firebase.providers.ts        # initializeApp + token DI: AUTH, FIRESTORE (no STORAGE)
       auth.service.ts              # stato auth (signal) + login/registrazione/logout + scadenza sessione 24h
       auth.guard.ts                # authGuard (login + sessione non scaduta) + guestGuard
       cdn-icons.service.ts         # icone caricate da CDN (Ant Design + Material via namespace)
       cloudinary.service.ts        # upload audio (resource_type=video) e immagini su Cloudinary
-      helper.service.ts            # client dell'helper locale: /health, /info, /extract, /heartbeat
+      mixer.service.ts             # client del Mixer locale: /health, /info, /extract, /heartbeat
       library.service.ts           # CRUD jingle su Cloudinary + Firestore; libreria PRIVATA per uid
       ffmpeg.service.ts            # wrapper ffmpeg.wasm (taglio client-side, eredità Fase 0)
     ui/                            # componenti riusabili (selettore ui-*): button, color-picker, tag-input
@@ -178,7 +178,7 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 
 ## 8. YouTube → audio (ricerca + decisione, storico)
 
-**Stato: IMPLEMENTATO (Fase 2)** tramite helper locale (vedi §10/§12). Questa sezione resta come
+**Stato: IMPLEMENTATO (Fase 2)** tramite il Mixer locale (vedi §10/§12). Questa sezione resta come
 **contesto e ricerca** che ha portato alla scelta. In breve: una pagina statica **non può** scaricare
 l'audio di YouTube da sola (no CORS sugli stream, serve decodifica signature + IP non-browser) → serve
 un componente locale (yt-dlp). Su **GitHub Pages la funzione è disattivata**; nell'**app standalone (Electron)** è attiva.
@@ -216,13 +216,13 @@ I free tier su datacenter restano una scommessa.
 - Il client legge l'URL del server da un env var (`extractorUrl`); se assente, la feature YouTube resta nascosta (come ora).
 - **Confezionamento**: Docker (yt-dlp + Deno + ffmpeg + il server) → gira identico in locale, su tunnel o su un host.
 
-### ✅ Decisioni di implementazione dell'helper (Fase 1)
+### ✅ Decisioni di implementazione del Mixer (Fase 1)
 Scelte fatte con l'utente prima di scrivere il codice:
 
 | Aspetto | Scelta | Perché |
 |---|---|---|
 | Motore HTTP | **Express** | standard, minimale, ottimo per imparare; bastano 2 endpoint |
-| Binari (yt-dlp / ffmpeg / Deno) | **Download automatico al primo avvio** in una cartella dell'helper | comodo per i colleghi; si sposa con l'auto-update di yt-dlp. In Fase 1 sul PC dello sviluppatore si possono comunque installare a mano |
+| Binari (yt-dlp / ffmpeg / Deno) | **Download automatico al primo avvio** in una cartella del Mixer | comodo per i colleghi; si sposa con l'auto-update di yt-dlp. In Fase 1 sul PC dello sviluppatore si possono comunque installare a mano |
 | Taglio audio | **Server-side con ffmpeg nativo** | più veloce; `/extract` riceve `start`/`end` e restituisce l'MP3 già pronto. NB: il taglio client-side (ffmpeg.wasm) **resta** per i file caricati a mano |
 
 ### ✅ Decisione finale (architettura definitiva)
@@ -234,11 +234,11 @@ Dopo analisi di costi/affidabilità (vedi storico decisioni sotto):
 | Login | **Firebase Auth** (piano Spark, gratis, **no carta**) | già integrato |
 | Metadati jingle | **Firebase Firestore** (Spark, gratis, **no carta**) | già integrato |
 | **File MP3** | **Cloudinary** (free 25 crediti/mese, **no carta**) | Firebase Storage richiede Blaze+carta (**dal 3 feb 2026**); Cloudinary no |
-| **Estrazione da YouTube** | **Helper locale** Node + yt-dlp + ffmpeg, sul PC di chi carica | IP residenziale → niente blocchi YouTube; gratis |
-| Webapp ↔ helper | **HTTP su `localhost`** | richiesta/risposta; l'MP3 va diretto helper→browser |
+| **Estrazione da YouTube** | **Mixer locale** Node + yt-dlp + ffmpeg, sul PC di chi carica | IP residenziale → niente blocchi YouTube; gratis |
+| Webapp ↔ Mixer | **HTTP su `localhost`** | richiesta/risposta; l'MP3 va diretto Mixer→browser |
 
 - **NIENTE Firebase Storage / NIENTE Blaze** → l'intero stack resta gratuito **senza carta**.
-- Solo chi *estrae* da YouTube avvia l'helper; chi *ascolta* usa solo la webapp.
+- Solo chi *estrae* da YouTube avvia il Mixer; chi *ascolta* usa solo la webapp.
 - Su Cloudinary free, se si sfora la quota **l'account si sospende** (file inaccessibili) → **nessun addebito a sorpresa**.
 
 > ⚠️ Impatto sul codice: la `LibraryService` attuale (scritta per Firebase Storage) va **riscritta per Cloudinary**.
@@ -273,8 +273,8 @@ ascoltano" la **banda di lettura è la voce di consumo principale**, non lo stor
 Automatico via GitHub Actions ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
 > 🎯 **Modello a due canali** (decisione 2026-06-05): GitHub Pages serve la webapp **senza** la funzione
-> YouTube (nessun helper → il pulsante "Carica da Youtube" resta nascosto); l'**app standalone (Electron)**
-> incorpora l'helper e ha tutte le funzioni. Il backend cloud è lo stesso (Cloudinary + Firestore); le librerie sono **private per utente**.
+> YouTube (nessun Mixer → il pulsante "Carica da Youtube" resta nascosto); l'**app standalone (Electron)**
+> incorpora il Mixer e ha tutte le funzioni. Il backend cloud è lo stesso (Cloudinary + Firestore); le librerie sono **private per utente**.
 
 > **Stato**: repo già creato e pushato → **https://github.com/ClemAnto/JingleMachine** (pubblico, account `ClemAnto`).
 > ⚠️ Pages **non ancora abilitato**: finché non si fa il punto 2 qui sotto, lo step di deploy del workflow **fallisce**
@@ -290,7 +290,7 @@ Una tantum:
 
 ---
 
-## 10. Helper locale (`server/`) — IMPLEMENTATO (Fase 1)
+## 10. Mixer locale (`server/`) — IMPLEMENTATO (Fase 1)
 
 Server Express 5 che gira sul PC di chi estrae. **Testato end-to-end il 2026-05-29** (info + extract su
 video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](server/README.md).
@@ -314,7 +314,7 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 
 ### Ancora da fare (sicurezza Fase 1)
 - Header **Local Network Access** per il preflight del browser (le origini CORS sono già ristrette).
-- **Token di abbinamento** webapp↔helper (l'ascolto è già solo su `127.0.0.1`).
+- **Token di abbinamento** webapp↔Mixer (l'ascolto è già solo su `127.0.0.1`).
 
 ### Packaging — Fase 7: **Electron** (decisione 2026-06-05; sostituisce yao-pkg)
 
@@ -371,7 +371,7 @@ artefatti (`jingle-machine.exe/.dmg` + `version.txt`) → aggiornarli ai nomi pr
 ## 12. Flusso YouTube — IMPLEMENTATO (Fase 2)
 
 Componente: `views/library/youtube-import-modal/`. Pulsante visibile solo se `/health` risponde.
-1. **URL** input → `GET /info?url=...` dell'helper (titolo, durata, autore, thumbnail) → errore se non valido
+1. **URL** input → `GET /info?url=...` del Mixer (titolo, durata, autore, thumbnail) → errore se non valido
 2. Step **taglio**: anteprima metadati + **slider range** (`nz-slider` `nzRange`, start/end in s, label mm:ss)
 3. **"Procedi"** → `POST /extract {url, start, end}` → riceve il **blob MP3**
 4. Il blob viene passato alla **CreateJingleModal** (`openWithAudio`): nome prefillato dal titolo, audio già pronto
@@ -384,8 +384,8 @@ Componente: `views/library/youtube-import-modal/`. Pulsante visibile solo se `/h
 ## 13. Limiti noti / TODO
 
 - [x] **Migrare lo storage file da Firebase Storage → Cloudinary** (✅ fatto il 2026-05-30)
-- [x] **Helper locale** Node + yt-dlp + ffmpeg con endpoint `/health`, `/info`, `/extract` (HTTP localhost). Vedi §10.
-- [x] **Fase 2**: estrazione da YouTube via helper (✅ vedi §12).
+- [x] **Mixer locale** Node + yt-dlp + ffmpeg con endpoint `/health`, `/info`, `/extract` (HTTP localhost). Vedi §10.
+- [x] **Fase 2**: estrazione da YouTube via Mixer (✅ vedi §12).
 - [x] **Libreria privata per utente** + **authGuard riabilitato** con sessione 24h (login giornaliero).
 - [x] **Packaging → Electron** (sostituito yao-pkg); GitHub Pages senza YouTube. Vedi §10.
 - [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8.

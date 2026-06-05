@@ -1,6 +1,6 @@
-// Headless entry point: starts the helper and, when packaged, offers to open
+// Headless entry point: starts the Mixer and, when packaged, offers to open
 // the web app in the system browser. Used in dev (`yarn start`) and as the
-// standalone GitHub Pages helper. The Electron app uses electron-main.js instead.
+// standalone GitHub Pages Mixer. The Electron app uses electron-main.js instead.
 import { exec } from "node:child_process";
 import { createInterface } from "node:readline";
 import { config } from "./config.js";
@@ -48,9 +48,9 @@ function askToOpenBrowser(url) {
 }
 
 const { url } = await startServer();
-const helperUrl = `${url}/helper`;
+const mixerUrl = `${url}/mixer`;
 if (config.isPkg) {
-  askToOpenBrowser(helperUrl);
+  askToOpenBrowser(mixerUrl);
 } else {
-  addLog(`Open ${helperUrl} in the browser for the mini test page.`);
+  addLog(`Open ${mixerUrl} in the browser for the mini test page.`);
 }

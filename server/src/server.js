@@ -20,7 +20,7 @@ export function addLog(message) {
   console.log(line);
 }
 
-// Is the helper ready to extract? (all required binaries installed)
+// Is the Mixer ready to extract? (all required binaries installed)
 async function readiness() {
   const versions = await binaryVersions();
   const ready = Boolean(versions.ytDlp && versions.ffmpeg && versions.deno);
@@ -36,8 +36,8 @@ export function createApp() {
   app.use(cors({ origin: config.allowedOrigins }));
   app.use(express.json());
 
-  // Mini test page always at /helper (before Angular static so it is not shadowed).
-  app.use("/helper", express.static(config.publicDir));
+  // Mini test page always at /mixer (before Angular static so it is not shadowed).
+  app.use("/mixer", express.static(config.publicDir));
 
   // Serve the Angular app at / if the dist has been bundled.
   if (existsSync(config.angularDir)) {
@@ -46,7 +46,7 @@ export function createApp() {
     app.use(express.static(config.publicDir));
   }
 
-  // Health: lets the web app show the "helper connected" indicator.
+  // Health: lets the web app show the "Mixer connected" indicator.
   app.get("/health", async (req, res) => {
     const status = await readiness();
     res.json({ ok: true, ...status });
@@ -102,9 +102,9 @@ export function createApp() {
     setTimeout(() => process.exit(0), 300);
   });
 
-  // Heartbeat: the web app pings this periodically while it is open. The helper
+  // Heartbeat: the web app pings this periodically while it is open. The Mixer
   // stays alive until the FIRST heartbeat arrives (so standalone use of the
-  // /helper test page is never auto-killed), then shuts down if pings stop.
+  // /mixer test page is never auto-killed), then shuts down if pings stop.
   let lastHeartbeat = null;
   app.post("/heartbeat", (req, res) => {
     lastHeartbeat = Date.now();
@@ -129,7 +129,7 @@ export function createApp() {
   return app;
 }
 
-// Starts the helper: ensures mutable dirs, listens, and prepares binaries in the
+// Starts the Mixer: ensures mutable dirs, listens, and prepares binaries in the
 // background. Returns { server, url, port }.
 export async function startServer() {
   // Ensure mutable dirs exist on the real FS (important when running packaged).
@@ -139,7 +139,7 @@ export async function startServer() {
   const app = createApp();
   const server = app.listen(config.port, config.host);
   const url = `http://${config.host}:${config.port}`;
-  addLog(`Helper listening on ${url}`);
+  addLog(`Mixer listening on ${url}`);
 
   // Prepare the binaries in the background so the server is reachable right away.
   (async () => {

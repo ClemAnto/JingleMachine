@@ -42,7 +42,7 @@ Due canali: **app desktop standalone (Electron)** con tutte le funzioni, e **Git
 - **Firebase Auth** → login **obbligatorio** (`authGuard`); sessione **24h** → ci si rilogga una volta al giorno (non a ogni refresh).
 - **Firebase Firestore** → metadati jingle. Libreria **privata per utente** (filtro `uid`): due utenti vedono librerie diverse.
 - **Cloudinary** (free, no carta) → file MP3 = **storage remoto**. ⚠️ NON usare Firebase Storage (richiede Blaze+carta).
-- **Helper locale** Node + yt-dlp + ffmpeg (in `server/`) → estrazione YouTube. In **standalone è embedded in Electron**; in **dev** gira a parte su `localhost:4321`. Su GitHub Pages non c'è → il pulsante YouTube resta nascosto.
+- **Mixer locale** Node + yt-dlp + ffmpeg (in `server/`) → carica/taglia audio da YouTube. In **standalone è embedded in Electron**; in **dev** gira a parte su `localhost:4321`. Su GitHub Pages non c'è → il pulsante YouTube resta nascosto.
 - ⚠️ **Requisito**: ottimizzare il consumo di letture/banda Cloudinary (cache HTTP + IndexedDB). Vedi `MEMO.md` §8.
 
 ## Struttura del repo
@@ -57,11 +57,11 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 |------|-----------------|
 | **`MEMO.md`** | **Sempre, per primo.** Setup, comandi, struttura, decisioni architetturali, deploy, limiti. È la fonte di verità operativa. |
 | **`ROADMAP.md`** | Per sapere a che punto siamo e cosa manca: piano a fasi con checklist. Aggiornarlo spuntando gli item completati. |
-| `README.md` | Panoramica + avvio rapido (client + helper locale). |
+| `README.md` | Panoramica + avvio rapido (client + Mixer locale). |
 | `firebase/firestore.rules` | Schema dati Firestore + sicurezza (libreria privata per utente). |
 | ~~`firebase/storage.rules`~~ | **Obsoleto** (Firebase Storage rimosso → si usa Cloudinary). |
 | `CLAUDE.md` (questo) | All'inizio, per orientarti e per le convenzioni. |
-| `server/README.md` | Quando lavori sull'**helper locale** (`server/`): come avviarlo, endpoint, comandi di test. |
+| `server/README.md` | Quando lavori sul **Mixer locale** (`server/`): come avviarlo, endpoint, comandi di test. |
 
 > Se aggiungi un nuovo `.md`, **aggiungilo a questa tabella**.
 
@@ -93,6 +93,6 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 3. Se cambi versioni di `@ffmpeg/*`: verifica il nome del worker e gli URL CDN in `client/src/app/core/ffmpeg.service.ts` (vedi `MEMO.md` §6).
 
 ## Punti delicati (vedi MEMO per il dettaglio)
-- **YouTube**: implementato (Fase 2) via helper locale (`/info` + `/extract`). Attivo solo se l'helper risponde (standalone Electron o dev); su GitHub Pages è nascosto.
+- **YouTube**: implementato (Fase 2) via il Mixer locale (`/info` + `/extract`). Attivo solo se il Mixer risponde (standalone Electron o dev); su GitHub Pages è nascosto.
 - **ffmpeg.wasm**: core single-thread + worker da CDN per compatibilità con GitHub Pages (no COOP/COEP).
 - **Sicurezza**: la config Firebase è pubblica; la protezione reale sono le Security Rules.

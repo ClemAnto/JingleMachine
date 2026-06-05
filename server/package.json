@@ -1,8 +1,8 @@
 {
-  "name": "jingle-machine-helper",
-  "version": "0.4.1",
+  "name": "jingle-machine-mixer",
+  "version": "0.4.2",
   "private": true,
-  "description": "Local helper that extracts audio from YouTube for Jingle Machine",
+  "description": "Local Mixer that loads and trims audio from YouTube for Jingle Machine",
   "type": "module",
   "main": "electron-main.js",
   "engines": {

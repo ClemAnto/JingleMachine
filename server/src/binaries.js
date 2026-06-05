@@ -1,4 +1,4 @@
-// Ensures the external programs the helper relies on (yt-dlp, ffmpeg, ffprobe,
+// Ensures the external programs the Mixer relies on (yt-dlp, ffmpeg, ffprobe,
 // deno) are available, downloading them on first run into the bin folder.
 //
 // Why these four: yt-dlp does the actual YouTube work, but it needs ffmpeg and
