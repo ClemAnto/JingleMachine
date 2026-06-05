@@ -19,15 +19,21 @@ const snapshotRoot = join(currentDir, "..");
 const isPkg = typeof process.pkg !== "undefined";
 const runtimeRoot = isPkg ? dirname(process.execPath) : snapshotRoot;
 
+// Where mutable data (downloaded binaries, temp files) lives. In Electron the
+// app folder is read-only, so electron-main.js sets JM_DATA_DIR to a writable
+// per-user folder (e.g. %APPDATA%\JingleMachine). Otherwise: next to the binary
+// (packaged) or the server/ folder (dev).
+const dataRoot = process.env.JM_DATA_DIR || runtimeRoot;
+
 export const config = {
   isPkg,
 
   host: "127.0.0.1",
   port: Number(process.env.PORT) || 4321,
 
-  // Mutable folders — must live on the real FS so the OS can execute binaries.
-  binDir: join(runtimeRoot, "bin"),
-  tmpDir: join(runtimeRoot, "tmp"),
+  // Mutable folders — must live on a writable FS so the OS can execute binaries.
+  binDir: join(dataRoot, "bin"),
+  tmpDir: join(dataRoot, "tmp"),
 
   // Static asset folders — bundled inside the exe (or served from disk in dev).
   publicDir: join(snapshotRoot, "public"),
@@ -37,6 +43,7 @@ export const config = {
   // from the helper itself (same origin), so it needs no entry here.
   allowedOrigins: [
     "http://localhost:4200",          // Angular dev server
+    "http://127.0.0.1:4200",          // Angular dev server (loopback IP variant)
     "https://clemanto.github.io",     // GitHub Pages (production)
   ],
 

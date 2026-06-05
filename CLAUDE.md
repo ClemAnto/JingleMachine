@@ -35,20 +35,21 @@ Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di risponder
   - Quando si crea un tag git, assicurarsi che corrisponda alla versione nel `package.json`.
 
 ## Cos'è il progetto
-Webapp Angular per tagliare porzioni di audio ed esportarle in MP3, con **libreria condivisa**.
-Deploy su GitHub Pages. Dettagli completi in `MEMO.md`.
+Webapp Angular per creare una **libreria di jingle PER-UTENTE**: audio caricati o **estratti da YouTube**, tagliati in MP3.
+Due canali: **app desktop standalone (Electron)** con tutte le funzioni, e **GitHub Pages** (stessa webapp ma **senza** YouTube). Dettagli in `MEMO.md`.
 
-**Architettura definitiva** (vedi `MEMO.md` §8 "Decisione finale"):
-- **Firebase Auth + Firestore** (piano Spark, gratis, no carta) → login + metadati.
-- **Cloudinary** (free, no carta) → file MP3 condivisi. ⚠️ NON usare Firebase Storage (ora richiede Blaze+carta).
-- **Helper locale** Node + yt-dlp + ffmpeg (in `server/`) → estrazione YouTube via HTTP `localhost`.
+**Architettura:**
+- **Firebase Auth** → login **obbligatorio** (`authGuard`); sessione **24h** → ci si rilogga una volta al giorno (non a ogni refresh).
+- **Firebase Firestore** → metadati jingle. Libreria **privata per utente** (filtro `uid`): due utenti vedono librerie diverse.
+- **Cloudinary** (free, no carta) → file MP3 = **storage remoto**. ⚠️ NON usare Firebase Storage (richiede Blaze+carta).
+- **Helper locale** Node + yt-dlp + ffmpeg (in `server/`) → estrazione YouTube. In **standalone è embedded in Electron**; in **dev** gira a parte su `localhost:4321`. Su GitHub Pages non c'è → il pulsante YouTube resta nascosto.
 - ⚠️ **Requisito**: ottimizzare il consumo di letture/banda Cloudinary (cache HTTP + IndexedDB). Vedi `MEMO.md` §8.
 
 ## Struttura del repo
 Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `package.json`):
-- `client/` → app Angular (esistente). I comandi usano **`npm`**, lanciati **dentro `client/`**.
-- `server/` → server Node per YouTube → audio. I comandi usano **`yarn`**, lanciati **dentro `server/`**.
-- `firebase/` → security rules. `.github/` → deploy. **Non c'è `package.json` in radice.**
+- `client/` → app Angular. I comandi usano **`npm`**, lanciati **dentro `client/`**.
+- `server/` → **app desktop Electron + server locale** (estrazione YouTube → MP3). I comandi usano **`yarn`**, lanciati **dentro `server/`**.
+- `firebase/` → security rules (solo Firestore). `.github/` → deploy. **Non c'è `package.json` in radice.**
 
 ## Documenti del progetto — quando consultarli
 
@@ -56,9 +57,9 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 |------|-----------------|
 | **`MEMO.md`** | **Sempre, per primo.** Setup, comandi, struttura, decisioni architetturali, deploy, limiti. È la fonte di verità operativa. |
 | **`ROADMAP.md`** | Per sapere a che punto siamo e cosa manca: piano a fasi con checklist. Aggiornarlo spuntando gli item completati. |
-| `README.md` | Generato da Angular CLI: comandi base. Poco rilevante, preferisci `MEMO.md`. |
-| `firebase/firestore.rules` | Quando tocchi lo schema dati Firestore o la sicurezza delle query. |
-| `firebase/storage.rules` | Quando tocchi upload/download dei file o i loro path. |
+| `README.md` | Panoramica + avvio rapido (client + helper locale). |
+| `firebase/firestore.rules` | Schema dati Firestore + sicurezza (libreria privata per utente). |
+| ~~`firebase/storage.rules`~~ | **Obsoleto** (Firebase Storage rimosso → si usa Cloudinary). |
 | `CLAUDE.md` (questo) | All'inizio, per orientarti e per le convenzioni. |
 | `server/README.md` | Quando lavori sull'**helper locale** (`server/`): come avviarlo, endpoint, comandi di test. |
 
@@ -73,8 +74,8 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
   - **Codice, commenti, log, identificatori SEMPRE in inglese.**
   - **Testi UI visibili all'utente in ITALIANO** (coerenti col mockup Figma e coi colleghi destinatari). Preferenza esplicita dell'utente.
   - La documentazione (`.md`) resta in italiano.
-- Service Firebase: iniettare i token `AUTH` / `FIRESTORE` / `STORAGE` da `client/src/app/core/firebase.providers.ts`
-  (NON usare `@angular/fire`: incompatibile con Angular 21).
+- Service Firebase: iniettare i token `AUTH` / `FIRESTORE` da `client/src/app/core/firebase.providers.ts`
+  (NON usare `@angular/fire`: incompatibile con Angular 21). NB: `STORAGE` rimosso → i file MP3 stanno su Cloudinary.
 - UI con **ng-zorro-antd**: nell'HTML usare **sempre i componenti ng-zorro dove possibile** (`nz-button`, `nz-input`, ecc.). Nuove icone NgZorro → registrarle in `client/src/app/app.config.ts`.
 - **Organizzazione dei componenti (preferenza esplicita dell'utente):**
   - **`client/src/app/views/`** → componenti che gestiscono un'**intera vista/pagina** (es. `login`, `library`, `stylesheet`). I sotto-componenti specifici di una vista (non riusabili altrove) restano **co-locati dentro la cartella della loro view**.
@@ -92,6 +93,6 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 3. Se cambi versioni di `@ffmpeg/*`: verifica il nome del worker e gli URL CDN in `client/src/app/core/ffmpeg.service.ts` (vedi `MEMO.md` §6).
 
 ## Punti delicati (vedi MEMO per il dettaglio)
-- **YouTube**: non implementato, richiede un server. Analisi e opzioni in `MEMO.md` §8.
+- **YouTube**: implementato (Fase 2) via helper locale (`/info` + `/extract`). Attivo solo se l'helper risponde (standalone Electron o dev); su GitHub Pages è nascosto.
 - **ffmpeg.wasm**: core single-thread + worker da CDN per compatibilità con GitHub Pages (no COOP/COEP).
 - **Sicurezza**: la config Firebase è pubblica; la protezione reale sono le Security Rules.

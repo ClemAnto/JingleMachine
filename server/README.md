@@ -1,34 +1,50 @@
-# Helper locale — Jingle Machine
+# Helper locale + app desktop — Jingle Machine
 
-Piccolo server Node che gira **sul PC di chi vuole estrarre audio da YouTube**.
-Usa il tuo IP di casa, così YouTube quasi non blocca, e resta tutto gratis.
+Server Node locale che estrae audio da YouTube usando il tuo IP di casa (YouTube quasi non blocca, tutto gratis).
+Ha **due modalità**:
+- **Standalone (Electron)** — è impacchettato nell'app desktop: avvia il server e apre una finestra sulla webapp. È il prodotto finale.
+- **Headless (dev)** — gira da solo (`yarn start`) e affianca il dev server Angular (`localhost:4200`).
 
-## Cosa fa
+> Su GitHub Pages l'helper **non c'è**: lì la funzione YouTube è disattivata.
 
-Tre endpoint HTTP, solo su `localhost`:
+## Endpoint HTTP (solo `localhost`)
 
 | Endpoint | Cosa fa |
 |---|---|
 | `GET /health` | Dice se l'helper è vivo e pronto (binari installati). |
 | `GET /info?url=...` | Metadati del video (titolo, durata, autore, anteprima), **senza scaricare**. |
-| `POST /extract` `{ url, start?, end? }` | Scarica, **taglia** (se passi start/end in secondi) e converte in **MP3**. |
+| `POST /extract` `{ url, start?, end? }` | Scarica, **taglia** (start/end in secondi) e converte in **MP3**. |
+| `POST /heartbeat` | La webapp lo pinga mentre è aperta; se i ping si fermano per ~150s l'helper si chiude. |
+| `POST /shutdown` | Spegne l'helper. |
 
-Al primo avvio scarica da solo i programmi che gli servono (`yt-dlp`, `ffmpeg`,
-`ffprobe`, `deno`) nella cartella `bin/`, e poi aggiorna `yt-dlp`.
+Al primo avvio scarica da solo i programmi che gli servono (`yt-dlp`, `ffmpeg`, `ffprobe`, `deno`) e aggiorna `yt-dlp`.
+In Electron i binari/temp stanno in `%APPDATA%\JingleMachine` (mac: `~/Library/Application Support/JingleMachine`); in dev nella cartella `server/`.
 
 ## Avvio
 
 ```bash
 cd server
 yarn install
-yarn start        # oppure: yarn dev (riavvio automatico ad ogni modifica)
+
+yarn start        # headless: server su http://127.0.0.1:4321 (yarn dev = riavvio automatico)
+yarn electron     # app desktop Electron (finestra sulla webapp) — richiede prima server/app/ (build Angular)
+yarn dist         # crea l'installer (NSIS su Win, dmg su mac) in dist-electron/
 ```
 
-Poi apri **<http://127.0.0.1:4321>** nel browser: c'è una **mini pagina di test**
-con pulsanti per i tre endpoint e una **textbox dei log**.
+In headless apri **<http://127.0.0.1:4321/helper>**: c'è una **mini pagina di test** con i pulsanti per gli endpoint e i log.
 
-> Il primo avvio impiega un po': sta scaricando i binari. Segui i log
-> (nel terminale o nella textbox della pagina) finché compare "All binaries ready.".
+> Il primo avvio impiega un po': sta scaricando i binari. Segui i log finché compare "All binaries ready.".
+
+### Test locale completo (con modifica MP3 / YouTube)
+
+Due terminali:
+```bash
+cd server && yarn start      # terminale 1 — helper
+cd client && npm start       # terminale 2 — webapp
+```
+Apri **<http://localhost:4200>**: con l'helper attivo compare **"Carica da Youtube"** → URL → taglio → estrazione MP3.
+> Il **salvataggio** del jingle richiede Cloudinary configurato in `client/src/environments/environment.ts`.
+> Un **refresh non spegne** l'helper (resta solo l'auto-shutdown via heartbeat dopo ~150s di inattività).
 
 ## Test rapidi da terminale
 

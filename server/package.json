@@ -1,37 +1,62 @@
 {
   "name": "jingle-machine-helper",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Local helper that extracts audio from YouTube for Jingle Machine",
   "type": "module",
-  "main": "src/index.js",
+  "main": "electron-main.js",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
+    "electron": "electron .",
+    "dist": "electron-builder",
     "release": "gh workflow run build-packages.yml",
     "download": "node scripts/download-release.js"
   },
-  "pkg": {
-    "assets": [
+  "build": {
+    "appId": "com.jinglemachine.app",
+    "productName": "Jingle Machine",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron-main.js",
+      "src/**/*",
       "public/**/*",
       "app/**/*",
-      "node_modules/**/*.mjs",
-      "node_modules/**/*.json"
+      "package.json"
     ],
-    "targets": [
-      "node22-win-x64",
-      "node22-macos-x64",
-      "node22-macos-arm64"
+    "asarUnpack": [
+      "app/**/*",
+      "public/**/*"
     ],
-    "outputPath": "dist"
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": {
+        "target": "dmg",
+        "arch": "universal"
+      },
+      "category": "public.app-category.music"
+    }
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
     "cors": "^2.8.5",
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
   },
   "packageManager": "yarn@4.14.1+sha512.64df448055b2d37ba269d7db535a469b8da93f8ef1140c25fd7a83c00a8fbaacb214ca0e02553b92a2c54cef78bb67d0b4817fab02001df0e24fac0faccc3b42"
 }

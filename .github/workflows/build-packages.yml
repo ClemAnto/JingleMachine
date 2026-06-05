@@ -1,4 +1,4 @@
-name: Build packages (exe + dmg)
+name: Build packages (Electron)
 
 on:
   workflow_dispatch:
@@ -7,16 +7,22 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: jingle-machine-win
+          - os: macos-latest
+            artifact: jingle-machine-mac
+    runs-on: ${{ matrix.os }}
+
+    # bash is available on all runners (Git Bash on Windows) → uniform cp/commands.
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Free disk space
-        run: |
-          sudo rm -rf /Applications/Xcode.app
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          df -h
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -30,13 +36,15 @@ jobs:
         run: npm ci
         working-directory: client
 
-      - name: Build Angular (base-href /)
+      - name: Build Angular (served at root by the embedded server)
         run: npm run build -- --base-href /
         working-directory: client
 
-      # ── 2. Copy Angular dist into server for bundling ───────────────────
+      # ── 2. Copy Angular dist into server/app for bundling ───────────────
       - name: Copy Angular dist → server/app
-        run: cp -r client/dist/jingle-machine/browser server/app
+        run: |
+          rm -rf server/app
+          cp -r client/dist/jingle-machine/browser server/app
 
       # ── 3. Install server dependencies ─────────────────────────────────
       - name: Enable Corepack (required for Yarn 4)
@@ -46,78 +54,18 @@ jobs:
         run: yarn install
         working-directory: server
 
-      # ── 4. Bundle with esbuild (ESM → CJS, all deps inlined) ───────────
-      # yao-pkg cannot resolve exports-map .mjs files at runtime; esbuild
-      # compiles everything to a single CJS file so pkg never needs to.
-      - name: Bundle with esbuild
-        run: >
-          npx --yes esbuild src/index.js
-          --bundle
-          --platform=node
-          --format=cjs
-          --outfile=dist/bundle.cjs
+      # ── 4. Build the Electron app (NSIS installer on Win, dmg on mac) ───
+      - name: Build Electron app
+        run: yarn dist
         working-directory: server
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── 5. Build executables with yao-pkg ──────────────────────────────
-      - name: Build Windows exe
-        run: >
-          npx --yes @yao-pkg/pkg dist/bundle.cjs
-          --target node22-win-x64
-          --output dist/jingle-machine.exe
-          --public
-          --config package.json
-        working-directory: server
-
-      - name: Build macOS x64
-        run: >
-          npx --yes @yao-pkg/pkg dist/bundle.cjs
-          --target node22-macos-x64
-          --output dist/jingle-machine-macos-x64
-          --public
-          --config package.json
-        working-directory: server
-
-      - name: Build macOS arm64
-        run: >
-          npx --yes @yao-pkg/pkg dist/bundle.cjs
-          --target node22-macos-arm64
-          --output dist/jingle-machine-macos-arm64
-          --public
-          --config package.json
-        working-directory: server
-
-      # ── 6. Merge into a universal macOS binary ──────────────────────────
-      - name: Create macOS universal binary
-        run: >
-          lipo -create
-          dist/jingle-machine-macos-x64
-          dist/jingle-machine-macos-arm64
-          -output dist/jingle-machine-macos
-        working-directory: server
-
-      # ── 7. Package macOS binary into a .dmg ────────────────────────────
-      - name: Create macOS dmg
-        run: |
-          mkdir -p dmg-root
-          cp dist/jingle-machine-macos "dmg-root/Jingle Machine Helper"
-          chmod +x "dmg-root/Jingle Machine Helper"
-          hdiutil create \
-            -volname "Jingle Machine Helper" \
-            -srcfolder dmg-root \
-            -ov -format UDZO \
-            dist/jingle-machine.dmg
-        working-directory: server
-
-      # ── 8. Write version file and upload artifacts ──────────────────────
-      - name: Write version file
-        run: node -e "const p=require('./package.json');process.stdout.write(p.version)" > dist/version.txt
-        working-directory: server
-
+      # ── 5. Upload installers ────────────────────────────────────────────
       - uses: actions/upload-artifact@v4
         with:
-          name: jingle-machine-packages
+          name: ${{ matrix.artifact }}
           retention-days: 30
           path: |
-            server/dist/jingle-machine.exe
-            server/dist/jingle-machine.dmg
-            server/dist/version.txt
+            server/dist-electron/*.exe
+            server/dist-electron/*.dmg

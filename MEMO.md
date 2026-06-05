@@ -7,13 +7,13 @@ quando qualcosa cambia (versioni, decisioni architetturali, trucchi), **aggiorna
 
 ## 1. Cos'è
 
-Webapp **senza backend** che permette di:
+Webapp per una **libreria di jingle PRIVATA per utente**. Permette di:
 
-1. Autenticarsi (Firebase Authentication: email/password + Google).
-2. Caricare un file audio, ascoltarlo, **selezionare una porzione** e **tagliarla in MP3** — tutto nel browser con `ffmpeg.wasm`.
-3. Salvare l'MP3 nella propria libreria (Firebase **Storage** per il file + **Firestore** per i metadati).
+1. Autenticarsi (Firebase Authentication: email/password + Google). **Login obbligatorio** (`authGuard`), sessione **24h** → si rilogga una volta al giorno.
+2. Caricare un file audio (o **estrarlo da YouTube**), tagliarlo in **MP3**, salvarlo nella **propria** libreria.
+3. Storage: **Cloudinary** per i file MP3 (storage remoto) + **Firestore** per i metadati. **Due utenti vedono librerie diverse** (filtro per `uid`).
 
-> ⚠️ Lo scarico diretto **da YouTube** NON è ancora implementato: non è fattibile senza un componente server. Vedi la sezione [§8 YouTube](#8-youtube--audio-il-nodo-da-sciogliere).
+> **YouTube → MP3**: implementato (Fase 2) via **helper locale** (yt-dlp + ffmpeg, `/info` + `/extract`). Attivo nell'**app standalone (Electron)** e in **dev**; su **GitHub Pages è disattivato** (nessun helper → pulsante nascosto). Contesto storico/ricerca in [§8](#8-youtube--audio-il-nodo-da-sciogliere).
 
 ## Struttura del repo (monorepo "semplice")
 
@@ -22,18 +22,17 @@ Due cartelle sorelle, ognuna **indipendente** (proprio `package.json` e `node_mo
 ```
 JingleMachine/
 ├── client/    # app Angular (la "sala": ciò che l'utente vede)
-├── server/    # server Node per YouTube → audio (la "cucina") — IN ARRIVO
-├── firebase/  # security rules (Firestore + Storage)
-├── .github/   # workflow di deploy su GitHub Pages
-├── MEMO.md · CLAUDE.md · README.md
+├── server/    # app desktop Electron + server locale per YouTube → MP3 (la "cucina")
+├── firebase/  # security rules (solo Firestore; storage.rules obsoleto → Cloudinary)
+├── .github/   # workflow: deploy GitHub Pages + build pacchetti Electron
+├── MEMO.md · ROADMAP.md · CLAUDE.md · README.md
 ```
 
 > Regola d'oro: i comandi `npm ...` vanno lanciati **dentro la cartella giusta** (`client/` per l'app, `server/` per il server). Non c'è un `package.json` in radice.
 
-> 📌 **Stato delle decisioni**: l'architettura definitiva è in **[§8 → "Decisione finale"](#-decisione-finale-architettura-definitiva)**.
-> In sintesi: **Firebase Auth + Firestore** (gratis, no carta) · **Cloudinary** per i file MP3 (gratis, no carta) ·
-> **helper locale** per estrarre da YouTube. ⚠️ Le parti di questo MEMO che citano **Firebase Storage** sono
-> **superate** (lo Storage ora richiede Blaze+carta): saranno aggiornate quando implementeremo la migrazione a Cloudinary.
+> 📌 **Architettura attuale**: **Firebase Auth + Firestore** (gratis, no carta) · **Cloudinary** per i file MP3 (gratis, no carta) ·
+> **helper locale** per estrarre da YouTube, **embedded nell'app standalone Electron**. Libreria **privata per utente**.
+> ⚠️ **Firebase Storage NON è più usato** (migrazione a Cloudinary completata, Fase 3): eventuali riferimenti residui allo Storage sono storici.
 
 ## 🎨 Riferimenti di design
 
@@ -70,21 +69,18 @@ npm install
 1. Crea un progetto su <https://console.firebase.google.com> (piano **Spark / free** va bene).
 2. **Authentication** → abilita i provider **Email/Password** e **Google**.
 3. **Firestore Database** → crea il database (modalità produzione).
-4. **Storage** → crea il bucket.
-5. Project Settings → *Le tue app* → app **Web** → copia l'oggetto `firebaseConfig`.
-6. Incollalo in [`client/src/environments/environment.ts`](client/src/environments/environment.ts) (sostituendo i `TODO_*`).
+4. Project Settings → *Le tue app* → app **Web** → copia l'oggetto `firebaseConfig`.
+5. Incollalo in [`client/src/environments/environment.ts`](client/src/environments/environment.ts) (sostituendo i `TODO_*`).
    > Questi valori NON sono segreti: la config web Firebase è pensata per stare nel client. La sicurezza la fanno le Security Rules.
-7. Copia le regole:
-   - [`firebase/firestore.rules`](firebase/firestore.rules) → Console → Firestore → **Regole**.
-   - [`firebase/storage.rules`](firebase/storage.rules) → Console → Storage → **Regole**.
+6. Copia le regole [`firebase/firestore.rules`](firebase/firestore.rules) → Console → Firestore → **Regole**.
 
-### 3.3 CORS dello Storage (per riprodurre/scaricare i file)
-`getDownloadURL` restituisce URL già accessibili dal browser, quindi di norma **non serve** toccare la CORS.
-Se in futuro dovessi leggere i byte via `fetch` cross-origin, imposta la CORS del bucket con `gsutil`.
+> ❌ **Niente Firebase Storage**: i file MP3 stanno su **Cloudinary** (vedi §11). `firebase/storage.rules` è obsoleto.
 
-### 3.4 Domini autorizzati
-In **Authentication → Settings → Authorized domains** aggiungi il dominio di GitHub Pages
-(`<utente>.github.io`) e `localhost` (già presente) per far funzionare il login Google.
+### 3.3 Cloudinary
+Vedi §11: crea l'account (no carta), un **upload preset unsigned**, e metti `cloudName` + `uploadPreset` in `environment.ts`.
+
+### 3.4 Domini autorizzati (login Google)
+In **Authentication → Settings → Authorized domains**: `localhost` (già presente, vale anche per l'app standalone su `http://localhost:<port>`) e il dominio GitHub Pages (`<utente>.github.io`).
 
 ---
 
@@ -99,9 +95,10 @@ npm run watch      # build incrementale in sviluppo
 npm test           # unit test (vitest)
 ```
 
-Generare codice con lo schematics (componenti standalone + scss):
+Generare codice con lo schematics (componenti standalone, **niente scss** → schematics `style: none`):
 ```bash
-ng g component features/<nome>     # nuovo componente
+ng g component views/<vista>       # nuova pagina/vista
+ng g component ui/<nome>           # componente riusabile (selettore ui-*)
 ng g service core/<nome>           # nuovo service
 ```
 
@@ -111,33 +108,39 @@ ng g service core/<nome>           # nuovo service
 
 ```
 client/src/
-  environments/environment.ts     # config Firebase + Cloudinary (TODO_* da compilare)
-  theme.less                       # tema NgZorro (Less vars + dark base) — entry stili NgZorro
-  styles.css                       # entry Tailwind + classi custom jm-*
+  environments/environment.ts     # config Firebase + Cloudinary + helper.baseUrl (TODO_* da compilare)
+  styles/                          # stili globali (referenziati in angular.json):
+    theme.less                     #   tema NgZorro (Less vars + dark base)
+    styles.css                     #   entry Tailwind + classi helper jm-*
+    ng-zorro.scss                  #   override dei componenti ng-zorro
   app/
-    app.config.ts                  # provider: router, animazioni, NgZorro (i18n it_IT + icone), Firebase
+    app.config.ts                  # provider: router, http, animazioni, NgZorro (i18n it_IT + CDN icons), Firebase
     app.routes.ts                  # /login (guest), / (authGuard → Library), /stylesheet (no guard)
-    app.ts / app.html              # shell minimale: solo <router-outlet />
+    app.ts                         # shell: <router-outlet /> + heartbeat all'helper (template inline)
     core/
       firebase.providers.ts        # initializeApp + token DI: AUTH, FIRESTORE (no STORAGE)
-      auth.service.ts              # stato auth via signal + login/registrazione/logout
-      auth.guard.ts                # authGuard (protegge) + guestGuard (solo non loggati)
-      ffmpeg.service.ts            # wrapper ffmpeg.wasm: trimToMp3() — usato in futuro dal YouTube modal
+      auth.service.ts              # stato auth (signal) + login/registrazione/logout + scadenza sessione 24h
+      auth.guard.ts                # authGuard (login + sessione non scaduta) + guestGuard
+      cdn-icons.service.ts         # icone caricate da CDN (Ant Design + Material via namespace)
       cloudinary.service.ts        # upload audio (resource_type=video) e immagini su Cloudinary
-      library.service.ts           # CRUD jingle su Cloudinary + Firestore; library condivisa (tutti vedono tutto)
-    features/
-      auth/login.ts|html           # form login/registrazione + Google
+      helper.service.ts            # client dell'helper locale: /health, /info, /extract, /heartbeat
+      library.service.ts           # CRUD jingle su Cloudinary + Firestore; libreria PRIVATA per uid
+      ffmpeg.service.ts            # wrapper ffmpeg.wasm (taglio client-side, eredità Fase 0)
+    ui/                            # componenti riusabili (selettore ui-*): button, color-picker, tag-input
+    views/
+      login/login.ts|html          # form login/registrazione + Google
       library/
-        library.ts|html|scss       # view principale: header + griglia jingle + ricerca
+        library.ts|html            # view principale: header + griglia jingle + ricerca (+ gate YouTube)
         jingle-item/               # card jingle: play/pause, progress bar, tags, edit/delete
-        create-jingle-modal/       # modal crea jingle: audio + immagine + nome + tags + colore
-        edit-jingle-modal/         # modal modifica jingle: stesse opzioni tranne l'audio
-      stylesheet/stylesheet.ts|html  # pagina dev /stylesheet: demo di tutti i componenti tematizzati
+        create-jingle-modal/       # modal crea jingle: audio (file o da YouTube) + immagine + nome + tags + colore
+        edit-jingle-modal/         # modal modifica jingle
+        youtube-import-modal/      # modal "Carica da Youtube": URL → taglio → extract
+      stylesheet/stylesheet.ts|html  # pagina dev /stylesheet: demo dei componenti tematizzati
 ```
 
-**Convenzioni**: componenti standalone, change detection con signals, niente NgModule.
+**Convenzioni**: componenti standalone, signals, niente NgModule. **Niente `.scss` per-componente** (Tailwind inline; override ng-zorro nello `.scss` globale). Componenti riusabili in `app/ui` (`ui-*`), pagine in `app/views`.
 Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
-**⚠️ authGuard commentato in `app.routes.ts`** durante lo sviluppo — riabilitare prima del deploy.
+**authGuard ATTIVO** in `app.routes.ts` (login obbligatorio, sessione 24h).
 
 ---
 
@@ -156,18 +159,15 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 
 ## 7. Tailwind + NgZorro — note
 
+- Gli stili globali stanno in **`client/src/styles/`** (referenziati in `angular.json`): `theme.less`, `styles.css`, `ng-zorro.scss`.
 - Tailwind v4 si configura con [`.postcssrc.json`](client/.postcssrc.json) (`@tailwindcss/postcss`) e
-  `@import "tailwindcss";` in [`src/styles.css`](client/src/styles.css). **Niente** `tailwind.config.js` necessario.
-- **NgZorro theming via Less** (non CSS variables): ng-zorro-antd 21 usa internamente Ant Design 4.x,
-  il cui CSS è compilato da Less. Il file `src/theme.less` sovrascrive le variabili Less **prima** di
-  `@import 'ng-zorro-antd/ng-zorro-antd.dark.less'` (Less lazy evaluation: l'ultima definizione vince,
-  quindi va PRIMA dell'import). In `angular.json`, `styles` usa `src/theme.less` (non più `.min.css`),
-  con `stylePreprocessorOptions.includePaths: ["node_modules"]`. `less` è devDep.
-- Le **icone** di NgZorro sono tree-shakable: vanno registrate una per una in `app.config.ts`
-  (array `icons`). Se usi una nuova icona nel template (`nzType="..."`), **aggiungila lì** o non comparirà.
+  `@import "tailwindcss";` in `src/styles/styles.css` (con `@source '../';` perché il file è in una sottocartella). **Niente** `tailwind.config.js`.
+- **NgZorro theming via Less**: `src/styles/theme.less` sovrascrive le variabili Less **prima** di
+  `@import 'ng-zorro-antd/ng-zorro-antd.dark.less'` (Less lazy evaluation: va PRIMA dell'import).
+  `stylePreprocessorOptions.includePaths: ["node_modules"]`. Gli **override dei componenti** ng-zorro stanno in `src/styles/ng-zorro.scss` (caricato per ultimo).
+- **Icone**: caricate **dinamicamente da CDN** via `cdn-icons.service.ts` (Ant Design da jsDelivr + Material Icons via namespace `mi:`/`mi-outlined:`…). Le icone pre-registrate in `app.config.ts` restano istantanee; le altre si scaricano al volo → **non serve più registrarle a mano**.
 - Locale impostato su **it_IT**.
-- **Classi custom `jm-*`** definite in `styles.css`: `jm-btn-primary`, `jm-btn-youtube`, `jm-btn-neutral`,
-  `jm-btn-alert`, `jm-card`, `jm-tag`, `jm-upload-area`, `jm-search-box`. Usarle nei template.
+- **Classi custom `jm-*`** in `src/styles/styles.css` (`jm-btn-*` via `ui-button`, `jm-card`, `jm-tag`, `jm-upload-area`, `jm-search-box`).
 
 ### Trappole NgZorro (imparate il 2026-05-30)
 - `NzMessageService` è un **service**, non un modulo → **non va in `imports[]`** del componente; si inietta con `inject()`.
@@ -176,11 +176,12 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 
 ---
 
-## 8. YouTube → audio (il nodo da sciogliere)
+## 8. YouTube → audio (ricerca + decisione, storico)
 
-**Stato: non implementato.** Una pagina statica su GitHub Pages **non può** scaricare l'audio di
-YouTube da sola: YouTube non espone gli stream con header CORS e serve la decodifica delle signature
-+ un IP non-browser → tutto lato server. Con piano Firebase **free** non abbiamo Cloud Functions.
+**Stato: IMPLEMENTATO (Fase 2)** tramite helper locale (vedi §10/§12). Questa sezione resta come
+**contesto e ricerca** che ha portato alla scelta. In breve: una pagina statica **non può** scaricare
+l'audio di YouTube da sola (no CORS sugli stream, serve decodifica signature + IP non-browser) → serve
+un componente locale (yt-dlp). Su **GitHub Pages la funzione è disattivata**; nell'**app standalone (Electron)** è attiva.
 
 ### Verdetto della ricerca (2026) — leggere prima di scegliere
 
@@ -232,7 +233,7 @@ Dopo analisi di costi/affidabilità (vedi storico decisioni sotto):
 |---|---|---|
 | Login | **Firebase Auth** (piano Spark, gratis, **no carta**) | già integrato |
 | Metadati jingle | **Firebase Firestore** (Spark, gratis, **no carta**) | già integrato |
-| **File MP3 (condivisi)** | **Cloudinary** (free 25 crediti/mese, **no carta**) | Firebase Storage richiede Blaze+carta (**dal 3 feb 2026**); Cloudinary no |
+| **File MP3** | **Cloudinary** (free 25 crediti/mese, **no carta**) | Firebase Storage richiede Blaze+carta (**dal 3 feb 2026**); Cloudinary no |
 | **Estrazione da YouTube** | **Helper locale** Node + yt-dlp + ffmpeg, sul PC di chi carica | IP residenziale → niente blocchi YouTube; gratis |
 | Webapp ↔ helper | **HTTP su `localhost`** | richiesta/risposta; l'MP3 va diretto helper→browser |
 
@@ -270,6 +271,10 @@ ascoltano" la **banda di lettura è la voce di consumo principale**, non lo stor
 ## 9. Deploy su GitHub Pages
 
 Automatico via GitHub Actions ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
+
+> 🎯 **Modello a due canali** (decisione 2026-06-05): GitHub Pages serve la webapp **senza** la funzione
+> YouTube (nessun helper → il pulsante "Carica da Youtube" resta nascosto); l'**app standalone (Electron)**
+> incorpora l'helper e ha tutte le funzioni. Il backend cloud è lo stesso (Cloudinary + Firestore); le librerie sono **private per utente**.
 
 > **Stato**: repo già creato e pushato → **https://github.com/ClemAnto/JingleMachine** (pubblico, account `ClemAnto`).
 > ⚠️ Pages **non ancora abilitato**: finché non si fa il punto 2 qui sotto, lo step di deploy del workflow **fallisce**
@@ -311,40 +316,38 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 - Header **Local Network Access** per il preflight del browser (le origini CORS sono già ristrette).
 - **Token di abbinamento** webapp↔helper (l'ascolto è già solo su `127.0.0.1`).
 
-### Packaging — Fase 7 (completata il 2026-05-30, v0.1.10)
+### Packaging — Fase 7: **Electron** (decisione 2026-06-05; sostituisce yao-pkg)
 
-**Strumento**: **yao-pkg** (no Electron — non serve tray icon).
-**Binari esterni** (yt-dlp/ffmpeg/Deno): download al primo avvio, NON bundlati nell'exe.
-**Dist Angular**: copiata in `server/app/` dal CI → bundlata come pkg asset → gitignored.
-**Output CI**: `jingle-machine.exe` (Win x64) + `jingle-machine.dmg` (macOS universal via lipo).
-**Download artefatti**: `yarn download` da `server/` → salva in `dist/{versione}/`.
+**Strumento**: **Electron + electron-builder** → finestra app pulita (no console), icona, esperienza "app vera".
+Scelta motivata: vedi memoria `project-packaging-decision`. yao-pkg **rimosso**.
 
-**Pipeline CI** (`.github/workflows/build-packages.yml`):
-1. Angular build (`--base-href /`) → copia dist in `server/app/`
-2. `yarn install` (con Corepack per Yarn 4)
-3. **esbuild** bundle ESM → CJS singolo file (`dist/bundle.cjs`)
-4. **yao-pkg** impacchetta `bundle.cjs` → exe Win + mac-x64 + mac-arm64
-5. `lipo` → universal macOS binary → `hdiutil` → `.dmg`
-6. `version.txt` nell'artifact → `yarn download` usa quella per il nome cartella
+**Come funziona** (riuso del server, niente riscrittura):
+- `electron-main.js` (main process) → avvia il server Express embedded (`src/server.js` → `startServer()`),
+  poi apre una `BrowserWindow` su **`http://localhost:<port>`** (same-origin → no CORS; `localhost` è dominio
+  Firebase autorizzato → login Google ok). Chiusura finestra → `app.quit()` → muore anche il server.
+- `src/index.js` resta l'entry **headless** (dev / `yarn start`) con prompt console.
+- **Dati mutabili** (binari yt-dlp/ffmpeg/deno, tmp): in `app.getPath('userData')` (`%APPDATA%\JingleMachine`),
+  passato al server via `process.env.JM_DATA_DIR` (la cartella dell'app è read-only). Disinstallare = rimuovere quella cartella.
+- **Distribuzione**: Windows = **installer NSIS**; macOS = **dmg universal**. Config in `package.json` → `build`.
 
-**Path nel bundle pkg** (`process.pkg` è definito):
-- `snapshotRoot` (da `__dirname` in CJS) → asset bundlati (public/, app/)
-- `runtimeRoot` = `dirname(process.execPath)` → cartelle reali su disco (bin/, tmp/)
-
-**URL al runtime**: mini pagina test su `/helper`; Angular SPA su `/` con fallback `*`.
-
-**Auto-apertura browser**: al primo avvio (solo in pkg) chiede in terminale `Open? [Y/n]`.
+**Pipeline CI** (`.github/workflows/build-packages.yml`): matrix `windows-latest` + `macos-latest` →
+Angular build (`--base-href /`) → copia dist in `server/app/` → `yarn install` → `yarn dist` (electron-builder) → upload installer.
 
 **Triggering build**: `yarn release` (richiede `gh` nel PATH) oppure tag git.
 `gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default.
 
-### ⚠️ Trappole risolte nel packaging (non riproporre)
-- **Yarn PnP incompatibile con yao-pkg** → `.yarnrc.yml` con `nodeLinker: node-modules`.
-- **ESM `.mjs` non risolvibili da yao-pkg a runtime** (anche in Express 4.x) → usare **esbuild** per bundlare tutto in CJS prima di pkg. NON tentare di aggiungere `.mjs` agli asset.
-- **`import.meta.url` → `undefined` in bundle esbuild CJS** → `config.js` usa `__dirname` quando disponibile, `import.meta.url` solo in ESM nativo.
-- **SPA fallback `app.get("*")` deve stare DOPO tutte le route API** → altrimenti restituisce Angular `index.html` invece del JSON.
-- **Campo `version` in `package.json`** va aggiornato esplicitamente — i messaggi commit non lo fanno. Ricordare: `"version": "X.Y.Z"` nel file, non solo nel testo del commit.
-- **Disk space su runner macOS**: rimuovere Xcode all'inizio (`sudo rm -rf /Applications/Xcode.app`) per liberare ~10 GB prima del build.
+> ⚠️ La build Electron va eseguita in CI o su macchina con GUI (richiede download di Electron + toolchain NSIS).
+
+**Note ancora valide (da rispettare):**
+- **SPA fallback `app.get("*")`** DOPO tutte le route API (in `src/server.js`), altrimenti torna `index.html` invece del JSON.
+- **Campo `version` in `package.json`** va aggiornato esplicitamente nel file, non basta il messaggio di commit.
+- **`config.js`** usa `__dirname` quando disponibile, `import.meta.url` in ESM nativo.
+
+**Da sistemare (eredità yao-pkg)**: `scripts/download-release.js` e `server/README.md` riferiscono i vecchi
+artefatti (`jingle-machine.exe/.dmg` + `version.txt`) → aggiornarli ai nomi prodotti da electron-builder.
+
+> 🗄️ *Storico yao-pkg (superato)*: bundle esbuild ESM→CJS, `--base-href /`, `lipo`+`hdiutil` per il dmg,
+> `.yarnrc.yml nodeLinker: node-modules`, asset pkg da `package.json` → tutto **non più in uso** con Electron.
 
 ---
 
@@ -361,18 +364,20 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 
 **Eliminazione file**: con unsigned preset il delete client-side non è supportato. I file rimossi dalla libreria restano su Cloudinary. Per il delete reale serve un backend (o la dashboard Cloudinary). Da implementare in futuro se necessario.
 
-**Firestore rules** aggiornate: lettura a tutti gli autenticati (library condivisa), scrittura solo al proprietario del documento.
+**Firestore rules**: libreria **privata per utente** → `read/create/update/delete` solo se `resource.data.uid == request.auth.uid`. `LibraryService.list()` filtra `where('uid','==',uid)` (ordinamento lato client per evitare l'indice composito).
 
 ---
 
-## 12. Flusso YouTube — design deciso (implementazione Fase 2)
+## 12. Flusso YouTube — IMPLEMENTATO (Fase 2)
 
-1. URL input → validazione via `GET /info?url=...` dell'helper → errore se non valido
-2. Card metadati: titolo, durata, autore, thumbnail
-3. Slider range (start/end sulla durata totale)
-4. **"Preview"** → `POST /extract {url, start, end}` con range breve → riproduce MP3 nel browser
-5. **"Extract"** → `POST /extract` con range finale → upload su Cloudinary → apre modal Crea Jingle pre-compilato
-6. **Preview in tempo reale** (essenziale): Web Audio API + canvas per waveform sull'MP3 di anteprima — da progettare nella Fase 2
+Componente: `views/library/youtube-import-modal/`. Pulsante visibile solo se `/health` risponde.
+1. **URL** input → `GET /info?url=...` dell'helper (titolo, durata, autore, thumbnail) → errore se non valido
+2. Step **taglio**: anteprima metadati + **slider range** (`nz-slider` `nzRange`, start/end in s, label mm:ss)
+3. **"Procedi"** → `POST /extract {url, start, end}` → riceve il **blob MP3**
+4. Il blob viene passato alla **CreateJingleModal** (`openWithAudio`): nome prefillato dal titolo, audio già pronto
+5. **"Crea"** → upload MP3 su **Cloudinary** + metadati su Firestore (upload solo alla conferma → non spreca crediti se si annulla)
+
+> Possibili evoluzioni: anteprima audio/waveform prima dell'estrazione (non implementata).
 
 ---
 
@@ -380,9 +385,11 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 
 - [x] **Migrare lo storage file da Firebase Storage → Cloudinary** (✅ fatto il 2026-05-30)
 - [x] **Helper locale** Node + yt-dlp + ffmpeg con endpoint `/health`, `/info`, `/extract` (HTTP localhost). Vedi §10.
+- [x] **Fase 2**: estrazione da YouTube via helper (✅ vedi §12).
+- [x] **Libreria privata per utente** + **authGuard riabilitato** con sessione 24h (login giornaliero).
+- [x] **Packaging → Electron** (sostituito yao-pkg); GitHub Pages senza YouTube. Vedi §10.
 - [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8.
-- [ ] **Fase 2**: Scarico da YouTube via helper (vedi §12).
-- [ ] **⚠️ authGuard commentato** in `app.routes.ts` per i test — da riabilitare prima del deploy.
-- [ ] Configurare Cloudinary (`cloudName` + `uploadPreset` in `environment.ts`).
+- [ ] **Configurare Cloudinary** (`cloudName` + `uploadPreset` in `environment.ts`) — serve per il salvataggio jingle.
+- [ ] Verificare la **build Electron** in CI (primo run) + aggiornare `download-release.js`/`server/README.md`.
 - [ ] Nessuna paginazione della libreria (ok per pochi elementi).
-- [ ] ffmpeg.wasm single-thread: file lunghi sono lenti (limite GitHub Pages, vedi §6).
+- [ ] (eredità) card jingle mostra ancora `uploaderEmail`, ora ridondante in libreria per-utente.

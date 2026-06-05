@@ -45,6 +45,10 @@ export class Library implements OnInit {
   protected readonly jingles = signal<Jingle[]>([]);
   protected readonly loading = signal(false);
   protected readonly search = signal('');
+  // YouTube import needs the local helper. On GitHub Pages there is none, so the
+  // button stays hidden; in the standalone (Electron) app the embedded helper
+  // answers and it shows.
+  protected readonly youtubeAvailable = signal(false);
 
   protected readonly filtered = () => {
     const q = this.search().toLowerCase().trim();
@@ -56,6 +60,7 @@ export class Library implements OnInit {
 
   async ngOnInit() {
     await this.loadJingles();
+    this.youtubeAvailable.set((await this.helper.health()) !== null);
   }
 
   protected openCreate() {

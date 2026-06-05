@@ -16,6 +16,10 @@ import { AUTH } from './firebase.providers';
  * `user` is `undefined` until Firebase has determined the initial state,
  * then `User | null`. Use `ready` to know when it has been resolved.
  */
+/** Daily login policy: a session older than this forces a fresh login. */
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const LAST_LOGIN_KEY = 'jm.lastLoginAt';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly auth = inject(AUTH);
@@ -42,19 +46,39 @@ export class AuthService {
     });
   }
 
-  loginWithEmail(email: string, password: string) {
-    return signInWithEmailAndPassword(this.auth, email, password);
+  async loginWithEmail(email: string, password: string) {
+    const cred = await signInWithEmailAndPassword(this.auth, email, password);
+    this.markLogin();
+    return cred;
   }
 
-  registerWithEmail(email: string, password: string) {
-    return createUserWithEmailAndPassword(this.auth, email, password);
+  async registerWithEmail(email: string, password: string) {
+    const cred = await createUserWithEmailAndPassword(this.auth, email, password);
+    this.markLogin();
+    return cred;
   }
 
-  loginWithGoogle() {
-    return signInWithPopup(this.auth, new GoogleAuthProvider());
+  async loginWithGoogle() {
+    const cred = await signInWithPopup(this.auth, new GoogleAuthProvider());
+    this.markLogin();
+    return cred;
   }
 
-  logout() {
-    return signOut(this.auth);
+  async logout() {
+    localStorage.removeItem(LAST_LOGIN_KEY);
+    await signOut(this.auth);
+  }
+
+  /**
+   * True when the session is older than the daily limit (or never stamped).
+   * Firebase keeps users signed in indefinitely; this enforces a once-a-day login.
+   */
+  isSessionExpired(): boolean {
+    const ts = Number(localStorage.getItem(LAST_LOGIN_KEY));
+    return !ts || Date.now() - ts > SESSION_MAX_AGE_MS;
+  }
+
+  private markLogin() {
+    localStorage.setItem(LAST_LOGIN_KEY, String(Date.now()));
   }
 }

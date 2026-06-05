@@ -7,18 +7,20 @@ sono in [`MEMO.md`](MEMO.md) §8. Spunta gli item man mano (`[ ]` → `[x]`).
 
 ## 🎯 Visione
 
-Webapp online (GitHub Pages) dove un gruppo di colleghi condivide una **libreria di jingle**:
-ognuno può **caricare** un jingle (anche estraendolo da YouTube) e **tutti** possono ascoltarli.
+App per gestire una **libreria di jingle PRIVATA per utente**: ognuno logga col proprio account e vede
+**solo i propri** jingle (due utenti → librerie diverse), caricati da file o **estratti da YouTube**.
 Stack **100% gratuito e senza carta di credito**.
 
-**Design:** la UI segue il **mockup Figma** di DiNardo → <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>
-(l'attuale UI è una prima bozza, da allineare al mockup nella Fase 5).
+**Due canali di distribuzione** (decisione 2026-06-05):
+- **App desktop standalone (Electron)** → incorpora il server locale, **tutte le funzioni attive** (incluso YouTube).
+- **GitHub Pages** → stessa webapp online ma **senza YouTube** (nessun helper): login + libreria + upload file.
 
-**Architettura decisa:**
-- **Firebase Auth + Firestore** → login + metadati (piano Spark, gratis, no carta)
-- **Cloudinary** → file MP3 condivisi (free 25 crediti/mese, no carta)
-- **Helper locale** (Node + yt-dlp + ffmpeg) → estrazione da YouTube sul PC di chi carica (IP residenziale)
-- **Webapp ↔ helper** → HTTP su `localhost`
+**Design:** la UI segue il **mockup Figma** di DiNardo → <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>
+
+**Architettura:**
+- **Firebase Auth** → login obbligatorio (sessione 24h) · **Firestore** → metadati (privati per `uid`)
+- **Cloudinary** → file MP3 (storage remoto, free, no carta)
+- **Helper locale** (Node + yt-dlp + ffmpeg) → estrazione YouTube; **embedded in Electron**, separato in dev (`localhost:4321`)
 
 ---
 
@@ -58,28 +60,29 @@ Stack **100% gratuito e senza carta di credito**.
 
 ---
 
-## 🔗 Fase 2 — Integrazione webapp ↔ helper  ⬅️ PROSSIMA
+## 🔗 Fase 2 — Integrazione webapp ↔ helper  ✅ FATTA
 
-> Collegare la webapp all'helper. All'inizio basta "estrai → ascolta/scarica nel browser", senza ancora salvare.
+> Componente `youtube-import-modal`. Pulsante "Carica da Youtube" visibile solo se `/health` risponde.
 
-- [ ] Sezione "Estrai da YouTube" nella webapp
-- [ ] Ping a `http://localhost:PORT/health` → stato "🟢 Helper connesso / 🔴 non trovato"
-- [ ] Flusso base: incolla URL + scegli intervallo → `POST /extract` → ricevi MP3 → riproducilo/scaricalo
-- [ ] Gestire il **prompt di permesso** del browser (Local Network Access) — uso personale, basta accettarlo
-- [ ] Barra di avanzamento (opz.: WebSocket o polling stato)
+- [x] Pulsante "Carica da Youtube" gated su `/health` (nascosto su GitHub Pages)
+- [x] Modal: incolla URL → `/info` (titolo/durata/autore/thumbnail)
+- [x] Step taglio: slider range (start/end) → **Procedi** → `POST /extract` → blob MP3
+- [x] Blob passato alla CreateJingleModal (`openWithAudio`, nome prefillato) → **Crea** = upload Cloudinary
+- [x] Lifecycle helper: heartbeat 60s + auto-shutdown 150s (kill on close); refresh-safe
+- [ ] (opz.) Anteprima audio/waveform prima dell'estrazione
 
 ---
 
-## 📦 Fase 3 — Storage condiviso su Cloudinary ✅ INFRASTRUTTURA PRONTA
+## 📦 Fase 3 — Storage su Cloudinary ✅ INFRASTRUTTURA PRONTA
 
-> Far atterrare gli MP3 estratti nella libreria condivisa. Sostituisce Firebase Storage (richiede Blaze+carta).
+> Far atterrare gli MP3 estratti nella libreria (privata per utente). Sostituisce Firebase Storage (richiede Blaze+carta).
 
 - [ ] Creare account Cloudinary (no carta) e cloud name → ottenere `cloudName` + upload preset unsigned
 - [ ] Inserire le credenziali Cloudinary in `client/src/environments/environment.ts`
 - [x] `CloudinaryService`: upload audio (resource_type=video) e immagini → `uploadAudio()` / `uploadImage()`
 - [x] Riscrivere `LibraryService`: nuovo modello `Jingle` (color, tags, imageUrl, uploaderEmail), upload su Cloudinary
-- [x] **Libreria CONDIVISA**: query Firestore senza filtro uid → tutti vedono tutti i jingle
-- [x] Aggiornare le **Firestore security rules**: lettura a tutti gli autenticati, scrittura solo al proprietario
+- [x] **Libreria PRIVATA per utente** (decisione 2026-06-05): query Firestore con filtro `uid` → ognuno vede solo i suoi jingle
+- [x] **Firestore security rules** per-utente: `read/write` solo se `resource.data.uid == request.auth.uid`
 - [x] Rimuovere Firebase Storage (STORAGE token, `firebase/storage.rules`)
 - [ ] Collegare l'estrazione YouTube (Fase 2): MP3 estratto → upload su Cloudinary + metadati Firestore
 - [x] Mostrare l'autore di ogni jingle nella card (`uploaderEmail`)
@@ -101,7 +104,7 @@ Stack **100% gratuito e senza carta di credito**.
 ## 🔒 Fase 5 — Sicurezza & rifiniture
 
 - [x] **UI allineata al mockup Figma**: tema NgZorro Less (dark teal), Library view, JingleItem card, CreateModal, EditModal
-- [x] Verifica finale Firestore security rules (libreria condivisa) ✅
+- [x] Verifica finale Firestore security rules (libreria privata per utente) ✅
 - [ ] Allineare la UI al mockup Figma aggiornato da DiNardo (tags visibili su card, mockup YouTube)
 - [ ] Gestione errori chiara (helper offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX
@@ -113,41 +116,35 @@ Stack **100% gratuito e senza carta di credito**.
 
 - [ ] Domini autorizzati in Firebase Auth (`<utente>.github.io`)
 - [ ] Deploy webapp su GitHub Pages
-- [ ] Test completo: login → estrai da YouTube (helper) → salva → un altro utente ascolta
-- [ ] Mini-istruzioni per i colleghi su come scaricare/avviare l'helper
+- [ ] Test completo (standalone): login → estrai da YouTube → salva → ricompare nella propria libreria
+- [ ] Test GitHub Pages: login + libreria + upload file (YouTube nascosto, nessun helper)
+- [ ] Mini-istruzioni per i colleghi: scaricare/installare l'**app standalone** (l'helper è incluso)
 
 ---
 
-## 📦 Fase 7 — Packaging in eseguibile unico (Win + Mac) — STEP FINALE
+## 📦 Fase 7 — App desktop standalone (**Electron**) — Win + Mac
 
-> Requisito del prodotto finale: i colleghi scaricano un'app da doppio clic, senza installare Node.
+> Prodotto finale: i colleghi scaricano un installer e fanno doppio clic → **finestra app pulita** (no console).
 
-**Architettura**: eseguibile unico che racchiude **server + client**. Il server Express serve anche
-la dist Angular come file statici (`express.static`). L'utente apre `http://localhost:4321`
-nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi su Cloudinary + Firestore
-(internet serve solo per quello).
+**Architettura**: **Electron** avvia il server Express embedded e apre una `BrowserWindow` su
+`http://localhost:<port>` (same-origin → no CORS; `localhost` autorizzato per il login Google).
+Chiusura finestra → `app.quit()` → server giù. Libreria su Cloudinary + Firestore.
+Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 
-> Accortezza per non chiudersi le porte già in Fase 2: aggiungere al server la route
-> `express.static(path alla dist Angular)` opzionale (una riga). Non serve attivarla ora.
+- [x] Scelto **Electron + electron-builder** (sostituisce yao-pkg) — finestra vera, no console
+- [x] `electron-main.js`: avvia `startServer()` + `BrowserWindow` su localhost + single-instance + no menu
+- [x] Refactor server: `src/server.js` (`startServer`) riusato da headless (`index.js`) e da Electron
+- [x] `config.js`: dati mutabili in `%APPDATA%\JingleMachine` via `JM_DATA_DIR` (la cartella app è read-only)
+- [x] `package.json`: `build` electron-builder → **NSIS** (Win) + **dmg universal** (mac); rimossa sezione `pkg`
+- [x] CI `build-packages.yml`: matrix windows/macos → `yarn dist`
+- [ ] **Verificare il primo build Electron in CI** (download Electron/NSIS; non testabile in locale headless)
+- [ ] Aggiornare `scripts/download-release.js` + `server/README.md` ai nuovi artefatti electron-builder
+- [ ] Icona app (`build/icon.*`) — ora icona Electron di default
+- [ ] **Windows**: SmartScreen → "Esegui comunque" (firma opzionale, a pagamento)
+- [ ] **macOS**: Gatekeeper → "tasto destro → Apri" (notarizzazione = Apple Dev $99/anno → rimandata)
+- [ ] (Opz.) Tray icon / auto-update — fuori scope
 
-- [x] Scegliere strumento: **yao-pkg** (leggero, headless — no Electron)
-- [x] Binari per-OS: **download al primo avvio** (già funziona, non bundlati nell'exe)
-- [x] `config.js`: rilevamento `process.pkg`, `snapshotRoot` per asset bundlati, `runtimeRoot` per bin/tmp reali
-- [x] `index.js`: `express.static` per dist Angular (se presente) + prompt terminale "Open? [Y/n]" all'avvio
-- [x] `package.json`: campo `main` + sezione `pkg` (targets win/mac-x64/arm64, assets public/+app/)
-- [x] Yarn: passato a **node-modules linker** (`.yarnrc.yml`) — Yarn PnP è incompatibile con yao-pkg
-- [x] **GitHub Actions** (`.github/workflows/build-packages.yml`): macos-latest, Angular build → yao-pkg → lipo universal → hdiutil dmg → artifact
-- [x] Script `yarn release` → `gh workflow run` (richiede gh CLI nel PATH — v. nota sotto)
-- [x] **Primo tag `v0.1.0`** pushato → build avviata su Actions
-- [x] Build CI verificata e artefatti scaricati (v0.1.10)
-- [x] Mini pagina test su `/helper`; Angular SPA su `/` con SPA fallback dopo le route API
-- [x] `yarn download` salva in `dist/{versione}/` da `version.txt` nell'artifact
-- [ ] **Windows**: SmartScreen (firma opzionale)
-- [ ] **macOS**: Gatekeeper → istruzioni "tasto destro → Apri" (notarizzazione rimandatata)
-- [ ] Auto-apertura browser intelligente: in Fase 2 l'Angular app manda un heartbeat → il server sa se è già aperta
-- [ ] (Opz.) Tray icon / auto-update — fuori scope per ora
-
-> **Note tecniche:** vedi `MEMO.md` §10 "Trappole risolte nel packaging" per tutte le insidie incontrate.
+> 🗄️ La precedente implementazione **yao-pkg (v0.1.10)** è stata sostituita; le sue note restano come storico in `MEMO.md` §10.
 
 ---
 
@@ -162,17 +159,15 @@ nel browser → ha l'intera app. La libreria condivisa continua ad appoggiarsi s
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (fine sessione 2026-05-30 — sessione 2):**
-- **Fase 7 completata**: exe Win + dmg macOS prodotti e testati (v0.1.10). ✅ `.exe` verificato ok su Windows.
-- **Fase 3 infrastruttura pronta**: `CloudinaryService`, `LibraryService` riscritto, Firestore rules aggiornate.
-  Manca solo la configurazione Cloudinary reale (`cloudName` + `uploadPreset` in `environment.ts`).
-- **UI Library completata** (Fase 5 parziale): tema NgZorro Less dark teal, Library view Figma-aligned,
-  `JingleItem` (play/pause/progress/tags/edit/delete), `CreateJingleModal`, `EditJingleModal`.
-- **Pagina `/stylesheet`**: dev reference con tutti i componenti tematizzati.
-- Fase 1 ancora con 2 punti sicurezza aperti (Local Network Access + token).
-- ⚠️ `authGuard` commentato in `app.routes.ts` per testing — da riabilitare prima del deploy.
+**Stato (sessione 2026-06-05):**
+- **Fase 2 FATTA**: pipeline YouTube completa (modal URL → taglio → extract → create prefillata) + lifecycle helper.
+- **Libreria PER-UTENTE** + **authGuard riabilitato** (sessione 24h). Supera la vecchia "libreria condivisa".
+- **Refactor UI**: `app/views` + `app/ui` (`ui-*`), niente `.scss` per-componente, stili in `src/styles/`, icone via CDN.
+- **Packaging → Electron** (sostituisce yao-pkg): NSIS + dmg; GitHub Pages senza YouTube. **Build CI da verificare** (primo run).
+- **UI Library** (Fase 5 parziale) + pagina `/stylesheet` ok.
+- ⚠️ Restano: configurare **Cloudinary** (serve per salvare i jingle); verificare build Electron in CI.
 
-**Prossimo passo — opzioni (in ordine di priorità):**
-1. **Configurare Cloudinary**: creare account → ottenere `cloudName` + unsigned preset → inserire in `environment.ts` → testare upload.
-2. **Chiudere Fase 1**: header Local Network Access + token di abbinamento.
-3. **Fase 2**: modal YouTube (URL → info → slider → Preview → Extract → Cloudinary).
+**Prossimo passo — opzioni:**
+1. **Configurare Cloudinary** (`cloudName` + unsigned preset in `environment.ts`) → testare upload end-to-end in locale.
+2. **Verificare la build Electron in CI** (tag/`yarn release`) + aggiornare `download-release.js`/`server/README.md`.
+3. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB) — anche via PWA.

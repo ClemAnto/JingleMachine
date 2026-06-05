@@ -6,10 +6,10 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 
 import { AuthService } from './auth.service';
@@ -112,14 +112,14 @@ export class LibraryService {
     await updateDoc(doc(this.db, this.COLLECTION, jingle.id), payload);
   }
 
-  /** Lists ALL jingles (shared library), most recent first. */
+  /** Lists the CURRENT user's jingles (private per-user library), most recent first. */
   async list(): Promise<Jingle[]> {
-    const q = query(
-      collection(this.db, this.COLLECTION),
-      orderBy('createdAt', 'desc'),
-    );
+    const user = this.requireUser();
+    const q = query(collection(this.db, this.COLLECTION), where('uid', '==', user.uid));
     const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Jingle, 'id'>) }));
+    const jingles = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Jingle, 'id'>) }));
+    // Sort client-side (newest first) to avoid a Firestore composite index.
+    return jingles.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
   }
 
   /** Deletes a jingle's Firestore document.

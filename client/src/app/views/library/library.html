@@ -12,10 +12,12 @@
         <span nz-icon nzType="plus"></span>
         Aggiungi file
       </button>
-      <button ui-button variant="youtube" (click)="openYoutube()">
-        <span nz-icon nzType="youtube"></span>
-        Carica da Youtube
-      </button>
+      @if (youtubeAvailable()) {
+        <button ui-button variant="youtube" (click)="openYoutube()">
+          <span nz-icon nzType="youtube"></span>
+          Carica da Youtube
+        </button>
+      }
       <button ui-button variant="neutral" (click)="logout()">
         <span nz-icon nzType="logout" class="text-white/60"></span>
       </button>

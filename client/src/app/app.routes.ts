@@ -14,7 +14,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    //canActivate: [authGuard],
+    canActivate: [authGuard],
     loadComponent: () => import('./views/library/library').then((m) => m.Library),
   },
   { path: '**', redirectTo: '' },

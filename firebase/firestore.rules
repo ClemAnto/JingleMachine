@@ -1,12 +1,12 @@
 rules_version = '2';
 
-// Jingle library — shared: all authenticated users can read.
-// Write (create/update/delete) restricted to the owner of the document.
-// Copy these rules to: Firebase Console → Firestore Database → Rules.
+// Jingle library — PRIVATE per user: each user can read/write only their own
+// documents (matched by the `uid` field). Two different users see different
+// libraries. Copy these rules to: Firebase Console → Firestore Database → Rules.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /jingles/{docId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }

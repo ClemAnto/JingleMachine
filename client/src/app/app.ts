@@ -13,20 +13,16 @@ export class App implements OnInit, OnDestroy {
   private heartbeatTimer?: ReturnType<typeof setInterval>;
 
   ngOnInit() {
+    // Keep the helper alive while the app is open. If heartbeats stop (tab/window
+    // closed) the helper auto-shuts down after its timeout. We intentionally do
+    // NOT shut it down on unload: in dev the helper is a separate process and a
+    // refresh would kill it. In the Electron app, closing the window quits the
+    // process (and the embedded server) directly.
     this.helper.heartbeat();
     this.heartbeatTimer = setInterval(() => this.helper.heartbeat(), 60000);
-    // Standalone build: the helper serves this very page, so a refresh must not
-    // beacon-shut it down — rely on the heartbeat timeout instead. Only beacon
-    // on unload when the helper is a separate process (dev server / GitHub Pages).
-    if (!this.helper.isStandalone) {
-      window.addEventListener('pagehide', this.onPageHide);
-    }
   }
 
   ngOnDestroy() {
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
-    window.removeEventListener('pagehide', this.onPageHide);
   }
-
-  private readonly onPageHide = () => this.helper.shutdown();
 }
