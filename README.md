@@ -32,6 +32,6 @@ cd ../client && npm run start:all  # avvia client (:4200) + Mixer (:4321) insiem
 Per testare **senza** configurare Firebase/Cloudinary (modalità userless): `npm run start:all:mock`.
 
 Apri **http://localhost:4200**: con il Mixer avviato compare anche il pulsante "Carica da Youtube".
-Per il salvataggio reale compila la config Firebase + Cloudinary in `client/src/environments/environment.ts`.
+Firebase + Cloudinary sono **già configurati** in `client/src/environments/environment.ts` (progetto `jingle-machine-2026`); le password locali stanno in `CREDENZIALI.local.md` (gitignored).
 
 📖 **Tutto il resto (setup, deploy, scelte tecniche, roadmap) è in [`MEMO.md`](MEMO.md) e [`ROADMAP.md`](ROADMAP.md).**

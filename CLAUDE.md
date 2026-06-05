@@ -95,4 +95,5 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 ## Punti delicati (vedi MEMO per il dettaglio)
 - **YouTube**: implementato (Fase 2) via il Mixer locale (`/info` + `/extract`). Attivo solo se il Mixer risponde (standalone Electron o dev); su GitHub Pages è nascosto.
 - **ffmpeg.wasm**: core single-thread + worker da CDN per compatibilità con GitHub Pages (no COOP/COEP).
-- **Sicurezza**: la config Firebase è pubblica; la protezione reale sono le Security Rules.
+- **Sicurezza / segreti**: il repo è **pubblico**. La config web Firebase/Cloudinary è pubblica per natura (sta nel client; protezione = Auth + Security Rules + preset unsigned). Le **password NON vanno mai committate**: stanno in **`CREDENZIALI.local.md`** (gitignored via `*.local.md`).
+- **Test locale**: `cd client && npm run start:all` (client + Mixer) oppure `start:all:mock` (userless, senza Firebase/Cloudinary).

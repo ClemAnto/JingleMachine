@@ -65,19 +65,15 @@ cd client
 npm install
 ```
 
-### 3.2 Configura Firebase
-1. Crea un progetto su <https://console.firebase.google.com> (piano **Spark / free** va bene).
-2. **Authentication** → abilita i provider **Email/Password** e **Google**.
-3. **Firestore Database** → crea il database (modalità produzione).
-4. Project Settings → *Le tue app* → app **Web** → copia l'oggetto `firebaseConfig`.
-5. Incollalo in [`client/src/environments/environment.ts`](client/src/environments/environment.ts) (sostituendo i `TODO_*`).
-   > Questi valori NON sono segreti: la config web Firebase è pensata per stare nel client. La sicurezza la fanno le Security Rules.
-6. Copia le regole [`firebase/firestore.rules`](firebase/firestore.rules) → Console → Firestore → **Regole**.
-
+### 3.2 Configura Firebase  ✅ FATTO (progetto `jingle-machine-2026`)
+Fatto il 2026-06-06: Authentication (**Email/Password** + **Google**), **Firestore** creato, **regole per-utente** ([`firebase/firestore.rules`](firebase/firestore.rules)) applicate, `firebaseConfig` in [`environment.ts`](client/src/environments/environment.ts).
+> La config web Firebase NON è segreta (sta nel client; la sicurezza la fanno Auth + Security Rules).
 > ❌ **Niente Firebase Storage**: i file MP3 stanno su **Cloudinary** (vedi §11). `firebase/storage.rules` è obsoleto.
+> 🔐 Le password (mail, account Google/Firebase) stanno in **`CREDENZIALI.local.md`** (gitignored, mai committato).
 
-### 3.3 Cloudinary
-Vedi §11: crea l'account (no carta), un **upload preset unsigned**, e metti `cloudName` + `uploadPreset` in `environment.ts`.
+### 3.3 Cloudinary  ✅ FATTO (cloud `dnpbzwccm`, preset `unsigned`)
+Account creato (no carta) + **upload preset unsigned**; `cloudName` + `uploadPreset` in `environment.ts`.
+Upload audio **validato** (resource_type=video → `secure_url`). Dettagli §11.
 
 ### 3.4 Domini autorizzati (login Google)
 In **Authentication → Settings → Authorized domains**: `localhost` (già presente, vale anche per l'app standalone su `http://localhost:<port>`) e il dominio GitHub Pages (`<utente>.github.io`).
@@ -89,11 +85,17 @@ In **Authentication → Settings → Authorized domains**: `localhost` (già pre
 > Tutti questi comandi vanno lanciati **dentro `client/`** (`cd client` prima).
 
 ```bash
-npm start          # dev server su http://localhost:4200
-npm run build      # build di produzione in client/dist/jingle-machine/browser
-npm run watch      # build incrementale in sviluppo
-npm test           # unit test (vitest)
+npm start            # dev server su http://localhost:4200
+npm run build        # build di produzione in client/dist/jingle-machine/browser
+npm test             # unit test (vitest)
+
+npm run start:all       # client (:4200) + Mixer (:4321) insieme (concurrently)
+npm run start:all:mock  # come sopra ma client in MOCK (userless: niente Firebase/Cloudinary)
+npm run start:mock      # solo client in mock
 ```
+
+> **Modalità mock** (`environment.mock.ts`, config build `mock`): utente finto, libreria in memoria,
+> upload finto via object URL. Serve a testare la UI **senza** Firebase/Cloudinary. L'estrazione YouTube resta reale (Mixer).
 
 Generare codice con lo schematics (componenti standalone, **niente scss** → schematics `style: none`):
 ```bash
@@ -108,7 +110,8 @@ ng g service core/<nome>           # nuovo service
 
 ```
 client/src/
-  environments/environment.ts     # config Firebase + Cloudinary + mixer.baseUrl (TODO_* da compilare)
+  environments/environment.ts     # config Firebase + Cloudinary + mixer.baseUrl (CONFIGURATI)
+  environments/environment.mock.ts # override per la modalità mock (userless)
   styles/                          # stili globali (referenziati in angular.json):
     theme.less                     #   tema NgZorro (Less vars + dark base)
     styles.css                     #   entry Tailwind + classi helper jm-*
@@ -342,20 +345,23 @@ Angular build (`--base-href /`) → copia dist in `server/app/` → `yarn instal
 - **SPA fallback `app.get("*")`** DOPO tutte le route API (in `src/server.js`), altrimenti torna `index.html` invece del JSON.
 - **Campo `version` in `package.json`** va aggiornato esplicitamente nel file, non basta il messaggio di commit.
 - **`config.js`** usa `__dirname` quando disponibile, `import.meta.url` in ESM nativo.
+- ⚠️ **Rinominare il campo `name` in `server/package.json`** richiede un **`yarn install`** subito dopo, altrimenti
+  `yarn start` fallisce con *"Package for jingle-machine-mixer@workspace:. not found"* (Yarn 4 tiene il nome workspace nel `yarn.lock`).
 
-**Da sistemare (eredità yao-pkg)**: `scripts/download-release.js` e `server/README.md` riferiscono i vecchi
-artefatti (`jingle-machine.exe/.dmg` + `version.txt`) → aggiornarli ai nomi prodotti da electron-builder.
+**Da sistemare (eredità yao-pkg)**: `scripts/download-release.js` riferisce ancora i vecchi
+artefatti (`jingle-machine.exe/.dmg` + `version.txt`) → aggiornarlo ai nomi prodotti da electron-builder.
 
 > 🗄️ *Storico yao-pkg (superato)*: bundle esbuild ESM→CJS, `--base-href /`, `lipo`+`hdiutil` per il dmg,
 > `.yarnrc.yml nodeLinker: node-modules`, asset pkg da `package.json` → tutto **non più in uso** con Electron.
 
 ---
 
-## 11. Cloudinary — setup e note (Fase 3, iniziata il 2026-05-30)
+## 11. Cloudinary — setup e note (Fase 3 ✅ configurato 2026-06-06)
 
-**Credenziali** (inserire in `client/src/environments/environment.ts`):
-- `cloudinary.cloudName` = cloud name del tuo account Cloudinary
-- `cloudinary.uploadPreset` = nome di un **upload preset UNSIGNED** (Settings → Upload presets → Add preset → Signing mode: Unsigned)
+**Credenziali attive** (in `client/src/environments/environment.ts`, non segrete):
+- `cloudinary.cloudName` = **`dnpbzwccm`**
+- `cloudinary.uploadPreset` = **`unsigned`** (Signing mode: Unsigned)
+- ✅ Upload audio **validato** via API: `POST .../dnpbzwccm/video/upload` con `upload_preset=unsigned` → `secure_url`.
 
 **Come funziona l'upload client-side** (nessun backend necessario):
 - Audio MP3: `POST https://api.cloudinary.com/v1_1/{cloudName}/video/upload` (Cloudinary tratta l'audio come "video")
@@ -388,8 +394,8 @@ Componente: `views/library/youtube-import-modal/`. Pulsante visibile solo se `/h
 - [x] **Fase 2**: estrazione da YouTube via Mixer (✅ vedi §12).
 - [x] **Libreria privata per utente** + **authGuard riabilitato** con sessione 24h (login giornaliero).
 - [x] **Packaging → Electron** (sostituito yao-pkg); GitHub Pages senza YouTube. Vedi §10.
-- [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8.
-- [ ] **Configurare Cloudinary** (`cloudName` + `uploadPreset` in `environment.ts`) — serve per il salvataggio jingle.
-- [ ] Verificare la **build Electron** in CI (primo run) + aggiornare `download-release.js`/`server/README.md`.
+- [x] **Configurare Firebase + Cloudinary** in `environment.ts` (2026-06-06) + **flusso testato end-to-end** in locale.
+- [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8. → **Fase 4 (prossima)**
+- [ ] Verificare la **build Electron** in CI (primo run) + aggiornare `download-release.js`/`server/README.md` + icona app.
 - [ ] Nessuna paginazione della libreria (ok per pochi elementi).
 - [ ] (eredità) card jingle mostra ancora `uploaderEmail`, ora ridondante in libreria per-utente.

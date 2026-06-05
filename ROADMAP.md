@@ -69,22 +69,24 @@ Stack **100% gratuito e senza carta di credito**.
 - [x] Step taglio: slider range (start/end) → **Procedi** → `POST /extract` → blob MP3
 - [x] Blob passato alla CreateJingleModal (`openWithAudio`, nome prefillato) → **Crea** = upload Cloudinary
 - [x] Lifecycle Mixer: heartbeat 60s + auto-shutdown 150s (kill on close); refresh-safe
-- [ ] (opz.) Anteprima audio/waveform prima dell'estrazione
+- [x] **Anteprima istantanea**: full audio precaricato all'apertura del taglio → play/pause + seek senza ri-estrazione (stop a fine intervallo)
+- [x] **Testato end-to-end in locale** (2026-06-06): login → estrai → taglio/anteprima → crea → riproduci ✅
 
 ---
 
-## 📦 Fase 3 — Storage su Cloudinary ✅ INFRASTRUTTURA PRONTA
+## 📦 Fase 3 — Storage su Cloudinary ✅ FATTA (configurato + testato)
 
 > Far atterrare gli MP3 estratti nella libreria (privata per utente). Sostituisce Firebase Storage (richiede Blaze+carta).
 
-- [ ] Creare account Cloudinary (no carta) e cloud name → ottenere `cloudName` + upload preset unsigned
-- [ ] Inserire le credenziali Cloudinary in `client/src/environments/environment.ts`
+- [x] Creare account Cloudinary (no carta) + upload preset unsigned → **cloud `dnpbzwccm`, preset `unsigned`**
+- [x] Inserire le credenziali Cloudinary in `client/src/environments/environment.ts`
 - [x] `CloudinaryService`: upload audio (resource_type=video) e immagini → `uploadAudio()` / `uploadImage()`
 - [x] Riscrivere `LibraryService`: nuovo modello `Jingle` (color, tags, imageUrl, uploaderEmail), upload su Cloudinary
 - [x] **Libreria PRIVATA per utente** (decisione 2026-06-05): query Firestore con filtro `uid` → ognuno vede solo i suoi jingle
 - [x] **Firestore security rules** per-utente: `read/write` solo se `resource.data.uid == request.auth.uid`
 - [x] Rimuovere Firebase Storage (STORAGE token, `firebase/storage.rules`)
-- [ ] Collegare l'estrazione YouTube (Fase 2): MP3 estratto → upload su Cloudinary + metadati Firestore
+- [x] Collegare l'estrazione YouTube (Fase 2): MP3 estratto → upload su Cloudinary + metadati Firestore
+- [x] Upload unsigned **validato** via API (2026-06-06): `video/upload` accetta l'MP3 → `secure_url` ✅
 - [x] Mostrare l'autore di ogni jingle nella card (`uploaderEmail`)
 
 ---
@@ -159,15 +161,14 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 
 ## 👉 Dove eravamo / Prossimo passo
 
-**Stato (sessione 2026-06-05):**
-- **Fase 2 FATTA**: pipeline YouTube completa (modal URL → taglio → extract → create prefillata) + lifecycle Mixer.
-- **Libreria PER-UTENTE** + **authGuard riabilitato** (sessione 24h). Supera la vecchia "libreria condivisa".
-- **Refactor UI**: `app/views` + `app/ui` (`ui-*`), niente `.scss` per-componente, stili in `src/styles/`, icone via CDN.
-- **Packaging → Electron** (sostituisce yao-pkg): NSIS + dmg; GitHub Pages senza YouTube. **Build CI da verificare** (primo run).
-- **UI Library** (Fase 5 parziale) + pagina `/stylesheet` ok.
-- ⚠️ Restano: configurare **Cloudinary** (serve per salvare i jingle); verificare build Electron in CI.
+**Stato (sessione 2026-06-06):**
+- **Fasi 0–3 FATTE.** Flusso **testato end-to-end in locale** (dev): login Firebase reale → "Carica da Youtube" → taglio + anteprima istantanea → Crea → upload Cloudinary + Firestore → libreria per-utente. ✅
+- **Firebase** (`jingle-machine-2026`) + **Cloudinary** (`dnpbzwccm` / preset `unsigned`) **configurati** in `environment.ts` (console Firebase già impostata: Email/Password + Google + Firestore + rules).
+- **Libreria PER-UTENTE** + **authGuard** (sessione 24h) · **Refactor UI** (`app/views` + `app/ui`, Tailwind inline, icone CDN) · **rename → Mixer** completo.
+- **Modalità mock** userless (`npm run start:all:mock`) + script `npm run start:all` (client + Mixer) per i test.
+- **Packaging → Electron** scaffoldato (NSIS + dmg). Credenziali locali in `CREDENZIALI.local.md` (gitignored).
 
 **Prossimo passo — opzioni:**
-1. **Configurare Cloudinary** (`cloudName` + unsigned preset in `environment.ts`) → testare upload end-to-end in locale.
-2. **Verificare la build Electron in CI** (tag/`yarn release`) + aggiornare `download-release.js`/`server/README.md`.
-3. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB) — anche via PWA.
+1. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.
+2. **Verificare la build Electron in CI** (tag/`yarn release`) + aggiornare `download-release.js`/`server/README.md` + icona app.
+3. **Chiudere Fase 1** (Local Network Access + token) e **Fase 6** (deploy GitHub Pages + domini autorizzati).
