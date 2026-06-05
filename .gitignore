@@ -20,6 +20,9 @@ server/downloads/
 .env.*
 !.env.example
 
+# Segreti / credenziali locali (MAI committare: repo pubblico)
+*.local.md
+
 # IDE / editor
 .idea/
 .project

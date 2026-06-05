@@ -15,15 +15,15 @@ export const environment = {
   // object-URL audio). Enabled by the `mock` build configuration (environment.mock.ts).
   mock: false,
   firebase: {
-    apiKey: 'TODO_API_KEY',
-    authDomain: 'TODO_PROJECT.firebaseapp.com',
-    projectId: 'TODO_PROJECT',
-    messagingSenderId: 'TODO_SENDER_ID',
-    appId: 'TODO_APP_ID',
+    apiKey: 'AIzaSyAgx11WcT5CfqJXoJdjO5ZnEcbp5gJeBlE',
+    authDomain: 'jingle-machine-2026.firebaseapp.com',
+    projectId: 'jingle-machine-2026',
+    messagingSenderId: '652328824925',
+    appId: '1:652328824925:web:559baff22f2db8dfb65db4',
   },
   cloudinary: {
-    cloudName: 'TODO_CLOUD_NAME',
-    uploadPreset: 'TODO_UPLOAD_PRESET',
+    cloudName: 'dnpbzwccm',
+    uploadPreset: 'unsigned',
   },
   // Local Mixer (runs on the user's machine, loopback). Same URL in dev and
   // prod: the Mixer always listens on 127.0.0.1 (browsers allow http://localhost
