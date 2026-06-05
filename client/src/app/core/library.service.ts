@@ -12,6 +12,7 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { CloudinaryService } from './cloudinary.service';
 import { FIRESTORE } from './firebase.providers';
@@ -64,6 +65,9 @@ export class LibraryService {
 
   private readonly COLLECTION = 'jingles';
 
+  /** Userless mode only: in-memory library (lost on refresh). */
+  private mockStore: Jingle[] = [];
+
   private requireUser() {
     const user = this.auth.user();
     if (!user) throw new Error('User not authenticated.');
@@ -73,6 +77,28 @@ export class LibraryService {
   /** Uploads audio (+ optional image) to Cloudinary and saves metadata to Firestore. */
   async save(draft: JingleDraft): Promise<void> {
     const user = this.requireUser();
+
+    if (environment.mock) {
+      const [audio, image] = await Promise.all([
+        this.cloudinary.uploadAudio(draft.audioBlob, draft.audioFilename),
+        draft.imageFile ? this.cloudinary.uploadImage(draft.imageFile) : Promise.resolve(null),
+      ]);
+      this.mockStore.unshift({
+        id: `mock-${Math.random().toString(36).slice(2)}`,
+        uid: user.uid,
+        uploaderEmail: user.email ?? '',
+        name: draft.name,
+        tags: draft.tags,
+        color: draft.color,
+        audioUrl: audio.secureUrl,
+        audioPublicId: audio.publicId,
+        imageUrl: image?.secureUrl,
+        imagePublicId: image?.publicId,
+        durationSec: draft.durationSec,
+        createdAt: null,
+      });
+      return;
+    }
 
     const [audioResult, imageResult] = await Promise.all([
       this.cloudinary.uploadAudio(draft.audioBlob, draft.audioFilename),
@@ -96,6 +122,21 @@ export class LibraryService {
 
   /** Updates editable fields of an existing jingle. Replaces cover image if provided. */
   async update(jingle: Jingle, changes: JingleUpdate): Promise<void> {
+    if (environment.mock) {
+      const target = this.mockStore.find((j) => j.id === jingle.id);
+      if (target) {
+        if (changes.name !== undefined) target.name = changes.name;
+        if (changes.tags !== undefined) target.tags = changes.tags;
+        if (changes.color !== undefined) target.color = changes.color;
+        if (changes.imageFile) {
+          const image = await this.cloudinary.uploadImage(changes.imageFile);
+          target.imageUrl = image.secureUrl;
+          target.imagePublicId = image.publicId;
+        }
+      }
+      return;
+    }
+
     const imageResult = changes.imageFile
       ? await this.cloudinary.uploadImage(changes.imageFile)
       : null;
@@ -115,6 +156,7 @@ export class LibraryService {
   /** Lists the CURRENT user's jingles (private per-user library), most recent first. */
   async list(): Promise<Jingle[]> {
     const user = this.requireUser();
+    if (environment.mock) return [...this.mockStore];
     const q = query(collection(this.db, this.COLLECTION), where('uid', '==', user.uid));
     const snap = await getDocs(q);
     const jingles = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Jingle, 'id'>) }));
@@ -125,6 +167,10 @@ export class LibraryService {
   /** Deletes a jingle's Firestore document.
    *  Cloudinary assets are NOT deleted here (unsigned preset limitation). */
   async remove(jingle: Jingle): Promise<void> {
+    if (environment.mock) {
+      this.mockStore = this.mockStore.filter((j) => j.id !== jingle.id);
+      return;
+    }
     await deleteDoc(doc(this.db, this.COLLECTION, jingle.id));
   }
 }

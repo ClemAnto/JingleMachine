@@ -9,12 +9,11 @@
     <nz-spin [nzSpinning]="busy()">
 
       @if (step() === 'url') {
-        <div class="space-y-4 py-2">
-          <p class="text-white/45 text-sm">Incolla il link di un video YouTube da cui estrarre l'audio.</p>
+        <div class="py-2">
           <input
             nz-input
             nzSize="large"
-            placeholder="URL del video"
+            placeholder="https://www.youtube.com"
             [ngModel]="url()"
             (ngModelChange)="url.set($event)"
             (keydown.enter)="checkUrl()"
@@ -22,26 +21,32 @@
         </div>
       } @else {
         <div class="space-y-5 py-2">
-          <!-- Video preview -->
-          <div class="flex gap-4">
+
+          <!-- Video card with preview play/pause -->
+          <div class="flex items-center gap-4 bg-[#00201c] rounded-2xl p-4">
             @if (info()?.thumbnail) {
-              <img [src]="info()!.thumbnail" alt="" class="w-40 h-24 object-cover rounded-xl shrink-0" />
+              <img [src]="info()!.thumbnail" alt="" class="w-28 h-16 object-cover rounded-lg shrink-0" />
             }
             <div class="min-w-0 flex-1">
-              <p class="text-white font-semibold leading-tight line-clamp-2">{{ info()?.title }}</p>
-              <p class="text-white/45 text-sm mt-1">{{ info()?.uploader }}</p>
-              <p class="text-white/45 text-xs mt-1">Durata totale: {{ formatTime(info()?.durationSeconds ?? 0) }}</p>
+              <p class="text-white font-semibold leading-tight line-clamp-1">{{ info()?.title }}</p>
+              <p class="text-white/45 text-sm line-clamp-1">{{ info()?.uploader }}</p>
+              <p class="text-white/45 text-sm">{{ formatTime(info()?.durationSeconds ?? 0) }}</p>
             </div>
+            <button
+              class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0 disabled:opacity-50"
+              [disabled]="previewLoading() || !previewReady()"
+              (click)="togglePreview()"
+            >
+              @if (previewLoading()) {
+                <span nz-icon nzType="loading" nzSpin class="text-[40px] text-[#45fff3]"></span>
+              } @else {
+                <span nz-icon [nzType]="previewing() ? 'pause-circle' : 'play-circle'" class="text-[40px] text-white"></span>
+              }
+            </button>
           </div>
 
           <!-- Cut interval -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm text-white/85">
-              <span>Intervallo da estrarre</span>
-              <span class="font-mono text-[#45fff3]">
-                {{ formatTime(range()[0]) }} – {{ formatTime(range()[1]) }} ({{ formatTime(clipDuration()) }})
-              </span>
-            </div>
+          <div>
             <nz-slider
               nzRange
               [nzMin]="0"
@@ -50,7 +55,12 @@
               [ngModel]="range()"
               (ngModelChange)="onRangeChange($event)"
             />
+            <div class="flex items-center justify-between mt-1">
+              <span class="px-3 py-1 rounded-full bg-[#00201c] text-white/70 text-xs font-mono">{{ formatTime(range()[0]) }}</span>
+              <span class="px-3 py-1 rounded-full bg-[#00201c] text-white/70 text-xs font-mono">{{ formatTime(range()[1]) }}</span>
+            </div>
           </div>
+
         </div>
       }
 
@@ -58,18 +68,17 @@
   </ng-container>
 </nz-modal>
 
-<!-- Title (depends on the current step) -->
-<ng-template #title>{{ step() === 'url' ? 'Carica da Youtube' : 'Taglia l’audio' }}</ng-template>
+<!-- Title (same for both steps, per the mockup) -->
+<ng-template #title>Carica da Youtube</ng-template>
 
 <!-- Footer -->
 <ng-template #footer>
   <div class="flex justify-end gap-3">
+    <button ui-button variant="neutral" [disabled]="busy()" (click)="close()">Annulla</button>
     @if (step() === 'url') {
-      <button ui-button variant="neutral" [disabled]="busy()" (click)="close()">Annulla</button>
       <button ui-button variant="primary" [disabled]="busy()" (click)="checkUrl()">Continua</button>
     } @else {
-      <button ui-button variant="neutral" [disabled]="busy()" (click)="back()">Indietro</button>
-      <button ui-button variant="primary" [disabled]="busy()" (click)="proceed()">Procedi</button>
+      <button ui-button variant="primary" [disabled]="busy()" (click)="proceed()">Continua</button>
     }
   </div>
 </ng-template>

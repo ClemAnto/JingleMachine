@@ -1,6 +1,6 @@
-// The Jingle Machine helper server, as a reusable module: builds the Express
+// The Jingle Machine Mixer server, as a reusable module: builds the Express
 // app and starts listening. Two entry points use it:
-//   - src/index.js     → headless (dev / GitHub Pages helper), with a console prompt
+//   - src/index.js     → headless (dev / GitHub Pages Mixer), with a console prompt
 //   - electron-main.js  → Electron app, which opens a window instead
 import express from "express";
 import cors from "cors";

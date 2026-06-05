@@ -4,6 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:mock": "ng serve --configuration mock",
+    "mixer": "cd ../server && yarn start",
+    "start:all": "concurrently -k -n client,mixer -c cyan,green \"npm run start\" \"npm run mixer\"",
+    "start:all:mock": "concurrently -k -n client,mixer -c cyan,green \"npm run start:mock\" \"npm run mixer\"",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -43,6 +47,7 @@
     "@angular/cli": "^21.1.2",
     "@angular/compiler-cli": "^21.1.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "concurrently": "^10.0.3",
     "jsdom": "^27.1.0",
     "less": "^4.6.4",
     "postcss": "^8.5.15",

@@ -8,7 +8,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { AuthService } from '../../core/auth.service';
-import { HelperService } from '../../core/helper.service';
+import { MixerService } from '../../core/mixer.service';
 import { Jingle, LibraryService } from '../../core/library.service';
 import { UiButton } from '../../ui/button/button';
 import { CreateJingleModal, PreparedAudio } from './create-jingle-modal/create-jingle-modal';
@@ -36,7 +36,7 @@ export class Library implements OnInit {
   private readonly router = inject(Router);
   private readonly message = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
-  private readonly helper = inject(HelperService);
+  private readonly mixer = inject(MixerService);
 
   private readonly createModal = viewChild.required(CreateJingleModal);
   private readonly editModal = viewChild.required(EditJingleModal);
@@ -45,8 +45,8 @@ export class Library implements OnInit {
   protected readonly jingles = signal<Jingle[]>([]);
   protected readonly loading = signal(false);
   protected readonly search = signal('');
-  // YouTube import needs the local helper. On GitHub Pages there is none, so the
-  // button stays hidden; in the standalone (Electron) app the embedded helper
+  // YouTube import needs the local Mixer. On GitHub Pages there is none, so the
+  // button stays hidden; in the standalone (Electron) app the embedded Mixer
   // answers and it shows.
   protected readonly youtubeAvailable = signal(false);
 
@@ -60,25 +60,24 @@ export class Library implements OnInit {
 
   async ngOnInit() {
     await this.loadJingles();
-    this.youtubeAvailable.set((await this.helper.health()) !== null);
+    this.youtubeAvailable.set((await this.mixer.health()) !== null);
   }
 
   protected openCreate() {
     this.createModal().open();
   }
 
-  /** YouTube flow: only open the import modal if the helper is up and ready. */
-  protected async openYoutube() {
-    const health = await this.helper.health();
-    if (!health) {
-      this.message.error("Helper non raggiungibile. Avvia l'app helper e riprova.");
-      return;
-    }
-    if (!health.ready) {
-      this.message.warning('Helper in preparazione (download binari). Riprova tra poco.');
-      return;
-    }
+  /** YouTube flow: open the modal immediately, then sanity-check the Mixer in the
+   *  background (non-blocking) so the modal never waits on a network round-trip. */
+  protected openYoutube() {
     this.youtubeModal().open();
+    this.mixer.health().then((health) => {
+      if (!health) {
+        this.message.error('Mixer non raggiungibile. Avvia il Mixer e riprova.');
+      } else if (!health.ready) {
+        this.message.warning('Mixer in preparazione (download binari). Riprova tra poco.');
+      }
+    });
   }
 
   /** Audio extracted + uploaded: open the create modal prefilled. */

@@ -9,6 +9,7 @@ import {
   signOut,
 } from 'firebase/auth';
 
+import { environment } from '../../environments/environment';
 import { AUTH } from './firebase.providers';
 
 /**
@@ -36,6 +37,17 @@ export class AuthService {
   constructor() {
     let resolveReady!: () => void;
     this.whenReady = new Promise<void>((resolve) => (resolveReady = resolve));
+
+    if (environment.mock) {
+      // Userless mode: pretend a fixed user is always logged in (no Firebase).
+      this.userSignal.set({
+        uid: 'mock-user',
+        email: 'mock@local.test',
+        displayName: 'Mock User',
+      } as User);
+      resolveReady();
+      return;
+    }
 
     onAuthStateChanged(this.auth, (user) => {
       const first = this.userSignal() === undefined;
@@ -65,6 +77,7 @@ export class AuthService {
   }
 
   async logout() {
+    if (environment.mock) return; // no real session to end in userless mode
     localStorage.removeItem(LAST_LOGIN_KEY);
     await signOut(this.auth);
   }
@@ -74,6 +87,7 @@ export class AuthService {
    * Firebase keeps users signed in indefinitely; this enforces a once-a-day login.
    */
   isSessionExpired(): boolean {
+    if (environment.mock) return false; // never expire in userless mode
     const ts = Number(localStorage.getItem(LAST_LOGIN_KEY));
     return !ts || Date.now() - ts > SESSION_MAX_AGE_MS;
   }

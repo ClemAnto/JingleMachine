@@ -11,6 +11,9 @@
  */
 export const environment = {
   production: false,
+  // Userless local test mode: bypass Firebase auth + Cloudinary (in-memory library,
+  // object-URL audio). Enabled by the `mock` build configuration (environment.mock.ts).
+  mock: false,
   firebase: {
     apiKey: 'TODO_API_KEY',
     authDomain: 'TODO_PROJECT.firebaseapp.com',
@@ -22,10 +25,10 @@ export const environment = {
     cloudName: 'TODO_CLOUD_NAME',
     uploadPreset: 'TODO_UPLOAD_PRESET',
   },
-  // Local helper (runs on the user's machine, loopback). Same URL in dev and
-  // prod: the helper always listens on 127.0.0.1 (browsers allow http://localhost
+  // Local Mixer (runs on the user's machine, loopback). Same URL in dev and
+  // prod: the Mixer always listens on 127.0.0.1 (browsers allow http://localhost
   // even from an https page).
-  helper: {
+  mixer: {
     baseUrl: 'http://127.0.0.1:4321',
   },
 };

@@ -15,12 +15,20 @@ export class CloudinaryService {
 
   /** Uploads an audio file (MP3). Cloudinary requires resource_type=video for audio. */
   async uploadAudio(blob: Blob, filename: string): Promise<CloudinaryUploadResult> {
+    if (environment.mock) return this.mockUpload(blob);
     return this.upload(blob, filename, 'video');
   }
 
   /** Uploads a cover image. */
   async uploadImage(file: File): Promise<CloudinaryUploadResult> {
+    if (environment.mock) return this.mockUpload(file);
     return this.upload(file, file.name, 'image');
+  }
+
+  /** Userless mode: don't hit Cloudinary, just serve the blob via an object URL. */
+  private mockUpload(data: Blob): CloudinaryUploadResult {
+    const url = URL.createObjectURL(data);
+    return { publicId: `mock-${Math.random().toString(36).slice(2)}`, url, secureUrl: url };
   }
 
   /** Deletes a resource from Cloudinary.
