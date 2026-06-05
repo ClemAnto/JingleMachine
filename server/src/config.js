@@ -43,4 +43,9 @@ export const config = {
   // Default audio quality for extracted jingles. Kept low on purpose: jingles
   // are short and small files save Cloudinary bandwidth (project requirement).
   audioBitrate: "128K",
+
+  // Auto-shutdown: if the web app stops sending heartbeats for this long, the
+  // helper exits. Must be comfortably larger than the client heartbeat interval
+  // (60s) so a page refresh does not trigger a shutdown.
+  heartbeatTimeoutMs: Number(process.env.HEARTBEAT_TIMEOUT_MS) || 150000,
 };

@@ -12,7 +12,7 @@
         <span nz-icon nzType="plus"></span>
         Aggiungi file
       </button>
-      <button ui-button variant="youtube" routerLink="/youtube">
+      <button ui-button variant="youtube" (click)="openYoutube()">
         <span nz-icon nzType="youtube"></span>
         Carica da Youtube
       </button>
@@ -66,5 +66,6 @@
 </div>
 
 <!-- Modals -->
+<app-youtube-import-modal (imported)="onYoutubeImported($event)" />
 <app-create-jingle-modal (saved)="onSaved()" />
 <app-edit-jingle-modal (saved)="onSaved()" />

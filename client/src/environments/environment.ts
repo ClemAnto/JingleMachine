@@ -22,4 +22,10 @@ export const environment = {
     cloudName: 'TODO_CLOUD_NAME',
     uploadPreset: 'TODO_UPLOAD_PRESET',
   },
+  // Local helper (runs on the user's machine, loopback). Same URL in dev and
+  // prod: the helper always listens on 127.0.0.1 (browsers allow http://localhost
+  // even from an https page).
+  helper: {
+    baseUrl: 'http://127.0.0.1:4321',
+  },
 };

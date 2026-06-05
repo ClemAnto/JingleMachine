@@ -12,6 +12,14 @@ import { UiButton } from '../../../ui/button/button';
 import { UiColorPicker } from '../../../ui/color-picker/color-picker';
 import { UiTagInput } from '../../../ui/tag-input/tag-input';
 
+/** Audio extracted from YouTube, ready to upload on save (e.g. from the extract flow). */
+export interface PreparedAudio {
+  audioBlob: Blob;
+  audioFilename: string;
+  durationSec: number;
+  suggestedName: string;
+}
+
 @Component({
   selector: 'app-create-jingle-modal',
   imports: [
@@ -41,9 +49,21 @@ export class CreateJingleModal {
   protected imageFile = signal<File | null>(null);
   protected saving = signal(false);
   protected audioDuration = signal(0);
+  // When set, the audio is already on Cloudinary (YouTube flow): no file upload step.
+  protected preparedAudio = signal<PreparedAudio | null>(null);
 
+  /** Opens the modal for a normal file upload. */
   open() {
     this.reset();
+    this.visible.set(true);
+  }
+
+  /** Opens the modal with audio already uploaded (YouTube flow), name prefilled. */
+  openWithAudio(audio: PreparedAudio) {
+    this.reset();
+    this.preparedAudio.set(audio);
+    this.name.set(audio.suggestedName);
+    this.audioDuration.set(audio.durationSec);
     this.visible.set(true);
   }
 
@@ -70,12 +90,13 @@ export class CreateJingleModal {
   }
 
   async save() {
-    if (!this.audioFile()) {
-      this.message.warning('Select an audio file first.');
+    const prepared = this.preparedAudio();
+    if (!prepared && !this.audioFile()) {
+      this.message.warning('Seleziona prima un file audio.');
       return;
     }
     if (!this.name().trim()) {
-      this.message.warning('Enter a name for the jingle.');
+      this.message.warning('Inserisci un nome per il jingle.');
       return;
     }
 
@@ -85,17 +106,18 @@ export class CreateJingleModal {
         name: this.name().trim(),
         tags: this.tags(),
         color: this.color(),
-        audioBlob: this.audioFile()!,
-        audioFilename: this.audioFile()!.name,
         durationSec: this.audioDuration(),
         imageFile: this.imageFile() ?? undefined,
+        ...(prepared
+          ? { audioBlob: prepared.audioBlob, audioFilename: prepared.audioFilename }
+          : { audioBlob: this.audioFile()!, audioFilename: this.audioFile()!.name }),
       });
-      this.message.success('Jingle saved!');
+      this.message.success('Jingle salvato!');
       this.visible.set(false);
       this.saved.emit();
     } catch (err) {
       console.error(err);
-      this.message.error('Upload failed. Check your Cloudinary configuration.');
+      this.message.error('Salvataggio fallito. Controlla la configurazione Cloudinary.');
     } finally {
       this.saving.set(false);
     }
@@ -108,5 +130,6 @@ export class CreateJingleModal {
     this.audioFile.set(null);
     this.imageFile.set(null);
     this.audioDuration.set(0);
+    this.preparedAudio.set(null);
   }
 }

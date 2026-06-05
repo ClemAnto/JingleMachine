@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -8,23 +8,25 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { AuthService } from '../../core/auth.service';
+import { HelperService } from '../../core/helper.service';
 import { Jingle, LibraryService } from '../../core/library.service';
 import { UiButton } from '../../ui/button/button';
-import { CreateJingleModal } from './create-jingle-modal/create-jingle-modal';
+import { CreateJingleModal, PreparedAudio } from './create-jingle-modal/create-jingle-modal';
 import { EditJingleModal } from './edit-jingle-modal/edit-jingle-modal';
 import { JingleItem } from './jingle-item/jingle-item';
+import { YoutubeImportModal } from './youtube-import-modal/youtube-import-modal';
 
 @Component({
   selector: 'app-library',
   imports: [
     FormsModule,
-    RouterLink,
     NzIconModule,
     NzSpinModule,
     UiButton,
     JingleItem,
     CreateJingleModal,
     EditJingleModal,
+    YoutubeImportModal,
   ],
   templateUrl: './library.html',
 })
@@ -34,9 +36,11 @@ export class Library implements OnInit {
   private readonly router = inject(Router);
   private readonly message = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
+  private readonly helper = inject(HelperService);
 
   private readonly createModal = viewChild.required(CreateJingleModal);
   private readonly editModal = viewChild.required(EditJingleModal);
+  private readonly youtubeModal = viewChild.required(YoutubeImportModal);
 
   protected readonly jingles = signal<Jingle[]>([]);
   protected readonly loading = signal(false);
@@ -56,6 +60,25 @@ export class Library implements OnInit {
 
   protected openCreate() {
     this.createModal().open();
+  }
+
+  /** YouTube flow: only open the import modal if the helper is up and ready. */
+  protected async openYoutube() {
+    const health = await this.helper.health();
+    if (!health) {
+      this.message.error("Helper non raggiungibile. Avvia l'app helper e riprova.");
+      return;
+    }
+    if (!health.ready) {
+      this.message.warning('Helper in preparazione (download binari). Riprova tra poco.');
+      return;
+    }
+    this.youtubeModal().open();
+  }
+
+  /** Audio extracted + uploaded: open the create modal prefilled. */
+  protected onYoutubeImported(audio: PreparedAudio) {
+    this.createModal().openWithAudio(audio);
   }
 
   protected openEdit(jingle: Jingle) {

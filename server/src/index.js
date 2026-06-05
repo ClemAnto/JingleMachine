@@ -116,8 +116,25 @@ app.post("/extract", async (req, res) => {
 // Graceful shutdown: responds first, then exits after a short delay.
 app.post("/shutdown", (req, res) => {
   res.json({ ok: true });
+  addLog("Shutdown requested by the web app.");
   setTimeout(() => process.exit(0), 300);
 });
+
+// Heartbeat: the web app pings this periodically while it is open. The helper
+// stays alive until the FIRST heartbeat arrives (so standalone use of the
+// /helper test page is never auto-killed), then shuts down if pings stop.
+let lastHeartbeat = null;
+app.post("/heartbeat", (req, res) => {
+  lastHeartbeat = Date.now();
+  res.json({ ok: true });
+});
+const idleCheck = setInterval(() => {
+  if (lastHeartbeat && Date.now() - lastHeartbeat > config.heartbeatTimeoutMs) {
+    addLog("No heartbeat from the web app; shutting down.");
+    process.exit(0);
+  }
+}, 30000);
+idleCheck.unref();
 
 // SPA fallback: must be registered AFTER all API routes so it only
 // catches truly unknown routes and returns Angular's index.html.

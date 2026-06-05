@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { signal } from '@angular/core';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
@@ -20,6 +21,7 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
         provideNoopAnimations(),
         provideNzIcons([SoundOutline, LogoutOutline]),
         { provide: AuthService, useClass: AuthServiceStub },

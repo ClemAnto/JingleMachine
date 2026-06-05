@@ -1,0 +1,75 @@
+<nz-modal
+  [nzVisible]="visible()"
+  [nzTitle]="title"
+  [nzFooter]="footer"
+  [nzWidth]="600"
+  (nzOnCancel)="close()"
+>
+  <ng-container *nzModalContent>
+    <nz-spin [nzSpinning]="busy()">
+
+      @if (step() === 'url') {
+        <div class="space-y-4 py-2">
+          <p class="text-white/45 text-sm">Incolla il link di un video YouTube da cui estrarre l'audio.</p>
+          <input
+            nz-input
+            nzSize="large"
+            placeholder="URL del video"
+            [ngModel]="url()"
+            (ngModelChange)="url.set($event)"
+            (keydown.enter)="checkUrl()"
+          />
+        </div>
+      } @else {
+        <div class="space-y-5 py-2">
+          <!-- Video preview -->
+          <div class="flex gap-4">
+            @if (info()?.thumbnail) {
+              <img [src]="info()!.thumbnail" alt="" class="w-40 h-24 object-cover rounded-xl shrink-0" />
+            }
+            <div class="min-w-0 flex-1">
+              <p class="text-white font-semibold leading-tight line-clamp-2">{{ info()?.title }}</p>
+              <p class="text-white/45 text-sm mt-1">{{ info()?.uploader }}</p>
+              <p class="text-white/45 text-xs mt-1">Durata totale: {{ formatTime(info()?.durationSeconds ?? 0) }}</p>
+            </div>
+          </div>
+
+          <!-- Cut interval -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm text-white/85">
+              <span>Intervallo da estrarre</span>
+              <span class="font-mono text-[#45fff3]">
+                {{ formatTime(range()[0]) }} – {{ formatTime(range()[1]) }} ({{ formatTime(clipDuration()) }})
+              </span>
+            </div>
+            <nz-slider
+              nzRange
+              [nzMin]="0"
+              [nzMax]="info()?.durationSeconds ?? 0"
+              [nzTipFormatter]="formatTime"
+              [ngModel]="range()"
+              (ngModelChange)="onRangeChange($event)"
+            />
+          </div>
+        </div>
+      }
+
+    </nz-spin>
+  </ng-container>
+</nz-modal>
+
+<!-- Title (depends on the current step) -->
+<ng-template #title>{{ step() === 'url' ? 'Carica da Youtube' : 'Taglia l’audio' }}</ng-template>
+
+<!-- Footer -->
+<ng-template #footer>
+  <div class="flex justify-end gap-3">
+    @if (step() === 'url') {
+      <button ui-button variant="neutral" [disabled]="busy()" (click)="close()">Annulla</button>
+      <button ui-button variant="primary" [disabled]="busy()" (click)="checkUrl()">Continua</button>
+    } @else {
+      <button ui-button variant="neutral" [disabled]="busy()" (click)="back()">Indietro</button>
+      <button ui-button variant="primary" [disabled]="busy()" (click)="proceed()">Procedi</button>
+    }
+  </div>
+</ng-template>
