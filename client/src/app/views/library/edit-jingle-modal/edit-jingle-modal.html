@@ -1,0 +1,43 @@
+<nz-modal
+  [nzVisible]="visible()"
+  nzTitle="Modifica Jingle"
+  [nzFooter]="footer"
+  [nzWidth]="600"
+  (nzOnCancel)="close()"
+>
+  <ng-container *nzModalContent>
+    <nz-spin [nzSpinning]="saving()">
+      <div class="space-y-5 py-2">
+
+        <!-- Cover image -->
+        <label class="jm-upload-area cursor-pointer">
+          <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" />
+          <span nz-icon nzType="picture" class="text-2xl" [class.text-white]="imageFile()" [class.text-[#45fff3]]="!imageFile()"></span>
+          <span class="text-sm font-semibold text-center">
+            {{ imageFile() ? imageFile()!.name : 'Sostituisci immagine (opzionale)' }}
+          </span>
+        </label>
+
+        <!-- Name -->
+        <input nz-input placeholder="Nome Jingle" [ngModel]="name()" (ngModelChange)="name.set($event)" />
+
+        <!-- Tags -->
+        <ui-tag-input [tags]="tags()" (tagsChange)="tags.set($event)" />
+
+        <!-- Colour picker -->
+        <div class="space-y-2">
+          <p class="text-sm font-semibold text-white/85">Colore scheda</p>
+          <ui-color-picker [value]="color()" (valueChange)="color.set($event)" />
+        </div>
+
+      </div>
+    </nz-spin>
+  </ng-container>
+</nz-modal>
+
+<ng-template #footer>
+  <button ui-button variant="primary" class="w-full justify-center" [disabled]="saving()" (click)="save()">
+    <span nz-icon nzType="save"></span>
+    {{ saving() ? 'Salvataggio...' : 'Salva modifiche' }}
+  </button>
+</ng-template>

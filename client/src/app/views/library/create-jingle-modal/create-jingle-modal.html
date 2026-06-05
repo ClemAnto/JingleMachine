@@ -11,7 +11,7 @@
 
         <!-- Audio + Image upload -->
         <div class="flex gap-4">
-          <label class="jm-upload-area flex-1 cursor-pointer" [class.jm-upload-area--filled]="audioFile()">
+          <label class="jm-upload-area flex-1 cursor-pointer">
             <input type="file" accept="audio/*,.mp3" class="hidden" (change)="onAudioSelected($event)" />
             <span nz-icon nzType="audio" class="text-2xl" [class.text-white]="audioFile()" [class.text-[#45fff3]]="!audioFile()"></span>
             <span class="text-sm font-semibold text-center">
@@ -19,7 +19,7 @@
             </span>
           </label>
 
-          <label class="jm-upload-area flex-1 cursor-pointer" [class.jm-upload-area--filled]="imageFile()">
+          <label class="jm-upload-area flex-1 cursor-pointer">
             <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" />
             <span nz-icon nzType="picture" class="text-2xl" [class.text-white]="imageFile()" [class.text-[#45fff3]]="!imageFile()"></span>
             <span class="text-sm font-semibold text-center">
@@ -32,43 +32,12 @@
         <input nz-input placeholder="Nome Jingle" [ngModel]="name()" (ngModelChange)="name.set($event)" />
 
         <!-- Tags -->
-        <div class="space-y-2">
-          <nz-input-group [nzSuffix]="tagSuffix">
-            <input
-              nz-input
-              placeholder="Aggiungi tag (invio per confermare)"
-              [ngModel]="tagInput()"
-              (ngModelChange)="tagInput.set($event)"
-              (keydown)="onTagKeydown($event)"
-            />
-          </nz-input-group>
-          <ng-template #tagSuffix>
-            <span nz-icon nzType="tag" class="text-white/45 cursor-pointer" (click)="addTag()"></span>
-          </ng-template>
-
-          @if (tags().length) {
-            <div class="flex flex-wrap gap-2">
-              @for (tag of tags(); track tag) {
-                <nz-tag nzMode="closeable" (nzOnClose)="removeTag(tag)">{{ tag }}</nz-tag>
-              }
-            </div>
-          }
-        </div>
+        <ui-tag-input [tags]="tags()" (tagsChange)="tags.set($event)" />
 
         <!-- Colour picker -->
         <div class="space-y-2">
           <p class="text-sm font-semibold text-white/85">Colore scheda</p>
-          <div class="flex gap-3 flex-wrap">
-            @for (c of colors; track c) {
-              <button
-                class="w-8 h-8 rounded-full border-2 transition-all cursor-pointer"
-                [style.background]="c"
-                [class.border-white]="color() === c"
-                [class.border-transparent]="color() !== c"
-                (click)="selectColor(c)"
-              ></button>
-            }
-          </div>
+          <ui-color-picker [value]="color()" (valueChange)="color.set($event)" />
         </div>
 
       </div>
@@ -77,7 +46,7 @@
 </nz-modal>
 
 <ng-template #footer>
-  <button class="jm-btn-primary w-full justify-center" [disabled]="saving()" (click)="save()">
+  <button ui-button variant="primary" class="w-full justify-center" [disabled]="saving()" (click)="save()">
     <span nz-icon nzType="upload"></span>
     {{ saving() ? 'Caricamento...' : 'Crea Jingle' }}
   </button>

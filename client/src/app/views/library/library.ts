@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -9,6 +9,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { AuthService } from '../../core/auth.service';
 import { Jingle, LibraryService } from '../../core/library.service';
+import { UiButton } from '../../ui/button/button';
 import { CreateJingleModal } from './create-jingle-modal/create-jingle-modal';
 import { EditJingleModal } from './edit-jingle-modal/edit-jingle-modal';
 import { JingleItem } from './jingle-item/jingle-item';
@@ -17,14 +18,15 @@ import { JingleItem } from './jingle-item/jingle-item';
   selector: 'app-library',
   imports: [
     FormsModule,
+    RouterLink,
     NzIconModule,
     NzSpinModule,
+    UiButton,
     JingleItem,
     CreateJingleModal,
     EditJingleModal,
   ],
   templateUrl: './library.html',
-  styleUrl: './library.scss',
 })
 export class Library implements OnInit {
   private readonly libraryService = inject(LibraryService);

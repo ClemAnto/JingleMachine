@@ -18,7 +18,7 @@ import { Jingle } from '../../../core/library.service';
   selector: 'app-jingle-item',
   imports: [NgStyle, NzIconModule],
   templateUrl: './jingle-item.html',
-  styleUrl: './jingle-item.scss',
+  host: { class: 'block w-full' },
 })
 export class JingleItem implements OnDestroy {
   readonly jingle = input.required<Jingle>();

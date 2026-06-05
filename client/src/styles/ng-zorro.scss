@@ -1,0 +1,26 @@
+// ============================================================
+// Jingle Machine — NgZorro component overrides (global)
+// Loaded after theme.less + styles.css (see angular.json) so these win.
+// Keep ALL ng-zorro component customizations here, not in component .scss.
+// ============================================================
+
+// --- Modal ---
+.ant-modal-content {
+  background-color: #001714 !important;
+  border-radius: 20px !important;
+}
+.ant-modal-header {
+  background-color: #001714 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+.ant-modal-title {
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+}
+.ant-modal-close-x {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+.ant-modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}

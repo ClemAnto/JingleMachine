@@ -6,13 +6,24 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
-import { NzTagModule } from 'ng-zorro-antd/tag';
 
 import { JINGLE_COLORS, LibraryService } from '../../../core/library.service';
+import { UiButton } from '../../../ui/button/button';
+import { UiColorPicker } from '../../../ui/color-picker/color-picker';
+import { UiTagInput } from '../../../ui/tag-input/tag-input';
 
 @Component({
   selector: 'app-create-jingle-modal',
-  imports: [FormsModule, NzIconModule, NzInputModule, NzModalModule, NzSpinModule, NzTagModule],
+  imports: [
+    FormsModule,
+    NzIconModule,
+    NzInputModule,
+    NzModalModule,
+    NzSpinModule,
+    UiButton,
+    UiColorPicker,
+    UiTagInput,
+  ],
   templateUrl: './create-jingle-modal.html',
 })
 export class CreateJingleModal {
@@ -21,11 +32,9 @@ export class CreateJingleModal {
 
   readonly saved = output<void>();
 
-  protected readonly colors = JINGLE_COLORS;
   protected readonly visible = signal(false);
 
   protected name = signal('');
-  protected tagInput = signal('');
   protected tags = signal<string[]>([]);
   protected color = signal<string>(JINGLE_COLORS[0]);
   protected audioFile = signal<File | null>(null);
@@ -58,29 +67,6 @@ export class CreateJingleModal {
   protected onImageSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) this.imageFile.set(file);
-  }
-
-  protected addTag() {
-    const raw = this.tagInput().trim().toLowerCase();
-    if (raw && !this.tags().includes(raw)) {
-      this.tags.update((t) => [...t, raw]);
-    }
-    this.tagInput.set('');
-  }
-
-  protected removeTag(tag: string) {
-    this.tags.update((t) => t.filter((x) => x !== tag));
-  }
-
-  protected onTagKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === ',') {
-      event.preventDefault();
-      this.addTag();
-    }
-  }
-
-  protected selectColor(c: string) {
-    this.color.set(c);
   }
 
   async save() {
@@ -117,7 +103,6 @@ export class CreateJingleModal {
 
   private reset() {
     this.name.set('');
-    this.tagInput.set('');
     this.tags.set([]);
     this.color.set(JINGLE_COLORS[0]);
     this.audioFile.set(null);

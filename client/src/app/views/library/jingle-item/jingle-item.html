@@ -1,0 +1,58 @@
+<div
+  class="relative w-full h-50 overflow-hidden rounded-[30px] flex flex-col justify-end border-2 bg-cover bg-center cursor-pointer transition-transform hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+  [ngStyle]="cardStyle()"
+  (click)="togglePlay()"
+>
+  <!-- Colour gradient overlay -->
+  <div class="absolute inset-0 rounded-[30px] pointer-events-none" [ngStyle]="overlayStyle()"></div>
+
+  <!-- Progress bar (visible only when playing) -->
+  @if (playing()) {
+    <div class="absolute bottom-0 left-0 h-0.75 bg-white z-2 transition-[width] duration-100" [style.width.%]="progress()"></div>
+  }
+
+  <!-- Content -->
+  <div class="relative z-1 px-4 pt-3 pb-3.5" (click)="$event.stopPropagation()">
+    <!-- Name + play/pause -->
+    <div class="flex items-end gap-2">
+      <span class="flex-1 text-[20px] font-semibold text-white leading-tight [text-shadow:0_1px_4px_rgba(0,0,0,0.5)]">{{ jingle().name }}</span>
+      <button class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0" (click)="togglePlay()">
+        <span nz-icon [nzType]="playing() ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white"></span>
+      </button>
+    </div>
+
+    <!-- Tags -->
+    @if (jingle().tags.length) {
+      <div class="flex flex-wrap gap-1 mt-1">
+        @for (tag of jingle().tags; track tag) {
+          <span class="jm-tag text-xs">{{ tag }}</span>
+        }
+      </div>
+    }
+
+    <!-- Uploader + actions -->
+    <div class="flex items-center justify-between mt-1.5">
+      <span class="text-[11px] text-white/45 overflow-hidden text-ellipsis whitespace-nowrap max-w-37.5">{{ jingle().uploaderEmail }}</span>
+      <div class="flex gap-2">
+        <button class="bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-white/12" (click)="editRequest.emit(jingle())">
+          <span nz-icon nzType="edit" class="text-sm text-white/60"></span>
+        </button>
+        <button class="bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-white/12" (click)="deleteRequest.emit(jingle())">
+          <span nz-icon nzType="delete" class="text-sm text-[#ff4548]/80"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden audio element -->
+  <audio
+    #audioEl
+    class="hidden"
+    [src]="jingle().audioUrl"
+    preload="none"
+    (play)="onPlay()"
+    (pause)="onPause()"
+    (ended)="onEnded()"
+    (timeupdate)="onTimeUpdate($event)"
+  ></audio>
+</div>

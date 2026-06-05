@@ -69,13 +69,21 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 - **Usare sempre i pattern più recenti consigliati** del framework; se in dubbio, **consultare prima la documentazione ufficiale online** (l'utente preferisce questo a soluzioni a memoria/datate).
 - **Nomi variabili "puliti"**: niente caratteri come `@` `_` `$`, solo camelCase. Per gli Observable **niente suffisso `$`** → usare nomi espliciti tipo `userStream` o `userQueue` (preferenza esplicita dell'utente).
 - Codice **semplice e leggibile**, commenti solo dove servono davvero (senza esagerare).
-- **LINGUA: codice, commenti, log, identificatori e testi UI SEMPRE in inglese.** La documentazione (`.md`) resta in italiano.
-  > ⚠️ Il codice scritto nella Fase 0 ha commenti e testi UI in italiano: vanno tradotti in inglese quando si tocca quel file
-  > (o in una passata dedicata).
+- **LINGUA:**
+  - **Codice, commenti, log, identificatori SEMPRE in inglese.**
+  - **Testi UI visibili all'utente in ITALIANO** (coerenti col mockup Figma e coi colleghi destinatari). Preferenza esplicita dell'utente.
+  - La documentazione (`.md`) resta in italiano.
 - Service Firebase: iniettare i token `AUTH` / `FIRESTORE` / `STORAGE` da `client/src/app/core/firebase.providers.ts`
   (NON usare `@angular/fire`: incompatibile con Angular 21).
-- UI con **ng-zorro-antd**; utility di layout con **Tailwind**. Nuove icone NgZorro → registrarle in `client/src/app/app.config.ts`.
-- Stile globale in `client/src/styles.css` (Tailwind); stili dei componenti in `.scss`.
+- UI con **ng-zorro-antd**: nell'HTML usare **sempre i componenti ng-zorro dove possibile** (`nz-button`, `nz-input`, ecc.). Nuove icone NgZorro → registrarle in `client/src/app/app.config.ts`.
+- **Organizzazione dei componenti (preferenza esplicita dell'utente):**
+  - **`client/src/app/views/`** → componenti che gestiscono un'**intera vista/pagina** (es. `login`, `library`, `stylesheet`). I sotto-componenti specifici di una vista (non riusabili altrove) restano **co-locati dentro la cartella della loro view**.
+  - **`client/src/app/ui/`** → componenti **globali/riusabili** non legati a una vista (un tipo particolare di button, una card, una lista, ecc.), con selettore **`ui-{component}`** (es. `ui-button`, `ui-color-picker`). Per elementi tipo button si usa il selettore-attributo idiomatico (`button[ui-button]`) così da preservare il comportamento nativo (click, disabled, routerLink).
+  - **`client/src/app/core/`** → service, guard, provider (no UI).
+- **Stili (preferenza esplicita dell'utente):**
+  - **Niente `.scss` per-componente**: layout e utility si fanno con **classi Tailwind inline** nel template.
+  - **Customizzazioni degli ng-zorro** in **un unico `.scss` globale** (approccio raccomandato da Tailwind per stilare le librerie di componenti).
+  - Stili globali in **`client/src/styles/`**: `theme.less` (tema NgZorro Less), `styles.css` (entry Tailwind + classi helper), `ng-zorro.scss` (override componenti). Referenziati in `angular.json`.
 
 ## Prima di consegnare una modifica
 > Lancia i comandi **dentro `client/`** (`cd client`).

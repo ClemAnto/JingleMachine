@@ -9,6 +9,8 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 
+import { UiButton } from '../../ui/button/button';
+
 /** Developer-only page at /stylesheet — no auth guard.
  *  Shows all themed UI components in every variant. */
 @Component({
@@ -22,6 +24,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
     NzSpinModule,
     NzModalModule,
     NzSelectModule,
+    UiButton,
   ],
   templateUrl: './stylesheet.html',
 })

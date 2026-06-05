@@ -1,6 +1,11 @@
 /* Tailwind v4 — utilities, base reset (preflight) and components.
-   NgZorro styles are loaded BEFORE this file via theme.less in angular.json. */
+   NgZorro styles are loaded BEFORE this file via theme.less in angular.json.
+   NgZorro component overrides live in ./ng-zorro.scss (loaded after this file). */
 @import 'tailwindcss';
+
+/* This file now lives in src/styles/, so point Tailwind's automatic content
+   scanning back at the whole src/ tree. */
+@source '../';
 
 html,
 body {
@@ -71,27 +76,4 @@ body {
 /* Upload area (dashed box in modal) */
 .jm-upload-area {
   @apply flex flex-col items-center justify-center gap-2 p-5 rounded-[20px] border border-dashed border-[#45fff3]/50 bg-[#45fff3]/5 cursor-pointer hover:bg-[#45fff3]/10 transition-colors;
-}
-
-/* ── NgZorro overrides (components used in the app) ─────── */
-
-/* Modal */
-.ant-modal-content {
-  background-color: #001714 !important;
-  border-radius: 20px !important;
-}
-.ant-modal-header {
-  background-color: #001714 !important;
-  border-bottom-color: rgba(255,255,255,0.08) !important;
-}
-.ant-modal-title {
-  color: rgba(255,255,255,0.88) !important;
-  font-size: 24px !important;
-  font-weight: 600 !important;
-}
-.ant-modal-close-x {
-  color: rgba(255,255,255,0.45) !important;
-}
-.ant-modal-footer {
-  border-top-color: rgba(255,255,255,0.08) !important;
 }

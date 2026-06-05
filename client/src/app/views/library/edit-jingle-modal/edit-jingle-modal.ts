@@ -6,13 +6,24 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
-import { NzTagModule } from 'ng-zorro-antd/tag';
 
-import { JINGLE_COLORS, Jingle, LibraryService } from '../../../core/library.service';
+import { Jingle, JINGLE_COLORS, LibraryService } from '../../../core/library.service';
+import { UiButton } from '../../../ui/button/button';
+import { UiColorPicker } from '../../../ui/color-picker/color-picker';
+import { UiTagInput } from '../../../ui/tag-input/tag-input';
 
 @Component({
   selector: 'app-edit-jingle-modal',
-  imports: [FormsModule, NzIconModule, NzInputModule, NzModalModule, NzSpinModule, NzTagModule],
+  imports: [
+    FormsModule,
+    NzIconModule,
+    NzInputModule,
+    NzModalModule,
+    NzSpinModule,
+    UiButton,
+    UiColorPicker,
+    UiTagInput,
+  ],
   templateUrl: './edit-jingle-modal.html',
 })
 export class EditJingleModal {
@@ -21,12 +32,10 @@ export class EditJingleModal {
 
   readonly saved = output<void>();
 
-  protected readonly colors = JINGLE_COLORS;
   protected readonly visible = signal(false);
   private jingle: Jingle | null = null;
 
   protected name = signal('');
-  protected tagInput = signal('');
   protected tags = signal<string[]>([]);
   protected color = signal<string>(JINGLE_COLORS[0]);
   protected imageFile = signal<File | null>(null);
@@ -38,7 +47,6 @@ export class EditJingleModal {
     this.tags.set([...jingle.tags]);
     this.color.set(jingle.color);
     this.imageFile.set(null);
-    this.tagInput.set('');
     this.visible.set(true);
   }
 
@@ -49,29 +57,6 @@ export class EditJingleModal {
   protected onImageSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) this.imageFile.set(file);
-  }
-
-  protected addTag() {
-    const raw = this.tagInput().trim().toLowerCase();
-    if (raw && !this.tags().includes(raw)) {
-      this.tags.update((t) => [...t, raw]);
-    }
-    this.tagInput.set('');
-  }
-
-  protected removeTag(tag: string) {
-    this.tags.update((t) => t.filter((x) => x !== tag));
-  }
-
-  protected onTagKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === ',') {
-      event.preventDefault();
-      this.addTag();
-    }
-  }
-
-  protected selectColor(c: string) {
-    this.color.set(c);
   }
 
   async save() {
