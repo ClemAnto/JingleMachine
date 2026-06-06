@@ -344,18 +344,30 @@ Scelta motivata: vedi memoria `project-packaging-decision`. yao-pkg **rimosso**.
 - **Distribuzione**: Windows = **installer NSIS**; macOS = **dmg universal**. Config in `package.json` → `build`.
 
 **Pipeline CI** (`.github/workflows/build-packages.yml`): matrix `windows-latest` + `macos-latest` →
-Angular build (`--base-href /`) → copia dist in `server/app/` → `yarn install` → `yarn dist` (electron-builder) → upload installer.
+Angular build (**senza `--base-href`**: default `/`) → copia dist in `server/app/` → `yarn install` →
+`yarn dist --publish never` (electron-builder) → upload artifact (`jingle-machine-win` = .exe, `jingle-machine-mac` = .dmg).
 
-**Triggering build**: `yarn release` (richiede `gh` nel PATH) oppure tag git.
-`gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default.
+> ✅ **CI verificata end-to-end (2026-06-06).** [Run #27059622842](https://github.com/ClemAnto/JingleMachine/actions/runs/27059622842):
+> entrambi i leg verdi → **`Jingle Machine Setup 0.4.4.exe`** (~79 MB) + **`Jingle Machine-0.4.4-universal.dmg`** (~172 MB).
+
+> ⚠️ **Trappole CI risolte (2026-06-06), non riproporre:**
+> 1. **`--base-href /` NON va nella action**: sul runner Windows gira in **Git Bash**, che converte lo `/` in
+>    `C:/Program Files/Git/` (path mangling MSYS). L'app Electron è servita dalla root → basta il default Angular `/` → **niente flag**.
+> 2. **NON impostare `GH_TOKEN`** sullo step `yarn dist`: con il token presente electron-builder attiva un publish
+>    provider GitHub e crasha generando i metadati di auto-update (*"Cannot read properties of null (reading 'provider')"*).
+>    Noi distribuiamo via **artifact**, non Release → niente token + `--publish never`. Il download di Electron funziona lo stesso.
+
+**Triggering build**: `gh workflow run build-packages.yml --ref <branch>` (manuale, `workflow_dispatch`) oppure **push di un tag** `v*`.
+`gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default (aggiungerlo a `$env:PATH` nella sessione).
 
 > ⚠️ La build Electron va eseguita in CI o su macchina con GUI (richiede download di Electron + toolchain NSIS).
+> **macOS non firmato** → Gatekeeper: l'utente apre con "tasto destro → Apri" (notarizzazione Apple Dev $99/anno rimandata).
 
 > ✅ **Build Windows verificata in locale (2026-06-06).** `npm run build -- --base-href=/` (con **PowerShell**:
 > Git Bash mangia lo `/` → `--base-href C:/Program Files/Git/`!) → copia dist in `server/app/` → `yarn dist`.
 > Prodotto `dist-electron/Jingle Machine Setup 0.4.4.exe` (~79 MB, NSIS). Smoke test su `win-unpacked`:
 > server up, Angular servito (HTTP 200), binari scaricati in `%APPDATA%\JingleMachine\bin` → `/health ready=true`
-> in ~27s (ytDlp 2026.03.17, ffmpeg, deno 2.8.2). **macOS dmg ancora non testato.**
+> in ~27s (ytDlp 2026.03.17, ffmpeg, deno 2.8.2). Il **dmg macOS** ora si costruisce in CI (vedi sotto), ma **non è ancora stato eseguito** su un Mac reale.
 > 🐞 *Robustezza nota (non bloccante)*: se un download binario viene interrotto, resta un file troncato che
 > `ensureBinaries` non riscarica (controlla l'esistenza, non l'integrità) → `yt-dlp -U` poi fallisce con
 > *"Could not load PyInstaller's embedded PKG archive"*. Workaround: cancellare `%APPDATA%\JingleMachine\bin`.
