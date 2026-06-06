@@ -21,6 +21,19 @@ import { AUTH } from './firebase.providers';
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const LAST_LOGIN_KEY = 'jm.lastLoginAt';
 
+/**
+ * Domain appended to a username to build a synthetic email for Firebase Auth.
+ * Firebase only stores email + password; this address is never used to send
+ * mail, so any non-routable domain works. It lets us offer a plain
+ * username + password UI while keeping Firebase as the auth engine (stable uid).
+ */
+const USERNAME_DOMAIN = 'jinglemachine.local';
+
+/** Maps a username to the synthetic email used internally (lowercased, trimmed). */
+function usernameToEmail(username: string): string {
+  return `${username.trim().toLowerCase()}@${USERNAME_DOMAIN}`;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly auth = inject(AUTH);
@@ -68,6 +81,16 @@ export class AuthService {
     const cred = await createUserWithEmailAndPassword(this.auth, email, password);
     this.markLogin();
     return cred;
+  }
+
+  /** Username + password sign-in (the username maps to a synthetic email). */
+  async loginWithUsername(username: string, password: string) {
+    return this.loginWithEmail(usernameToEmail(username), password);
+  }
+
+  /** Username + password registration (self-service account creation). */
+  async registerWithUsername(username: string, password: string) {
+    return this.registerWithEmail(usernameToEmail(username), password);
   }
 
   async loginWithGoogle() {

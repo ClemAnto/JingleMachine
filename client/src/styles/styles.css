@@ -77,3 +77,37 @@ body {
 .jm-upload-area {
   @apply flex flex-col items-center justify-center gap-2 p-5 rounded-[20px] border border-dashed border-[#45fff3]/50 bg-[#45fff3]/5 cursor-pointer hover:bg-[#45fff3]/10 transition-colors;
 }
+
+/* Inputs — dark inset fields matching the Figma mockup (global, all nz-input). */
+.ant-input,
+.ant-input-affix-wrapper {
+  background-color: #00201c;
+  border-color: transparent;
+  border-radius: 16px;
+}
+/* The affix wrapper (e.g. password) paints the field; its inner input stays transparent. */
+.ant-input-affix-wrapper > .ant-input {
+  background-color: transparent;
+  border-radius: 0;
+}
+.ant-input:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:focus-within {
+  border-color: #45fff3;
+  box-shadow: none;
+}
+/* Browser autofill: keep the dark field AND the light text in EVERY state
+   (idle/hover/focus/active) — these are exactly where browsers re-impose the
+   yellow background and black text. The inset box-shadow repaints the fill;
+   -webkit-text-fill-color wins over the browser's forced text colour. */
+.ant-input:-webkit-autofill,
+.ant-input:-webkit-autofill:hover,
+.ant-input:-webkit-autofill:focus,
+.ant-input:-webkit-autofill:active {
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.85);
+  -webkit-box-shadow: 0 0 0 1000px #00201c inset;
+  caret-color: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  /* Defer the autofill background animation so it never flashes yellow. */
+  transition: background-color 9999s ease-in-out 0s;
+}

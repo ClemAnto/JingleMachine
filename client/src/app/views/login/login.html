@@ -1,44 +1,72 @@
-<div class="flex justify-center pt-8">
-  <nz-card class="w-full max-w-md shadow-sm" [nzTitle]="mode() === 'login' ? 'Sign in' : 'Create account'">
+<div class="flex justify-center pt-16 px-4">
+  <div class="w-full max-w-md bg-[#001714] rounded-[20px] p-8 shadow-lg">
+    <h1 class="text-white text-2xl font-semibold mb-6">
+      {{ mode() === 'register' ? 'Crea nuova utenza' : 'Accedi' }}
+    </h1>
+
     @if (error()) {
       <nz-alert nzType="error" [nzMessage]="error()!" class="mb-4" nzShowIcon></nz-alert>
     }
 
     <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
-        <nz-form-label nzRequired>Email</nz-form-label>
-        <nz-form-control nzErrorTip="Enter a valid email.">
-          <input nz-input type="email" formControlName="email" placeholder="name@example.com" autocomplete="email" />
+        <nz-form-label nzRequired>{{ emailMode ? 'Email' : 'Utente' }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="emailMode ? 'Inserisci un\'email valida.' : 'Da 3 a 20 caratteri: lettere, numeri, . _ - (niente spazi).'">
+          @if (emailMode) {
+            <input nz-input nzSize="large" type="email" formControlName="identifier"
+              placeholder="nome@esempio.com" autocomplete="email" />
+          } @else {
+            <input nz-input nzSize="large" type="text" formControlName="identifier"
+              placeholder="Il tuo nome utente" autocomplete="username" />
+          }
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
         <nz-form-label nzRequired>Password</nz-form-label>
-        <nz-form-control nzErrorTip="At least 6 characters.">
-          <input nz-input type="password" formControlName="password" placeholder="••••••" autocomplete="current-password" />
+        <nz-form-control nzErrorTip="Da 6 a 64 caratteri.">
+          <nz-input-password>
+            <input nz-input nzSize="large" formControlName="password"
+              placeholder="••••••"
+              [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'" />
+          </nz-input-password>
         </nz-form-control>
       </nz-form-item>
 
-      <button nz-button nzType="primary" nzBlock [nzLoading]="loading()" [disabled]="loading()" type="submit">
-        {{ mode() === 'login' ? 'Sign in' : 'Sign up' }}
-      </button>
+      @if (mode() === 'register') {
+        <nz-form-item>
+          <nz-form-label nzRequired>Conferma password</nz-form-label>
+          <nz-form-control>
+            <nz-input-password>
+              <input nz-input nzSize="large" formControlName="confirmPassword"
+                placeholder="••••••" autocomplete="new-password" />
+            </nz-input-password>
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      <div class="flex flex-col gap-3 mt-2">
+        @if (mode() === 'register') {
+          <button ui-button variant="primary" class="w-full justify-center"
+            [disabled]="loading()" type="submit">Crea utenza</button>
+          <button ui-button variant="neutral" class="w-full justify-center"
+            [disabled]="loading()" type="button" (click)="setMode('login')">Torna all'accesso</button>
+        } @else {
+          <button ui-button variant="primary" class="w-full justify-center"
+            [disabled]="loading()" type="submit">Accedi</button>
+          <button ui-button variant="neutral" class="w-full justify-center"
+            [disabled]="loading()" type="button" (click)="setMode('register')">Crea nuova utenza</button>
+        }
+      </div>
     </form>
 
-    <div class="my-3 text-center text-xs text-slate-400">or</div>
-
-    <button nz-button nzBlock (click)="google()" [disabled]="loading()" type="button">
-      <span nz-icon nzType="google"></span>
-      Continue with Google
-    </button>
-
-    <div class="mt-4 text-center text-sm">
-      @if (mode() === 'login') {
-        <span class="text-slate-500">Don't have an account?</span>
-        <a class="text-indigo-600 ml-1" (click)="toggleMode()">Sign up</a>
-      } @else {
-        <span class="text-slate-500">Already have an account?</span>
-        <a class="text-indigo-600 ml-1" (click)="toggleMode()">Sign in</a>
-      }
-    </div>
-  </nz-card>
+    @if (emailMode && mode() === 'login') {
+      <div class="my-4 text-center text-xs text-white/30">oppure</div>
+      <button ui-button variant="neutral" class="w-full justify-center"
+        [disabled]="loading()" type="button" (click)="google()">
+        <span nz-icon nzType="google"></span>
+        Continua con Google
+      </button>
+    }
+  </div>
 </div>

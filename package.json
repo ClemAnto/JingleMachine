@@ -3,6 +3,7 @@
   "private": true,
   "description": "Project-level orchestration only (no app code). The downloadable installers are the COMPLETE app (client + Mixer), so fetching them is a project-level concern, not a server one.",
   "scripts": {
+    "start": "npm --prefix client run start:all",
     "download": "node scripts/download-packages.mjs"
   },
   "//packages": "References to the two independent sub-packages, for clarity. NOT npm/yarn workspaces on purpose: client/ uses npm and server/ uses Yarn 4 — keeping them separate avoids a shared lockfile/linker. Run each package's commands from inside its own folder.",

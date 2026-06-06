@@ -14,6 +14,9 @@ export const environment = {
   // Userless local test mode: bypass Firebase auth + Cloudinary (in-memory library,
   // object-URL audio). Enabled by the `mock` build configuration (environment.mock.ts).
   mock: false,
+  // Login UI: when false (default) only the simple username + password form is shown.
+  // The email + Google sign-in code stays in place; set to true to bring it back.
+  emailAndGoogleAuth: false,
   firebase: {
     apiKey: 'AIzaSyAgx11WcT5CfqJXoJdjO5ZnEcbp5gJeBlE',
     authDomain: 'jingle-machine-2026.firebaseapp.com',

@@ -8,6 +8,7 @@
 export const environment = {
   production: false,
   mock: true,
+  emailAndGoogleAuth: false,
   firebase: {
     apiKey: 'mock',
     authDomain: 'mock',
