@@ -12,7 +12,7 @@
 //
 // Requires the GitHub CLI (gh) authenticated for the repo.
 import { execSync } from "node:child_process";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const REPO = "ClemAnto/JingleMachine";
@@ -47,6 +47,9 @@ const version = JSON.parse(readFileSync(new URL("../server/package.json", import
 // No trailing slash: on Windows a path ending in "\" would escape the closing
 // quote when passed as --dir "...\" and corrupt the argument.
 const outDir = fileURLToPath(new URL(`../dist/v${version}`, import.meta.url));
+// Start clean: gh run download refuses to overwrite existing files, so a re-run
+// would fail with "The file exists" unless we clear the version folder first.
+rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 console.log(`Run ${runId} → downloading the complete app packages into dist/v${version}/`);
 
@@ -58,8 +61,8 @@ for (const name of ARTIFACTS) {
       stdio: "inherit",
     });
     downloaded++;
-  } catch {
-    console.warn(`! Artifact "${name}" not found in run ${runId} (that leg may have failed or been skipped).`);
+  } catch (err) {
+    console.warn(`! Could not download "${name}" from run ${runId}: ${err.message}`);
   }
 }
 
