@@ -15,6 +15,7 @@ import { it_IT, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { NzIconService, provideNzIcons } from 'ng-zorro-antd/icon';
 import {
   AudioOutline,
+  CaretRightOutline,
   DeleteOutline,
   EditOutline,
   GoogleOutline,
@@ -45,6 +46,7 @@ const MATERIAL_ICONS_CDN = 'https://cdn.jsdelivr.net/npm/@material-design-icons/
 
 const icons = [
   AudioOutline,
+  CaretRightOutline,
   DeleteOutline,
   EditOutline,
   GoogleOutline,

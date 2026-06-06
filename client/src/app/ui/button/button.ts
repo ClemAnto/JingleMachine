@@ -3,10 +3,10 @@ import { Component, computed, input } from '@angular/core';
 /** Figma-styled button variants, driven by theme tokens (no custom CSS classes). */
 export type UiButtonVariant = 'primary' | 'youtube' | 'neutral' | 'alert';
 
-/** Shared shape: pill, comfortable height, large label. */
+/** Shared shape: rounded-lg (mockup radius), comfortable height, large label. */
 const BASE =
   'inline-flex items-center justify-center gap-2 h-(--control-height) px-5 ' +
-  'rounded-full text-xl font-semibold cursor-pointer border-0 transition ' +
+  'rounded-lg text-xl font-semibold cursor-pointer border-0 transition ' +
   'active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
 
 /** Per-variant colours, all from theme tokens. */

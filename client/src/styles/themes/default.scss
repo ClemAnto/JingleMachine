@@ -42,7 +42,7 @@
   --radius-lg:  20px; /* inputs / controls / upload areas */
   --radius-xl:  30px; /* jingle card, raised panels */
   --radius-2xl: 40px; /* modal */
-  /* buttons use --radius-full (pill) — rounder than the mock's 20, per request */
+  /* ui-button uses --radius-lg (20px) like the mockup; --radius-full stays for pills/tags/dots */
 
   /* --- Typography --- */
   --font-sans: 'Inter', system-ui, sans-serif;

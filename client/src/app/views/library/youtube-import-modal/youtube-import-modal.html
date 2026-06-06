@@ -20,46 +20,40 @@
           />
         </div>
       } @else {
-        <div class="space-y-5 py-2">
+        <div class="space-y-10 py-2">
 
-          <!-- Video card with preview play/pause -->
-          <div class="flex items-center gap-4 bg-page rounded-xl p-4">
+          <!-- Video preview + play -->
+          <div class="flex items-center gap-4 bg-page rounded-lg p-3">
             @if (info()?.thumbnail) {
-              <img [src]="info()!.thumbnail" alt="" class="w-28 h-16 object-cover rounded-lg shrink-0" />
+              <img [src]="info()!.thumbnail" alt="" class="w-20 h-20 object-cover rounded-lg shrink-0" />
             }
             <div class="min-w-0 flex-1">
-              <p class="text-fg font-semibold leading-tight line-clamp-1">{{ info()?.title }}</p>
-              <p class="text-muted text-sm line-clamp-1">{{ info()?.uploader }}</p>
-              <p class="text-muted text-sm">{{ formatTime(info()?.durationSeconds ?? 0) }}</p>
+              <p class="text-2xl font-semibold text-fg line-clamp-1">{{ info()?.title }}</p>
+              <p class="text-lg text-muted line-clamp-1">{{ info()?.uploader }}</p>
+              <p class="text-base text-muted">{{ formatTime(info()?.durationSeconds ?? 0) }}</p>
             </div>
             <button
-              class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0 disabled:opacity-50"
+              class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full border-2 border-fg/60 text-fg
+                     bg-transparent cursor-pointer transition hover:border-primary hover:text-primary disabled:opacity-50"
               [disabled]="previewLoading() || !previewReady()"
               (click)="togglePreview()"
             >
               @if (previewLoading()) {
-                <span nz-icon nzType="loading" nzSpin class="text-[40px] text-primary"></span>
+                <span nz-icon nzType="loading" nzSpin class="text-lg"></span>
               } @else {
-                <span nz-icon [nzType]="previewing() ? 'pause-circle' : 'play-circle'" class="text-[40px] text-fg"></span>
+                <span nz-icon [nzType]="previewing() ? 'pause' : 'caret-right'" class="text-lg"></span>
               }
             </button>
           </div>
 
           <!-- Cut interval -->
-          <div>
-            <nz-slider
-              nzRange
-              [nzMin]="0"
-              [nzMax]="info()?.durationSeconds ?? 0"
-              [nzTipFormatter]="formatTime"
-              [ngModel]="range()"
-              (ngModelChange)="onRangeChange($event)"
-            />
-            <div class="flex items-center justify-between mt-1">
-              <span class="px-3 py-1 rounded-full bg-page text-muted text-xs font-mono">{{ formatTime(range()[0]) }}</span>
-              <span class="px-3 py-1 rounded-full bg-page text-muted text-xs font-mono">{{ formatTime(range()[1]) }}</span>
-            </div>
-          </div>
+          <ui-trim-slider
+            [max]="info()?.durationSeconds ?? 0"
+            [step]="0.1"
+            [value]="range()"
+            (valueChange)="onRangeChange($event)"
+            [format]="formatTime"
+          />
 
         </div>
       }

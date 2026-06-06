@@ -5,11 +5,11 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
-import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { MixerService, VideoInfo } from '../../../core/mixer.service';
 import { UiButton } from '../../../ui/button/button';
+import { UiTrimSlider } from '../../../ui/trim-slider/trim-slider';
 import { PreparedAudio } from '../create-jingle-modal/create-jingle-modal';
 
 /** Default clip length (seconds) pre-selected on the cut slider. */
@@ -30,9 +30,9 @@ const DEFAULT_CLIP_SECONDS = 30;
     NzIconModule,
     NzInputModule,
     NzModalModule,
-    NzSliderModule,
     NzSpinModule,
     UiButton,
+    UiTrimSlider,
   ],
   templateUrl: './youtube-import-modal.html',
 })

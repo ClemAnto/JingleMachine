@@ -209,17 +209,6 @@
     border-radius: var(--radius-full);
   }
 
-  // --- Slider (range used in YouTube import) ------------------
-  .ant-slider-track {
-    background: var(--color-primary);
-  }
-  .ant-slider:hover .ant-slider-track {
-    background: color-mix(in srgb, var(--color-primary) 88%, white);
-  }
-  .ant-slider-handle {
-    border-color: var(--color-primary);
-  }
-
   // --- Spin / loading -----------------------------------------
   .ant-spin-dot-item {
     background: var(--color-primary);

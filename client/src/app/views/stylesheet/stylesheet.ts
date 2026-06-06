@@ -10,6 +10,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 
 import { UiButton } from '../../ui/button/button';
+import { UiTrimSlider } from '../../ui/trim-slider/trim-slider';
 
 /** Developer-only page at /stylesheet — no auth guard.
  *  Shows all themed UI components in every variant. */
@@ -25,6 +26,7 @@ import { UiButton } from '../../ui/button/button';
     NzModalModule,
     NzSelectModule,
     UiButton,
+    UiTrimSlider,
   ],
   templateUrl: './stylesheet.html',
 })
@@ -32,6 +34,42 @@ export class Stylesheet {
   protected modalVisible = signal(false);
   protected searchValue = signal('');
   protected selectValue = signal<string | null>(null);
+
+  // "Carica da Youtube" modal — two-step flow (paste URL → preview + trim).
+  protected ytModalVisible = signal(false);
+  protected ytStep = signal<1 | 2>(1);
+  protected ytUrl = signal('');
+  // Trim range, in seconds, over a mock 6:45 (405s) clip — start/end handles.
+  protected ytTrim = signal<[number, number]>([0, 345]);
+  // Independent copy for the always-visible static reference card.
+  protected trimDemo = signal<[number, number]>([0, 345]);
+  protected readonly clipDuration = 405; // 6:45 mock clip
+
+  protected openYoutubeModal(): void {
+    this.ytStep.set(1);
+    this.ytUrl.set('');
+    this.ytTrim.set([0, 345]);
+    this.ytModalVisible.set(true);
+  }
+
+  protected ytContinue(): void {
+    if (this.ytStep() === 1) this.ytStep.set(2);
+    else this.ytModalVisible.set(false);
+  }
+
+  /** Seconds → m:ss (e.g. 405 → "6:45"), used for the video duration label. */
+  protected formatSeconds = (total: number): string => {
+    const minutes = Math.floor(total / 60);
+    const seconds = Math.floor(total % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  /** Seconds → mm:ss (e.g. 345 → "05:45"), used by the trim slider pills (per mockup). */
+  protected formatClock = (total: number): string => {
+    const minutes = Math.floor(total / 60);
+    const seconds = Math.floor(total % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   // Jingle card accent colours — values from the Figma mockup SVG.
   protected readonly jingleColors = [

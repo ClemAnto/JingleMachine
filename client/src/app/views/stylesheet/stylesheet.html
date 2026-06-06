@@ -53,7 +53,7 @@
   <section class="space-y-4">
     <h2 class="section-title">Buttons</h2>
 
-    <h3 class="subsection-title">App button — <code class="text-xs">ui-button</code> (4 variants, pill)</h3>
+    <h3 class="subsection-title">App button — <code class="text-xs">ui-button</code> (4 variants, rounded-lg)</h3>
     <div class="flex flex-wrap gap-4 items-center">
       <button ui-button variant="primary"><span nz-icon nzType="upload"></span> Aggiungi file</button>
       <button ui-button variant="youtube"><span nz-icon nzType="youtube"></span> Carica da Youtube</button>
@@ -210,6 +210,88 @@
         </div>
       </ng-container>
     </nz-modal>
+  </section>
+
+  <!-- ── Modal — Carica da Youtube ── -->
+  <section class="space-y-4">
+    <h2 class="section-title">Modal — Carica da Youtube</h2>
+    <p class="text-sm text-muted">Flusso a due step: incolla l'URL → anteprima del video + taglio (range slider).</p>
+
+    <!-- Always-visible reference card: the step-2 content (preview + trim) -->
+    <div class="w-full max-w-xl rounded-2xl bg-surface p-10 space-y-10">
+      <h3 class="text-3xl font-semibold text-heading">Carica da Youtube</h3>
+
+      <div class="flex items-center gap-4 p-3 rounded-lg bg-page">
+        <div class="w-20 h-20 shrink-0 rounded-lg bg-surface flex items-center justify-center overflow-hidden">
+          <span nz-icon nzType="picture" class="text-2xl text-muted"></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-2xl font-semibold text-fg truncate">Titolo video</p>
+          <p class="text-lg text-muted truncate">Descrizione del video</p>
+          <p class="text-base text-muted">{{ formatSeconds(clipDuration) }}</p>
+        </div>
+        <button
+          type="button"
+          class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full border-2 border-fg/60 text-fg
+                 hover:border-primary hover:text-primary transition cursor-pointer"
+        >
+          <span nz-icon nzType="caret-right" class="text-base"></span>
+        </button>
+      </div>
+
+      <ui-trim-slider [max]="clipDuration" [(value)]="trimDemo" [format]="formatClock" />
+
+    </div>
+
+    <button ui-button variant="youtube" (click)="openYoutubeModal()">
+      <span nz-icon nzType="youtube"></span> Carica da Youtube
+    </button>
+
+    <nz-modal
+      [nzVisible]="ytModalVisible()"
+      nzTitle="Carica da Youtube"
+      [nzFooter]="ytFooter"
+      (nzOnCancel)="ytModalVisible.set(false)"
+    >
+      <ng-container *nzModalContent>
+        @if (ytStep() === 1) {
+          <!-- Step 1 — paste the video URL -->
+          <div class="py-2">
+            <input nz-input nzSize="large" placeholder="https://www.youtube.com" [(ngModel)]="ytUrl" />
+          </div>
+        } @else {
+          <!-- Step 2 — video preview + trim range -->
+          <div class="space-y-10 py-2">
+            <div class="flex items-center gap-4 p-3 rounded-lg bg-page">
+              <div class="w-20 h-20 shrink-0 rounded-lg bg-surface flex items-center justify-center overflow-hidden">
+                <span nz-icon nzType="picture" class="text-2xl text-muted"></span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-2xl font-semibold text-fg truncate">Titolo video</p>
+                <p class="text-lg text-muted truncate">Descrizione del video</p>
+                <p class="text-base text-muted">{{ formatSeconds(clipDuration) }}</p>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full border-2 border-fg/60 text-fg
+                       hover:border-primary hover:text-primary transition cursor-pointer"
+              >
+                <span nz-icon nzType="caret-right" class="text-base"></span>
+              </button>
+            </div>
+
+            <ui-trim-slider [max]="clipDuration" [(value)]="ytTrim" [format]="formatClock" />
+          </div>
+        }
+      </ng-container>
+    </nz-modal>
+
+    <ng-template #ytFooter>
+      <div class="flex gap-5">
+        <button ui-button variant="neutral" class="flex-1" (click)="ytModalVisible.set(false)">Annulla</button>
+        <button ui-button variant="primary" class="flex-1" (click)="ytContinue()">Continua</button>
+      </div>
+    </ng-template>
   </section>
 
   <!-- ── Spinner ── -->

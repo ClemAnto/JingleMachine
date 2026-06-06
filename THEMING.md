@@ -116,10 +116,10 @@ Token correlati:
 Configuriamo gli **slot esistenti** di Tailwind → si usano `rounded-lg`/`rounded-xl`/… senza nuove classi.
 | Token Tailwind | Valore | Utility | Uso |
 |---|---|---|---|
-| `--radius-lg` | `20px` | `rounded-lg` | input/control, `nz-button` (default) |
+| `--radius-lg` | `20px` | `rounded-lg` | input/control, `nz-button` (default), **CTA `ui-button`** (come da mockup) |
 | `--radius-xl` | `30px` | `rounded-xl` | card jingle, pannelli raised |
 | `--radius-2xl` | `40px` | `rounded-2xl` | modale |
-| `--radius-full` | (default `9999px`) | `rounded-full` | pill/tag/dot, **CTA `ui-button`** |
+| `--radius-full` | (default `9999px`) | `rounded-full` | pill/tag/dot, box ricerca, maniglie/pill dello slider |
 
 > **Altezza control**: token `--control-height: 56px` (in `tokens.css`), usato via `h-(--control-height)`
 > per input/select/CTA. Tunable. `nzSize="small"/"large"` di ng-zorro restano disponibili.

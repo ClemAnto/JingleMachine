@@ -1,0 +1,46 @@
+<!-- --s/--e = start/end handle centre (px), --tw = track width (px); set from JS.
+     CSS clamps each element inside the track and positions it with translateX (GPU). -->
+<div #root class="select-none">
+  <!-- Track: dark rail (unselected) + brighter selected fill + 2 flush handles -->
+  <div #track class="relative h-10 flex items-center">
+    <div class="absolute inset-x-0 h-10 rounded-lg bg-page"></div>
+    <div
+      class="absolute h-10 rounded-lg bg-control"
+      style="left: calc(clamp(0.625rem, var(--s, 0px), calc(var(--tw, 100%) - 0.625rem)) - 0.625rem);
+             right: calc(var(--tw, 100%) - clamp(0.625rem, var(--e, 0px), calc(var(--tw, 100%) - 0.625rem)) - 0.625rem)"
+    ></div>
+
+    <div
+      #startHandle
+      class="absolute top-1/2 left-0 flex w-5 h-10 cursor-grab touch-none items-center justify-center rounded-lg bg-primary active:cursor-grabbing"
+      style="transform: translateX(clamp(0.625rem, var(--s, 0px), calc(var(--tw, 100%) - 0.625rem))) translate(-50%, -50%)"
+      (pointerdown)="startDrag(0, $event)"
+    >
+      <span class="w-1 h-5 rounded-full bg-control"></span>
+    </div>
+    <div
+      #endHandle
+      class="absolute top-1/2 left-0 flex w-5 h-10 cursor-grab touch-none items-center justify-center rounded-lg bg-primary active:cursor-grabbing"
+      style="transform: translateX(clamp(0.625rem, var(--e, 0px), calc(var(--tw, 100%) - 0.625rem))) translate(-50%, -50%)"
+      (pointerdown)="startDrag(1, $event)"
+    >
+      <span class="w-1 h-5 rounded-full bg-control"></span>
+    </div>
+  </div>
+
+  <!-- Time pills: centred under each handle, clamped to stay inside the track -->
+  <div class="relative h-7 mt-2.5 [--pill-w:3.75rem]">
+    <span
+      #startPill
+      class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg"
+      style="transform: translateX(clamp(calc(var(--pill-w) / 2), var(--s, 0px), calc(var(--tw, 100%) - var(--pill-w) / 2))) translateX(-50%)"
+      >{{ format()(value()[0]) }}</span
+    >
+    <span
+      #endPill
+      class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg"
+      style="transform: translateX(clamp(calc(var(--pill-w) / 2), var(--e, 0px), calc(var(--tw, 100%) - var(--pill-w) / 2))) translateX(-50%)"
+      >{{ format()(value()[1]) }}</span
+    >
+  </div>
+</div>
