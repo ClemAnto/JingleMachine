@@ -168,9 +168,9 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Firebase** (`jingle-machine-2026`) + **Cloudinary** (`dnpbzwccm` / preset `unsigned`) **configurati** in `environment.ts` (console Firebase già impostata: Email/Password + Google + Firestore + rules).
 - **Libreria PER-UTENTE** + **authGuard** (sessione 24h) · **Refactor UI** (`app/views` + `app/ui`, Tailwind inline, icone CDN) · **rename → Mixer** completo.
 - **Modalità mock** userless (`npm run start:all:mock`) + script `npm run start:all` (client + Mixer) per i test.
-- **Packaging → Electron** scaffoldato (NSIS + dmg). Credenziali locali in `CREDENZIALI.local.md` (gitignored).
+- **Packaging → Electron: PRIMA VERSIONE FUNZIONANTE.** Risolto il bug ESM/CJS di Electron 33 (main → `electron-main.cjs` + `createRequire`); **build CI verificata** (Win + Mac, [run #27059622842](https://github.com/ClemAnto/JingleMachine/actions/runs/27059622842)) → installer `.exe` (~79 MB) e `.dmg` universal (~172 MB). Scaricabili con **`npm run download`** (root). Dettagli e trappole CI in `MEMO.md` §10. Credenziali locali in `CREDENZIALI.local.md` (gitignored).
 
 **Prossimo passo — opzioni:**
 1. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.
-2. **Build CI verificata** (2026-06-06) + script download riscritto (`npm run download`). Resta: aggiornare `server/README.md` + icona app + eseguire il dmg su un Mac reale.
+2. **Rifinire Fase 7**: eseguire il **dmg su un Mac reale** (build OK ma mai avviato su macOS), **icona app** (`build/icon.*`), aggiornare `server/README.md`.
 3. **Chiudere Fase 1** (Local Network Access + token) e **Fase 6** (deploy GitHub Pages + domini autorizzati).
