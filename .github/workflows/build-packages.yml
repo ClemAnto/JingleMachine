@@ -58,16 +58,15 @@ jobs:
         working-directory: server
 
       # ── 4. Build the Electron app (NSIS installer on Win, dmg on mac) ───
-      # --publish never: we only want the installers as build artifacts (step 5),
-      # not a GitHub Release. Without it, GH_TOKEN puts electron-builder into
-      # publish mode and it fails trying to detect the repo ("Cannot detect
-      # repository by .git/config"). GH_TOKEN is kept only to avoid GitHub rate
-      # limits while downloading the Electron binaries.
+      # --publish never + no GH_TOKEN: we only want the installers as build
+      # artifacts (step 5), not a GitHub Release. If GH_TOKEN is set,
+      # electron-builder auto-configures a GitHub publish provider and crashes
+      # generating update metadata ("Cannot read properties of null (reading
+      # 'provider')" / "Cannot detect repository by .git/config"). Leaving the
+      # token unset keeps it fully offline; the Electron binary download still works.
       - name: Build Electron app
         run: yarn dist --publish never
         working-directory: server
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ── 5. Upload installers ────────────────────────────────────────────
       - uses: actions/upload-artifact@v4
