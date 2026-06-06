@@ -1,6 +1,6 @@
 <div class="flex justify-center pt-16 px-4">
-  <div class="w-full max-w-md bg-[#001714] rounded-[20px] p-8 shadow-lg">
-    <h1 class="text-white text-2xl font-semibold mb-6">
+  <div class="w-full max-w-md bg-surface rounded-xl p-8 shadow-lg">
+    <h1 class="text-fg text-2xl font-semibold mb-6">
       {{ mode() === 'register' ? 'Crea nuova utenza' : 'Accedi' }}
     </h1>
 
@@ -61,7 +61,7 @@
     </form>
 
     @if (emailMode && mode() === 'login') {
-      <div class="my-4 text-center text-xs text-white/30">oppure</div>
+      <div class="my-4 text-center text-xs text-muted">oppure</div>
       <button ui-button variant="neutral" class="w-full justify-center"
         [disabled]="loading()" type="button" (click)="google()">
         <span nz-icon nzType="google"></span>

@@ -13,23 +13,23 @@
         <div class="flex gap-4">
           @if (preparedAudio()) {
             <!-- Audio already extracted from YouTube and uploaded -->
-            <div class="jm-upload-area flex-1">
-              <span nz-icon nzType="youtube" class="text-2xl text-[#45fff3]"></span>
-              <span class="text-sm font-semibold text-center text-white">Audio da YouTube pronto</span>
+            <div class="flex flex-col items-center justify-center gap-2 p-5 rounded-lg border border-dashed border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors flex-1">
+              <span nz-icon nzType="youtube" class="text-2xl text-primary"></span>
+              <span class="text-sm font-semibold text-center text-fg">Audio da YouTube pronto</span>
             </div>
           } @else {
-            <label class="jm-upload-area flex-1 cursor-pointer">
+            <label class="flex flex-col items-center justify-center gap-2 p-5 rounded-lg border border-dashed border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors flex-1">
               <input type="file" accept="audio/*,.mp3" class="hidden" (change)="onAudioSelected($event)" />
-              <span nz-icon nzType="audio" class="text-2xl" [class.text-white]="audioFile()" [class.text-[#45fff3]]="!audioFile()"></span>
+              <span nz-icon nzType="audio" class="text-2xl" [class.text-fg]="audioFile()" [class.text-primary]="!audioFile()"></span>
               <span class="text-sm font-semibold text-center">
                 {{ audioFile() ? audioFile()!.name : 'Carica file audio' }}
               </span>
             </label>
           }
 
-          <label class="jm-upload-area flex-1 cursor-pointer">
+          <label class="flex flex-col items-center justify-center gap-2 p-5 rounded-lg border border-dashed border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors flex-1">
             <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" />
-            <span nz-icon nzType="picture" class="text-2xl" [class.text-white]="imageFile()" [class.text-[#45fff3]]="!imageFile()"></span>
+            <span nz-icon nzType="picture" class="text-2xl" [class.text-fg]="imageFile()" [class.text-primary]="!imageFile()"></span>
             <span class="text-sm font-semibold text-center">
               {{ imageFile() ? imageFile()!.name : 'Carica immagine' }}
             </span>
@@ -44,7 +44,7 @@
 
         <!-- Colour picker -->
         <div class="space-y-2">
-          <p class="text-sm font-semibold text-white/85">Colore scheda</p>
+          <p class="text-sm font-semibold text-fg">Colore scheda</p>
           <ui-color-picker [value]="color()" (valueChange)="color.set($event)" />
         </div>
 

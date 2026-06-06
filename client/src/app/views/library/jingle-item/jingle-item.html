@@ -1,10 +1,10 @@
 <div
-  class="relative w-full h-50 overflow-hidden rounded-[30px] flex flex-col justify-end border-2 bg-cover bg-center cursor-pointer transition-transform hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+  class="relative w-full h-50 overflow-hidden rounded-xl flex flex-col justify-end border-2 bg-cover bg-center cursor-pointer transition-transform hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
   [ngStyle]="cardStyle()"
   (click)="togglePlay()"
 >
   <!-- Colour gradient overlay -->
-  <div class="absolute inset-0 rounded-[30px] pointer-events-none" [ngStyle]="overlayStyle()"></div>
+  <div class="absolute inset-0 rounded-xl pointer-events-none" [ngStyle]="overlayStyle()"></div>
 
   <!-- Progress bar (visible only when playing) -->
   @if (playing()) {
@@ -15,7 +15,7 @@
   <div class="relative z-1 px-4 pt-3 pb-3.5" (click)="$event.stopPropagation()">
     <!-- Name + play/pause -->
     <div class="flex items-end gap-2">
-      <span class="flex-1 text-[20px] font-semibold text-white leading-tight [text-shadow:0_1px_4px_rgba(0,0,0,0.5)]">{{ jingle().name }}</span>
+      <span class="flex-1 text-xl font-semibold text-white leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">{{ jingle().name }}</span>
       <button class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0" (click)="togglePlay()">
         <span nz-icon [nzType]="playing() ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white"></span>
       </button>
@@ -25,7 +25,7 @@
     @if (jingle().tags.length) {
       <div class="flex flex-wrap gap-1 mt-1">
         @for (tag of jingle().tags; track tag) {
-          <span class="jm-tag text-xs">{{ tag }}</span>
+          <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-xs font-medium">{{ tag }}</span>
         }
       </div>
     }
@@ -38,7 +38,7 @@
           <span nz-icon nzType="edit" class="text-sm text-white/60"></span>
         </button>
         <button class="bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-white/12" (click)="deleteRequest.emit(jingle())">
-          <span nz-icon nzType="delete" class="text-sm text-[#ff4548]/80"></span>
+          <span nz-icon nzType="delete" class="text-sm text-danger/80"></span>
         </button>
       </div>
     </div>

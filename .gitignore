@@ -43,3 +43,6 @@ server/downloads/
 # File di sistema
 .DS_Store
 Thumbs.db
+
+# Materiale di riferimento mockup (export Figma, non sorgente)
+client/mockup_temp/

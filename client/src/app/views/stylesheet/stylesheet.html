@@ -1,28 +1,39 @@
-<div class="min-h-screen bg-[#00201c] text-white p-10 space-y-16">
+<div class="min-h-screen bg-page text-fg p-10 space-y-16">
 
   <!-- ── Title ── -->
   <header>
-    <h1 class="text-4xl font-bold text-[#45fff3] tracking-tight">Jingle Machine — Stylesheet</h1>
-    <p class="mt-1 text-white/45 text-sm">Developer reference — <code class="text-[#45fff3]/70">/stylesheet</code></p>
+    <h1 class="text-4xl font-bold text-primary tracking-tight">Jingle Machine — Stylesheet</h1>
+    <p class="mt-1 text-muted text-sm">Developer reference — <code class="text-primary/70">/stylesheet</code></p>
   </header>
 
   <!-- ── Colour Palette ── -->
   <section class="space-y-4">
-    <h2 class="section-title">Colour Palette</h2>
-    <div class="flex flex-wrap gap-4">
-      <div class="swatch" style="background:#00201c"><span>#00201c</span><span class="label">bg outer</span></div>
-      <div class="swatch" style="background:#001714"><span>#001714</span><span class="label">bg inner</span></div>
-      <div class="swatch" style="background:#45fff3; color:#00201c"><span>#45fff3</span><span class="label">primary</span></div>
-      <div class="swatch" style="background:#ff4548"><span>#ff4548</span><span class="label">danger / YT</span></div>
-      <div class="swatch" style="background:rgba(255,255,255,0.85)"><span>#fff 85%</span><span class="label">text</span></div>
-      <div class="swatch" style="background:rgba(255,255,255,0.45)"><span>#fff 45%</span><span class="label">secondary</span></div>
-      <div class="swatch" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2)"><span>#fff 12%</span><span class="label">border</span></div>
+    <h2 class="section-title">Colour Palette (theme tokens)</h2>
+    <div class="flex flex-wrap gap-5">
+      @for (t of paletteTokens; track t.name) {
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-28 h-16 rounded-xl border border-border flex items-center justify-center" [class]="t.cls">
+            <span class="text-sm font-semibold" [class]="t.on">{{ t.onName }}</span>
+          </div>
+          <span class="text-xs font-mono text-muted">{{ t.name }}</span>
+        </div>
+      }
     </div>
 
-    <h3 class="text-sm font-semibold text-white/45 mt-6 mb-2">Jingle card accent colours</h3>
+    <h3 class="subsection-title">Text & border tokens</h3>
+    <div class="flex flex-wrap items-center gap-6">
+      <span class="text-fg">text-fg</span>
+      <span class="text-muted">text-muted</span>
+      <span class="text-heading font-semibold">text-heading</span>
+      <span class="text-disabled">text-disabled</span>
+      <span class="px-4 py-2 rounded-lg border border-border">border</span>
+      <span class="px-4 py-2 rounded-lg border border-border-subtle">border-subtle</span>
+    </div>
+
+    <h3 class="subsection-title">Jingle card accent colours (per-jingle, from the mockup)</h3>
     <div class="flex gap-3">
       @for (color of jingleColors; track color) {
-        <div class="w-9 h-9 rounded-full border-2 border-white/20" [style.background]="color"></div>
+        <div class="w-9 h-9 rounded-full border-2 border-border" [style.background]="color"></div>
       }
     </div>
   </section>
@@ -30,35 +41,28 @@
   <!-- ── Typography ── -->
   <section class="space-y-3">
     <h2 class="section-title">Typography</h2>
-    <p class="text-[30px] font-semibold">I tuoi Jingle — 30px semibold</p>
-    <p class="text-[24px] font-semibold">Titolo modale — 24px semibold</p>
-    <p class="text-[20px] font-semibold">Nome jingle — 20px semibold</p>
-    <p class="text-base">Body text — 14px regular</p>
-    <p class="text-sm text-white/45">Secondary / placeholder — 14px 45%</p>
-    <code class="text-xs text-[#45fff3]/70 font-mono">font-family: Inter, system-ui</code>
+    <p class="text-3xl font-semibold">I tuoi Jingle — text-3xl semibold</p>
+    <p class="text-2xl font-semibold">Titolo modale — text-2xl semibold</p>
+    <p class="text-xl font-semibold">Nome jingle — text-xl semibold</p>
+    <p class="text-base">Body text — text-base</p>
+    <p class="text-sm text-muted">Secondary / placeholder — text-sm muted</p>
+    <code class="text-xs text-primary/70 font-mono">--font-sans: Inter, system-ui</code>
   </section>
 
   <!-- ── Buttons ── -->
   <section class="space-y-4">
     <h2 class="section-title">Buttons</h2>
 
-    <h3 class="subsection-title">Custom (Figma) — button ui-button</h3>
+    <h3 class="subsection-title">App button — <code class="text-xs">ui-button</code> (4 variants, pill)</h3>
     <div class="flex flex-wrap gap-4 items-center">
-      <button ui-button variant="primary">
-        <span nz-icon nzType="upload"></span> Aggiungi file
-      </button>
-      <button ui-button variant="youtube">
-        <span nz-icon nzType="youtube"></span> Carica da Youtube
-      </button>
-      <button ui-button variant="neutral">
-        <span nz-icon nzType="search"></span> Cerca
-      </button>
-      <button ui-button variant="alert">
-        <span nz-icon nzType="delete"></span> Elimina
-      </button>
+      <button ui-button variant="primary"><span nz-icon nzType="upload"></span> Aggiungi file</button>
+      <button ui-button variant="youtube"><span nz-icon nzType="youtube"></span> Carica da Youtube</button>
+      <button ui-button variant="neutral"><span nz-icon nzType="logout"></span> Annulla</button>
+      <button ui-button variant="alert"><span nz-icon nzType="delete"></span> Elimina</button>
+      <button ui-button variant="primary" disabled>Disabled</button>
     </div>
 
-    <h3 class="subsection-title">NgZorro (NzButton)</h3>
+    <h3 class="subsection-title">NgZorro (NzButton) — themed</h3>
     <div class="flex flex-wrap gap-4 items-center">
       <button nz-button nzType="primary">Primary</button>
       <button nz-button nzType="primary" nzDanger>Danger</button>
@@ -70,7 +74,14 @@
       <button nz-button nzType="primary" disabled>Disabled</button>
     </div>
 
-    <h3 class="subsection-title">Icon Buttons</h3>
+    <h3 class="subsection-title">NgZorro sizes — <code class="text-xs">nzSize</code></h3>
+    <div class="flex flex-wrap gap-4 items-center">
+      <button nz-button nzType="primary" nzSize="small">Small</button>
+      <button nz-button nzType="primary">Default</button>
+      <button nz-button nzType="primary" nzSize="large">Large</button>
+    </div>
+
+    <h3 class="subsection-title">Icon buttons</h3>
     <div class="flex gap-4 items-center">
       <button nz-button nzType="primary" nzShape="circle"><span nz-icon nzType="plus"></span></button>
       <button nz-button nzType="default" nzShape="circle"><span nz-icon nzType="edit"></span></button>
@@ -82,24 +93,31 @@
   <section class="space-y-4">
     <h2 class="section-title">Inputs</h2>
     <div class="max-w-sm space-y-3">
-      <input nz-input placeholder="Nome jingle..." [(ngModel)]="searchValue" />
-      <nz-input-group [nzPrefix]="prefixSearch">
+      <input nz-input nzSize="large" placeholder="Nome Jingle (large)" [(ngModel)]="searchValue" />
+      <input nz-input placeholder="Default size" [(ngModel)]="searchValue" />
+      <nz-input-group nzSize="large" [nzPrefix]="prefixSearch">
         <input nz-input placeholder="Cerca..." [(ngModel)]="searchValue" />
       </nz-input-group>
       <ng-template #prefixSearch><span nz-icon nzType="search"></span></ng-template>
 
-      <input nz-input placeholder="Disabled" disabled />
+      <nz-input-password>
+        <input nz-input nzSize="large" placeholder="Password" />
+      </nz-input-password>
 
-      <nz-select class="w-full" [(ngModel)]="selectValue" nzPlaceHolder="Seleziona tag">
+      <textarea nz-input rows="3" placeholder="Textarea..."></textarea>
+
+      <input nz-input nzSize="large" placeholder="Disabled" disabled />
+
+      <nz-select class="w-full" nzSize="large" [(ngModel)]="selectValue" nzPlaceHolder="Seleziona tag">
         @for (tag of mockTags; track tag) {
           <nz-option [nzValue]="tag" [nzLabel]="tag"></nz-option>
         }
       </nz-select>
 
-      <!-- Custom Figma-style search button -->
-      <div class="jm-search-box">
-        <span nz-icon nzType="search" class="text-white/50"></span>
-        <span class="text-white/50 text-[20px] font-semibold">Cerca</span>
+      <!-- App search pill (token-driven, no custom class) -->
+      <div class="flex items-center gap-2 h-(--control-height) px-5 rounded-full bg-control cursor-text">
+        <span nz-icon nzType="search" class="text-muted"></span>
+        <span class="text-fg text-lg font-semibold">Cerca</span>
       </div>
     </div>
   </section>
@@ -111,15 +129,12 @@
       @for (tag of mockTags; track tag) {
         <nz-tag>{{ tag }}</nz-tag>
       }
-      <nz-tag nzColor="cyan">cyan</nz-tag>
-      <nz-tag nzColor="red">red</nz-tag>
-      <nz-tag nzColor="geekblue">geekblue</nz-tag>
     </div>
 
-    <h3 class="subsection-title">Custom pill tags (Figma-style)</h3>
+    <h3 class="subsection-title">Pill tags (app style, token-driven)</h3>
     <div class="flex flex-wrap gap-2">
       @for (tag of mockTags; track tag) {
-        <span class="jm-tag">{{ tag }}</span>
+        <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-xs font-medium">{{ tag }}</span>
       }
     </div>
   </section>
@@ -128,62 +143,40 @@
   <section class="space-y-4">
     <h2 class="section-title">Jingle Card</h2>
     <div class="flex flex-wrap gap-6">
-
-      <!-- Default state -->
-      <div class="jm-card" style="--card-color: #009e94; background-image: linear-gradient(226deg, rgba(0,158,148,0) 0%, #009e94 100%)">
-        <div class="jm-card-body">
-          <div class="jm-card-meta">
-            <span class="jm-card-name">Rompicoglioni</span>
-            <button class="jm-card-play"><span nz-icon nzType="play-circle" class="text-2xl text-white"></span></button>
-          </div>
-          <div class="flex gap-1 flex-wrap mt-1">
-            <span class="jm-tag text-xs">jingle</span>
-            <span class="jm-tag text-xs">intro</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Playing state -->
-      <div class="jm-card jm-card--playing" style="--card-color: #009e94; background-image: linear-gradient(226deg, rgba(0,158,148,0) 0%, #009e94 100%)">
-        <div class="jm-card-progress" style="width: 45%"></div>
-        <div class="jm-card-body">
-          <div class="jm-card-meta">
-            <span class="jm-card-name">Polizia</span>
-            <button class="jm-card-play"><span nz-icon nzType="pause-circle" class="text-2xl text-white"></span></button>
-          </div>
-          <div class="flex gap-1 flex-wrap mt-1">
-            <span class="jm-tag text-xs">effetto</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Yellow accent -->
-      <div class="jm-card" style="--card-color: #ffb700; background-image: linear-gradient(226deg, rgba(255,183,0,0) 0%, #ffb700 100%)">
-        <div class="jm-card-body">
-          <div class="jm-card-meta">
-            <span class="jm-card-name">Teng e sord</span>
-            <button class="jm-card-play"><span nz-icon nzType="play-circle" class="text-2xl text-white"></span></button>
+      @for (card of [
+        { name: 'Rompicoglioni', color: '#3AE9CF', playing: false, tags: ['jingle','intro'] },
+        { name: 'Polizia', color: '#007EF4', playing: true, tags: ['effetto'] },
+        { name: 'Teng e sord', color: '#FFD500', playing: false, tags: [] },
+        { name: 'Nome Jingle', color: '#AA00FF', playing: false, tags: [] }
+      ]; track card.name) {
+        <div class="relative w-72 h-50 overflow-hidden rounded-xl flex flex-col justify-end border-2 cursor-pointer"
+             [style.border-color]="card.color"
+             [style.background-image]="'linear-gradient(226deg, transparent 0%, ' + card.color + ' 100%)'">
+          @if (card.playing) {
+            <div class="absolute bottom-0 left-0 h-0.75 bg-white" style="width:45%"></div>
+          }
+          <div class="relative px-4 pt-3 pb-3.5">
+            <div class="flex items-end gap-2">
+              <span class="flex-1 text-xl font-semibold text-white leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">{{ card.name }}</span>
+              <span nz-icon [nzType]="card.playing ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white"></span>
+            </div>
+            @if (card.tags.length) {
+              <div class="flex gap-1 flex-wrap mt-1">
+                @for (t of card.tags; track t) {
+                  <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-xs font-medium">{{ t }}</span>
+                }
+              </div>
+            }
           </div>
         </div>
-      </div>
-
-      <!-- Purple accent -->
-      <div class="jm-card" style="--card-color: #9000ff; background-image: linear-gradient(226deg, rgba(144,0,255,0) 0%, #9000ff 100%)">
-        <div class="jm-card-body">
-          <div class="jm-card-meta">
-            <span class="jm-card-name">Nome Jingle</span>
-            <button class="jm-card-play"><span nz-icon nzType="play-circle" class="text-2xl text-white"></span></button>
-          </div>
-        </div>
-      </div>
-
+      }
     </div>
   </section>
 
   <!-- ── Modal ── -->
   <section class="space-y-4">
     <h2 class="section-title">Modal</h2>
-    <button nz-button nzType="primary" (click)="modalVisible.set(true)">Open modal demo</button>
+    <button ui-button variant="primary" (click)="modalVisible.set(true)">Open modal demo</button>
 
     <nz-modal
       [nzVisible]="modalVisible()"
@@ -195,21 +188,21 @@
       <ng-container *nzModalContent>
         <div class="space-y-4 py-2">
           <div class="flex gap-4">
-            <div class="jm-upload-area flex-1">
-              <span nz-icon nzType="audio" class="text-2xl text-[#45fff3]"></span>
+            <div class="flex flex-col items-center justify-center gap-2 p-5 rounded-lg border border-dashed border-primary/50 bg-primary/5 flex-1">
+              <span nz-icon nzType="audio" class="text-2xl text-primary"></span>
               <span class="text-sm font-semibold">Carica file audio</span>
             </div>
-            <div class="jm-upload-area flex-1">
-              <span nz-icon nzType="picture" class="text-2xl text-[#45fff3]"></span>
+            <div class="flex flex-col items-center justify-center gap-2 p-5 rounded-lg border border-dashed border-primary/50 bg-primary/5 flex-1">
+              <span nz-icon nzType="picture" class="text-2xl text-primary"></span>
               <span class="text-sm font-semibold">Carica immagine</span>
             </div>
           </div>
-          <input nz-input placeholder="Nome Jingle" />
+          <input nz-input nzSize="large" placeholder="Nome Jingle" />
           <div class="space-y-2">
-            <p class="text-sm font-semibold text-white/85">Colore scheda</p>
+            <p class="text-sm font-semibold text-fg">Colore scheda</p>
             <div class="flex gap-3 flex-wrap">
               @for (color of jingleColors; track color) {
-                <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all"
+                <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-border hover:border-fg transition-all"
                      [style.background]="color"></div>
               }
             </div>

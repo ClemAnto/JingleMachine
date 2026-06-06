@@ -62,6 +62,7 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 | `firebase/firestore.rules` | Schema dati Firestore + sicurezza (libreria privata per utente). |
 | ~~`firebase/storage.rules`~~ | **Obsoleto** (Firebase Storage rimosso → si usa Cloudinary). |
 | `CLAUDE.md` (questo) | All'inizio, per orientarti e per le convenzioni. |
+| **`THEMING.md`** | Quando lavori su **tema/stili**. Sistema a **token CSS** (multi-tema, un file per tema), come lo consumano Tailwind/ng-zorro/tag nativi, taxonomy dei token, ricetta per un tema nuovo, checklist di migrazione. |
 | `server/README.md` | Quando lavori sul **Mixer locale** (`server/`): come avviarlo, endpoint, comandi di test. |
 
 > Se aggiungi un nuovo `.md`, **aggiungilo a questa tabella**.
@@ -82,10 +83,13 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
   - **`client/src/app/views/`** → componenti che gestiscono un'**intera vista/pagina** (es. `login`, `library`, `stylesheet`). I sotto-componenti specifici di una vista (non riusabili altrove) restano **co-locati dentro la cartella della loro view**.
   - **`client/src/app/ui/`** → componenti **globali/riusabili** non legati a una vista (un tipo particolare di button, una card, una lista, ecc.), con selettore **`ui-{component}`** (es. `ui-button`, `ui-color-picker`). Per elementi tipo button si usa il selettore-attributo idiomatico (`button[ui-button]`) così da preservare il comportamento nativo (click, disabled, routerLink).
   - **`client/src/app/core/`** → service, guard, provider (no UI).
-- **Stili (preferenza esplicita dell'utente):**
-  - **Niente `.scss` per-componente**: layout e utility si fanno con **classi Tailwind inline** nel template.
-  - **Customizzazioni degli ng-zorro** in **un unico `.scss` globale** (approccio raccomandato da Tailwind per stilare le librerie di componenti).
-  - Stili globali in **`client/src/styles/`**: `theme.less` (tema NgZorro Less), `styles.css` (entry Tailwind + classi helper), `ng-zorro.scss` (override componenti). Referenziati in `angular.json`.
+- **Stili (preferenza esplicita dell'utente) — vedi `THEMING.md` per il dettaglio:**
+  - **Token = slot nativi di Tailwind** (`--color-*`, `--radius-*`, `--font-*`): unica fonte di verità, configurati nel blocco **`@theme static`** (tema default; `static` obbligatorio o le var usate solo da `ng-zorro.scss` vengono eliminate → sfondi trasparenti) → **si usano le utility native** (`bg-primary`, `rounded-xl`, `text-2xl`), niente scala/variabili parallele. **Un file per tema** in `client/src/styles/themes/` (default = `@theme static`; temi extra = override `:root[data-theme="x"]`). **Niente valori letterali** (`#45fff3`, `rounded-[20px]`) → utility-da-token o `var(--color-*)`.
+  - **Niente classi di styling custom** (`.jm-*`, `.jw-*`): si stilizzano **tag nativi** (`input`, `button`, `textarea`), i loro **stati/attributi** (`:hover`, `:checked`, `type="password"`) e le **classi ng-zorro** (`.ant-*`), tutto via token.
+  - **Cascade layer + niente `!important`**: ordine **dichiarato esplicito** in cima a `styles.css` (Tailwind v4 lo onora): **`@layer theme, base, ngzorro, components, utilities`**. La base ng-zorro è il **CSS precompilato** (`ng-zorro-antd.dark.min.css`) in `@layer ngzorro` (niente più `theme.less`/Less); deve stare **sopra `base`** o il Preflight di Tailwind ne azzera padding/margin/bordi. I nostri override `.ant-*` in **`@layer components`** → sopra `ngzorro` (vincono **senza `!important`**), sotto `utilities`.
+  - **Z-index**: scala esplicita allineata a ng-zorro in token `--z-*` (modal 1000, dropdown 1050, tooltip 1070…). Mai numeri arbitrari → `z-[var(--z-modal)]`.
+  - **Niente `.scss` per-componente**: layout/utility con **Tailwind inline**; **override ng-zorro** in **un unico file globale** (`ng-zorro.scss`, in `@layer components`, solo `var(--color-*)` + `color-mix()`).
+  - Stili globali in **`client/src/styles/`**: `styles.css` (UNICA entry Tailwind, **deve restare `.css`**: `@import` di ng-zorro precompilato + tailwind + tokens + temi), `themes/<nome>.scss` (`@theme` default / override `:root[data-theme]`; `.scss` ok perché letto da Tailwind, ma Sass non ci gira), `tokens.css` (token strutturali: `--z-*`, body, focus), `ng-zorro.scss` (override, entry Sass separata). Referenziati in `angular.json`.
 
 ## Prima di consegnare una modifica
 > Lancia i comandi **dentro `client/`** (`cd client`).

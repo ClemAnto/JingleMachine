@@ -1,10 +1,23 @@
-/* Tailwind v4 — utilities, base reset (preflight) and components.
-   NgZorro styles are loaded BEFORE this file via theme.less in angular.json.
-   NgZorro component overrides live in ./ng-zorro.scss (loaded after this file). */
+/* Tailwind v4 entry — single source for the whole cascade.
+
+   Cascade-layer order. `ngzorro` MUST sit ABOVE Tailwind's `base` layer:
+   Preflight (in `base`) resets margin/padding/border on every element, which
+   would otherwise destroy ng-zorro's component layout. But `ngzorro` must stay
+   BELOW our `components` overrides and the `utilities`. Target order:
+     theme < base(Preflight) < ngzorro < components(our overrides) < utilities
+   We declare it explicitly up-front, then import. See THEMING.md §5. */
+@layer theme, base, ngzorro, components, utilities;
+
 @import 'tailwindcss';
 
-/* This file now lives in src/styles/, so point Tailwind's automatic content
-   scanning back at the whole src/ tree. */
+/* ng-zorro base (precompiled dark) → @layer ngzorro: above Preflight, below our overrides. */
+@import 'ng-zorro-antd/ng-zorro-antd.dark.min.css' layer(ngzorro);
+
+/* Design tokens (must share the Tailwind pipeline so @theme generates utilities). */
+@import './themes/default.scss'; /* @theme — brand colours, radii, font */
+@import './tokens.css';         /* structural tokens: z-index scale */
+
+/* This file lives in src/styles/, so point Tailwind's content scanning at src/. */
 @source '../';
 
 html,
@@ -12,102 +25,10 @@ body {
   height: 100%;
 }
 
-/* ── Stylesheet helper classes ─────────────────────────────── */
+/* ── /stylesheet dev-page helpers (not used by the app UI) ── */
 .section-title {
-  @apply text-lg font-semibold text-white/85 border-b border-white/10 pb-2;
+  @apply text-lg font-semibold text-heading border-b border-border-subtle pb-2;
 }
 .subsection-title {
-  @apply text-sm font-semibold text-white/45 mt-4 mb-2;
-}
-.swatch {
-  @apply flex flex-col items-center justify-center w-28 h-20 rounded-xl text-xs font-mono gap-1 text-white border border-white/10;
-}
-.swatch .label {
-  @apply text-white/45;
-}
-
-/* ── Jingle Machine custom UI classes ─────────────────────── */
-
-/* Buttons */
-.jm-btn-primary {
-  @apply flex items-center gap-2 h-[60px] px-5 rounded-[20px] bg-[#45fff3] text-[#00201c] text-[20px] font-semibold cursor-pointer border-none transition-opacity hover:opacity-90;
-}
-.jm-btn-youtube {
-  @apply flex items-center gap-2 h-[60px] px-5 rounded-[20px] bg-[#ff4548] text-white text-[20px] font-semibold cursor-pointer border-none transition-opacity hover:opacity-90;
-}
-.jm-btn-neutral {
-  @apply flex items-center gap-2 h-[60px] px-5 rounded-[20px] bg-[#00201c] text-white/50 text-[20px] font-semibold cursor-pointer border-none;
-}
-.jm-btn-alert {
-  @apply flex items-center gap-2 h-[60px] px-5 rounded-[20px] bg-transparent text-[#ff4548] text-[20px] font-semibold cursor-pointer border border-[#ff4548]/40 hover:bg-[#ff4548]/10 transition-colors;
-}
-
-/* Search box (Figma header variant) */
-.jm-search-box {
-  @apply flex items-center gap-2 h-[60px] px-5 rounded-[20px] bg-[#00201c] cursor-text;
-}
-
-/* Jingle card */
-.jm-card {
-  @apply relative overflow-hidden rounded-[30px] w-[290px] h-[200px] flex flex-col justify-end border-2 bg-cover bg-center;
-  border-color: var(--card-color);
-}
-.jm-card-progress {
-  @apply absolute bottom-0 left-0 h-1 bg-white;
-}
-.jm-card-body {
-  @apply p-4;
-}
-.jm-card-meta {
-  @apply flex items-end gap-2;
-}
-.jm-card-name {
-  @apply flex-1 text-[20px] font-semibold text-white leading-tight;
-}
-.jm-card-play {
-  @apply bg-transparent border-none cursor-pointer p-0 leading-none;
-}
-
-/* Tag pill */
-.jm-tag {
-  @apply inline-block px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-xs font-medium;
-}
-
-/* Upload area (dashed box in modal) */
-.jm-upload-area {
-  @apply flex flex-col items-center justify-center gap-2 p-5 rounded-[20px] border border-dashed border-[#45fff3]/50 bg-[#45fff3]/5 cursor-pointer hover:bg-[#45fff3]/10 transition-colors;
-}
-
-/* Inputs — dark inset fields matching the Figma mockup (global, all nz-input). */
-.ant-input,
-.ant-input-affix-wrapper {
-  background-color: #00201c;
-  border-color: transparent;
-  border-radius: 16px;
-}
-/* The affix wrapper (e.g. password) paints the field; its inner input stays transparent. */
-.ant-input-affix-wrapper > .ant-input {
-  background-color: transparent;
-  border-radius: 0;
-}
-.ant-input:focus,
-.ant-input-affix-wrapper-focused,
-.ant-input-affix-wrapper:focus-within {
-  border-color: #45fff3;
-  box-shadow: none;
-}
-/* Browser autofill: keep the dark field AND the light text in EVERY state
-   (idle/hover/focus/active) — these are exactly where browsers re-impose the
-   yellow background and black text. The inset box-shadow repaints the fill;
-   -webkit-text-fill-color wins over the browser's forced text colour. */
-.ant-input:-webkit-autofill,
-.ant-input:-webkit-autofill:hover,
-.ant-input:-webkit-autofill:focus,
-.ant-input:-webkit-autofill:active {
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.85);
-  -webkit-box-shadow: 0 0 0 1000px #00201c inset;
-  caret-color: rgba(255, 255, 255, 0.85);
-  border-radius: 16px;
-  /* Defer the autofill background animation so it never flashes yellow. */
-  transition: background-color 9999s ease-in-out 0s;
+  @apply text-sm font-semibold text-muted mt-4 mb-2;
 }

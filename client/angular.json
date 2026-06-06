@@ -36,7 +36,6 @@
               "includePaths": ["node_modules"]
             },
             "styles": [
-              "src/styles/theme.less",
               "src/styles/styles.css",
               "src/styles/ng-zorro.scss"
             ]

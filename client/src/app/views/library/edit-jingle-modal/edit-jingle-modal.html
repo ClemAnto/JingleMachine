@@ -10,9 +10,9 @@
       <div class="space-y-5 py-2">
 
         <!-- Cover image -->
-        <label class="jm-upload-area cursor-pointer">
+        <label class="flex flex-col items-center justify-center gap-2 p-5 rounded-lg border border-dashed border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors">
           <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" />
-          <span nz-icon nzType="picture" class="text-2xl" [class.text-white]="imageFile()" [class.text-[#45fff3]]="!imageFile()"></span>
+          <span nz-icon nzType="picture" class="text-2xl" [class.text-fg]="imageFile()" [class.text-primary]="!imageFile()"></span>
           <span class="text-sm font-semibold text-center">
             {{ imageFile() ? imageFile()!.name : 'Sostituisci immagine (opzionale)' }}
           </span>
@@ -26,7 +26,7 @@
 
         <!-- Colour picker -->
         <div class="space-y-2">
-          <p class="text-sm font-semibold text-white/85">Colore scheda</p>
+          <p class="text-sm font-semibold text-fg">Colore scheda</p>
           <ui-color-picker [value]="color()" (valueChange)="color.set($event)" />
         </div>
 

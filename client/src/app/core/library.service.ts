@@ -17,10 +17,10 @@ import { AuthService } from './auth.service';
 import { CloudinaryService } from './cloudinary.service';
 import { FIRESTORE } from './firebase.providers';
 
-/** Accent colours available for jingle cards (matches Figma swatch picker). */
+/** Accent colours available for jingle cards (from the Figma mockup SVG). */
 export const JINGLE_COLORS = [
-  '#ff4548', '#ff7a00', '#ffb700', '#52c41a',
-  '#45fff3', '#1890ff', '#9000ff', '#ff45e5',
+  '#D60F00', '#F97000', '#FFD500', '#56E42E',
+  '#3AE9CF', '#007EF4', '#AA00FF', '#FF24A7',
 ] as const;
 
 export type JingleColor = typeof JINGLE_COLORS[number];

@@ -1,0 +1,49 @@
+/* ============================================================
+   Default theme — design tokens (Tailwind v4 @theme).
+   Single source of truth for brand colours, radii and font.
+   Defining them here both sets the values AND generates the
+   matching utilities (bg-primary, rounded-xl, text-2xl, …).
+   A new theme = a file with :root[data-theme="x"] that overrides
+   only these --color-* (see THEMING.md §6/§10).
+   ============================================================ */
+/* `static` forces ALL these variables into :root even if no Tailwind utility
+   uses them — needed because ng-zorro.scss (a separate Sass entry Tailwind does
+   not scan) consumes var(--color-surface), var(--color-control), … */
+@theme static {
+  /* --- Brand palette (the only tokens that change between themes) --- */
+  --color-primary:    #45fff3; /* cyan — CTA, links, focus ring */
+  --color-on-primary: #00201c; /* text/icon on top of primary   */
+  --color-danger:     #ff4548; /* red — errors, YouTube, destructive */
+  --color-on-danger:  #ffffff;
+  --color-success:    #52c41a;
+  --color-on-success: #00201c;
+  --color-warning:    #ffb700;
+  --color-on-warning: #00201c;
+  --color-info:       #1890ff;
+  --color-on-info:    #ffffff;
+
+  /* --- Surfaces (from the Figma mockup SVG) --- */
+  --color-page:    #00201c; /* page background */
+  --color-surface: #001714; /* modals/popovers inner bg (darker than page, per mock) */
+  --color-control: #005147; /* inputs, textareas, search box, neutral buttons (teal, visible) */
+  --color-control-hover: #006659; /* control hover (lighter teal) */
+
+  /* --- Text --- */
+  --color-fg:       rgb(255 255 255 / 0.85); /* base text */
+  --color-muted:    rgb(255 255 255 / 0.55); /* secondary / placeholder (>=AA on dark) */
+  --color-heading:  rgb(255 255 255 / 0.88); /* titles */
+  --color-disabled: rgb(255 255 255 / 0.30);
+
+  /* --- Borders --- */
+  --color-border:        rgb(255 255 255 / 0.12);
+  --color-border-subtle: rgb(255 255 255 / 0.08);
+
+  /* --- Radii (from the mockup SVG: controls 20, cards 30, modal 40) --- */
+  --radius-lg:  20px; /* inputs / controls / upload areas */
+  --radius-xl:  30px; /* jingle card, raised panels */
+  --radius-2xl: 40px; /* modal */
+  /* buttons use --radius-full (pill) — rounder than the mock's 20, per request */
+
+  /* --- Typography --- */
+  --font-sans: 'Inter', system-ui, sans-serif;
+}

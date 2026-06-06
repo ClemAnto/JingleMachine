@@ -1,0 +1,41 @@
+/* ============================================================
+   Structural tokens — NOT part of a theme (same in every theme).
+   These live in @layer base so app rules and utilities win over them.
+   ============================================================ */
+@layer base {
+  :root {
+    /* Z-index scale, aligned to ng-zorro / antd 4 overlay stacking
+       (see THEMING.md §3.8). z-index is NOT a Tailwind @theme namespace,
+       so these are plain CSS vars: use via var(--z-modal) or z-[var(--z-modal)]. */
+    --z-affix: 10;        /* affix, back-top, picker-panel, popup-close */
+    --z-modal: 1000;      /* nz-modal + mask */
+    --z-message: 1010;    /* nz-message (toast) */
+    --z-notification: 1010;
+    --z-popover: 1030;
+    --z-dropdown: 1050;   /* nz-dropdown, nz-select, nz-date-picker */
+    --z-popconfirm: 1060;
+    --z-tooltip: 1070;
+    --z-image: 1080;      /* image preview */
+
+    /* Roomy control height (inputs/select/buttons), matching the Figma mockup. Tunable. */
+    --control-height: 56px;
+  }
+
+  /* Page foundation (token-driven). Lives in `base`, above the `ngzorro` layer,
+     so it wins over ng-zorro's own body styling without !important. */
+  body {
+    background: var(--color-page);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  /* Focus ring on NATIVE tags only — exclude ng-zorro elements (they keep
+     their own focus styling; e.g. the modal close button is a native <button>). */
+  button:not([class*='ant-']):focus-visible,
+  a:not([class*='ant-']):focus-visible,
+  input:not([class*='ant-']):focus-visible,
+  textarea:not([class*='ant-']):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

@@ -163,7 +163,16 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 
 ## 7. Tailwind + NgZorro — note
 
-- Gli stili globali stanno in **`client/src/styles/`** (referenziati in `angular.json`): `theme.less`, `styles.css`, `ng-zorro.scss`.
+> 🎨 **Tema/stili — IMPLEMENTATO**: architettura completa in **[`THEMING.md`](THEMING.md)**. In sintesi:
+> token = **slot nativi di Tailwind** (`--color-*`, `--radius-*`, `--font-*`) in **`@theme static`** (il `static`
+> è obbligatorio: senza, Tailwind elimina le var usate solo da `ng-zorro.scss` → sfondi trasparenti) →
+> utility native (`bg-primary`, `rounded-xl`); temi extra = override `:root[data-theme="x"]`. Base ng-zorro =
+> **CSS precompilato** `ng-zorro-antd.dark.min.css` in `@layer ngzorro`; override `.ant-*` in **`@layer components`**
+> (`var(--color-*)`+`color-mix()`, **zero `!important`**). **Ordine layer** (dichiarato esplicito, Tailwind lo onora):
+> **`theme < base(Preflight) < ngzorro < components < utilities`** — ng-zorro DEVE stare *sopra* `base` o il
+> Preflight ne azzera padding/margin. **Z-index** in scala `--z-*` (modal 1000…tooltip 1070). Niente più `theme.less`.
+
+- Gli stili globali stanno in **`client/src/styles/`** (referenziati in `angular.json` → `styles.css` + `ng-zorro.scss`; gli altri via `@import`): `styles.css` (entry), `themes/default.scss` (`@theme`), `tokens.css` (z-index, body, focus), `ng-zorro.scss` (override).
 - Tailwind v4 si configura con [`.postcssrc.json`](client/.postcssrc.json) (`@tailwindcss/postcss`) e
   `@import "tailwindcss";` in `src/styles/styles.css` (con `@source '../';` perché il file è in una sottocartella). **Niente** `tailwind.config.js`.
 - **NgZorro theming via Less**: `src/styles/theme.less` sovrascrive le variabili Less **prima** di

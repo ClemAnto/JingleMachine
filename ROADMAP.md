@@ -107,6 +107,16 @@ Stack **100% gratuito e senza carta di credito**.
 
 - [x] **UI allineata al mockup Figma**: tema NgZorro Less (dark teal), Library view, JingleItem card, CreateModal, EditModal
 - [x] Verifica finale Firestore security rules (libreria privata per utente) ✅
+- [x] **🎨 Sistema di tema a token CSS (multi-tema)** ✅ — architettura e dettagli in [`THEMING.md`](THEMING.md):
+  - [x] Ordine cascade layer in `styles.css` (`theme,base,ngzorro,components,utilities`) + ng-zorro **precompilato** in `@layer ngzorro`
+  - [x] `themes/default.scss`: `@theme static { --color-*, --radius-*, --font-sans }` → utility native (`bg-primary`, `rounded-xl`)
+  - [x] `tokens.css`: token strutturali in `@layer base` (z-index `--z-*`, `--control-height`, body, focus)
+  - [x] `ng-zorro.scss` in `@layer components`: hex→`var(--color-*)`, `fade()`→`color-mix()`, **zero `!important`**
+  - [x] **Eliminato `theme.less`** (brand → `@theme`; base ng-zorro = CSS precompilato)
+  - [x] Eliminate tutte le classi `.jm-*` → utility-da-token / `ui-button` / `.ant-*`
+  - [x] Template ripuliti dai valori letterali (hex, `rounded-[…]`); valori tarati sull'**SVG del mockup**
+  - [x] `/stylesheet` aggiornata (varianti reali, swatch `on-*`, `nzSize`) + **contrasto WCAG verificato**
+  - [ ] (Opz. futuro) selezione tema **runtime** (`ThemeService` + `:root[data-theme]` + localStorage)
 - [ ] Allineare la UI al mockup Figma aggiornato da DiNardo (tags visibili su card, mockup YouTube)
 - [ ] Gestione errori chiara (Mixer offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX

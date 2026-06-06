@@ -1,26 +1,34 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
-/** Figma-styled button variants (defined as global classes in styles.css). */
+/** Figma-styled button variants, driven by theme tokens (no custom CSS classes). */
 export type UiButtonVariant = 'primary' | 'youtube' | 'neutral' | 'alert';
 
+/** Shared shape: pill, comfortable height, large label. */
+const BASE =
+  'inline-flex items-center justify-center gap-2 h-(--control-height) px-5 ' +
+  'rounded-full text-xl font-semibold cursor-pointer border-0 transition ' +
+  'disabled:opacity-40 disabled:cursor-not-allowed';
+
+/** Per-variant colours, all from theme tokens. */
+const VARIANTS: Record<UiButtonVariant, string> = {
+  primary: 'bg-primary text-on-primary hover:opacity-90',
+  youtube: 'bg-danger text-on-danger hover:opacity-90',
+  neutral: 'bg-control text-fg hover:opacity-90',
+  alert: 'bg-transparent text-danger border border-danger/40 hover:bg-danger/10',
+};
+
 /**
- * Reusable Figma-styled button.
- * Attribute selector (like ng-zorro's `[nz-button]`) so the host stays a native
- * <button>, keeping click/disabled/type/routerLink behaviour for free.
- *
- * Usage: <button ui-button variant="youtube" (click)="...">Label</button>
- * Extra utility classes on the element are preserved (e.g. class="w-full justify-center").
+ * Reusable themed button. Attribute selector (like `[nz-button]`) so the host
+ * stays a native <button>, keeping click/disabled/type/routerLink for free.
+ * Usage: <button ui-button variant="youtube">Label</button>
+ * Extra utility classes on the element are preserved (Angular merges them).
  */
 @Component({
   selector: 'button[ui-button]',
   template: '<ng-content />',
-  host: {
-    '[class.jm-btn-primary]': "variant() === 'primary'",
-    '[class.jm-btn-youtube]': "variant() === 'youtube'",
-    '[class.jm-btn-neutral]': "variant() === 'neutral'",
-    '[class.jm-btn-alert]': "variant() === 'alert'",
-  },
+  host: { '[class]': 'classes()' },
 })
 export class UiButton {
   readonly variant = input<UiButtonVariant>('primary');
+  protected readonly classes = computed(() => `${BASE} ${VARIANTS[this.variant()]}`);
 }

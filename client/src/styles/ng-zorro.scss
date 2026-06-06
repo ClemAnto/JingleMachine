@@ -1,26 +1,219 @@
 // ============================================================
-// Jingle Machine — NgZorro component overrides (global)
-// Loaded after theme.less + styles.css (see angular.json) so these win.
-// Keep ALL ng-zorro component customizations here, not in component .scss.
+// Jingle Machine — ng-zorro component overrides (global)
+// ------------------------------------------------------------
+// The ng-zorro base is the precompiled antd DARK theme, imported into
+// @layer ngzorro (see styles.css). That base is neutral grey, so here we
+// REPAINT only the brand bits onto the .ant-* classes, driven by tokens.
+//
+// These overrides live in @layer components → above `ngzorro` (so they win
+// WITHOUT !important) and below `utilities` (so a Tailwind utility in a
+// template can still correct a one-off). Derived colours via color-mix().
 // ============================================================
+@layer components {
+  // --- Buttons (brand colours; hover stays on-palette) ----
+  .ant-btn {
+    border-radius: var(--radius-lg); // moderately rounded (mockup nz-buttons = 20px)
+  }
+  .ant-btn-circle {
+    border-radius: 50%; // keep icon-only circle buttons round
+  }
 
-// --- Modal ---
-.ant-modal-content {
-  background-color: #001714 !important;
-  border-radius: 20px !important;
-}
-.ant-modal-header {
-  background-color: #001714 !important;
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
-.ant-modal-title {
-  color: rgba(255, 255, 255, 0.88) !important;
-  font-size: 24px !important;
-  font-weight: 600 !important;
-}
-.ant-modal-close-x {
-  color: rgba(255, 255, 255, 0.45) !important;
-}
-.ant-modal-footer {
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  .ant-btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .ant-btn-primary:hover,
+  .ant-btn-primary:focus {
+    background: color-mix(in srgb, var(--color-primary) 85%, white);
+    border-color: color-mix(in srgb, var(--color-primary) 85%, white);
+    color: var(--color-on-primary);
+  }
+
+  .ant-btn-dangerous.ant-btn-primary {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-on-danger);
+  }
+  .ant-btn-dangerous.ant-btn-primary:hover,
+  .ant-btn-dangerous.ant-btn-primary:focus {
+    background: color-mix(in srgb, var(--color-danger) 85%, white);
+    border-color: color-mix(in srgb, var(--color-danger) 85%, white);
+    color: var(--color-on-danger);
+  }
+
+  // Default (neutral) button: antd turns its border/text to ITS blue primary on
+  // hover — repaint to our cyan so no off-palette colour appears.
+  .ant-btn-default:hover,
+  .ant-btn-default:focus {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  // Links / ghost text buttons follow primary
+  .ant-btn-link {
+    color: var(--color-primary);
+  }
+  .ant-btn-link:hover,
+  .ant-btn-link:focus {
+    color: color-mix(in srgb, var(--color-primary) 85%, white);
+  }
+
+  // --- Inputs --------------------------------------------------
+  .ant-input,
+  .ant-input-affix-wrapper {
+    background: var(--color-control);
+    border-color: transparent;
+    border-radius: var(--radius-lg);
+    color: var(--color-fg);
+  }
+  // The affix wrapper carries the border/background; the inner input must be
+  // fully borderless in EVERY state, otherwise :hover/:focus below would draw a
+  // second (square) border inside the rounded wrapper.
+  .ant-input-affix-wrapper > .ant-input,
+  .ant-input-affix-wrapper > .ant-input:hover,
+  .ant-input-affix-wrapper > .ant-input:focus {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .ant-input::placeholder {
+    color: var(--color-muted);
+  }
+  .ant-input:hover,
+  .ant-input-affix-wrapper:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  }
+  .ant-input:focus,
+  .ant-input-affix-wrapper-focused,
+  .ant-input-affix-wrapper:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: none;
+  }
+  // Browser autofill: keep the dark field + light text in every state (idle/
+  // hover/focus/active) where the browser re-imposes yellow bg + black text.
+  .ant-input:-webkit-autofill,
+  .ant-input:-webkit-autofill:hover,
+  .ant-input:-webkit-autofill:focus,
+  .ant-input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--color-fg);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-control) inset;
+    caret-color: var(--color-fg);
+    border-radius: var(--radius-lg);
+    transition: background-color 9999s ease-in-out 0s; // defer the yellow flash
+  }
+
+  // --- Control sizing (roomy default, like the mockup) --------
+  // Default = comfortable height via --control-height. antd's nzSize="small"/
+  // "large" still apply their own .ant-*-sm/-lg heights on top where used.
+  // Fixed height → single-line inputs center their text reliably.
+  // The select HOST must also take the height, else its selector overflows the
+  // 32px host (eats the gap to the next control + misplaces the arrow).
+  input.ant-input,
+  .ant-input-affix-wrapper,
+  .ant-select-single,
+  .ant-select-single .ant-select-selector {
+    height: var(--control-height);
+  }
+  // Centre the dropdown arrow at the taller height.
+  .ant-select-single .ant-select-arrow {
+    top: 50%;
+    margin-top: 0;
+    transform: translateY(-50%);
+  }
+  .ant-input-affix-wrapper {
+    align-items: center; // center the inner input + icons at the taller height
+  }
+  .ant-input-affix-wrapper > input.ant-input {
+    height: auto; // inner input fills the (flex-centered) wrapper
+  }
+  textarea.ant-input {
+    height: auto; // multi-line: grow with content
+    min-height: calc(var(--control-height) * 1.6);
+  }
+  // Center the select's value/placeholder/caret at the taller height.
+  .ant-select-single .ant-select-selector .ant-select-selection-item,
+  .ant-select-single .ant-select-selector .ant-select-selection-placeholder,
+  .ant-select-single .ant-select-selector .ant-select-selection-search-input {
+    height: var(--control-height);
+    line-height: var(--control-height);
+  }
+
+  // --- Select --------------------------------------------------
+  // No !important needed: ng-zorro base lives in the lower `ngzorro` layer,
+  // so these `components`-layer rules win on layer order alone.
+  .ant-select-selector {
+    background: var(--color-control);
+    border-color: transparent;
+    border-radius: var(--radius-lg);
+  }
+  .ant-select-focused .ant-select-selector {
+    border-color: var(--color-primary);
+    box-shadow: none;
+  }
+  .ant-select-dropdown {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+  }
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  }
+  .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+    background: color-mix(in srgb, white 8%, transparent);
+  }
+
+  // --- Modal ---------------------------------------------------
+  .ant-modal-content,
+  .ant-modal-header {
+    background: var(--color-surface);
+  }
+  .ant-modal-content {
+    border-radius: var(--radius-2xl); // generous, like the mockup
+    overflow: hidden; // clip header/footer to the rounded corners (else they look square)
+  }
+  .ant-modal-header {
+    border-bottom-color: var(--color-border-subtle);
+  }
+  .ant-modal-title {
+    color: var(--color-heading);
+    font-size: 1.5rem; // 24px — text-2xl
+    font-weight: 600;
+  }
+  .ant-modal-close-x {
+    color: var(--color-muted);
+  }
+  .ant-modal-footer {
+    border-top-color: var(--color-border-subtle);
+  }
+
+  // --- Tag -----------------------------------------------------
+  .ant-tag {
+    background: color-mix(in srgb, white 8%, transparent);
+    border-color: var(--color-border-subtle);
+    color: var(--color-fg);
+    border-radius: var(--radius-full);
+  }
+
+  // --- Slider (range used in YouTube import) ------------------
+  .ant-slider-track {
+    background: var(--color-primary);
+  }
+  .ant-slider:hover .ant-slider-track {
+    background: color-mix(in srgb, var(--color-primary) 88%, white);
+  }
+  .ant-slider-handle {
+    border-color: var(--color-primary);
+  }
+
+  // --- Spin / loading -----------------------------------------
+  .ant-spin-dot-item {
+    background: var(--color-primary);
+  }
+
+  // --- Message (toast) ----------------------------------------
+  .ant-message-notice-content {
+    background: var(--color-surface);
+    color: var(--color-fg);
+  }
 }

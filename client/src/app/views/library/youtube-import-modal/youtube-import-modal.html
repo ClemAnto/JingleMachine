@@ -23,14 +23,14 @@
         <div class="space-y-5 py-2">
 
           <!-- Video card with preview play/pause -->
-          <div class="flex items-center gap-4 bg-[#00201c] rounded-2xl p-4">
+          <div class="flex items-center gap-4 bg-page rounded-xl p-4">
             @if (info()?.thumbnail) {
               <img [src]="info()!.thumbnail" alt="" class="w-28 h-16 object-cover rounded-lg shrink-0" />
             }
             <div class="min-w-0 flex-1">
-              <p class="text-white font-semibold leading-tight line-clamp-1">{{ info()?.title }}</p>
-              <p class="text-white/45 text-sm line-clamp-1">{{ info()?.uploader }}</p>
-              <p class="text-white/45 text-sm">{{ formatTime(info()?.durationSeconds ?? 0) }}</p>
+              <p class="text-fg font-semibold leading-tight line-clamp-1">{{ info()?.title }}</p>
+              <p class="text-muted text-sm line-clamp-1">{{ info()?.uploader }}</p>
+              <p class="text-muted text-sm">{{ formatTime(info()?.durationSeconds ?? 0) }}</p>
             </div>
             <button
               class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0 disabled:opacity-50"
@@ -38,9 +38,9 @@
               (click)="togglePreview()"
             >
               @if (previewLoading()) {
-                <span nz-icon nzType="loading" nzSpin class="text-[40px] text-[#45fff3]"></span>
+                <span nz-icon nzType="loading" nzSpin class="text-[40px] text-primary"></span>
               } @else {
-                <span nz-icon [nzType]="previewing() ? 'pause-circle' : 'play-circle'" class="text-[40px] text-white"></span>
+                <span nz-icon [nzType]="previewing() ? 'pause-circle' : 'play-circle'" class="text-[40px] text-fg"></span>
               }
             </button>
           </div>
@@ -56,8 +56,8 @@
               (ngModelChange)="onRangeChange($event)"
             />
             <div class="flex items-center justify-between mt-1">
-              <span class="px-3 py-1 rounded-full bg-[#00201c] text-white/70 text-xs font-mono">{{ formatTime(range()[0]) }}</span>
-              <span class="px-3 py-1 rounded-full bg-[#00201c] text-white/70 text-xs font-mono">{{ formatTime(range()[1]) }}</span>
+              <span class="px-3 py-1 rounded-full bg-page text-muted text-xs font-mono">{{ formatTime(range()[0]) }}</span>
+              <span class="px-3 py-1 rounded-full bg-page text-muted text-xs font-mono">{{ formatTime(range()[1]) }}</span>
             </div>
           </div>
 
