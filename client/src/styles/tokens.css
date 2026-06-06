@@ -23,10 +23,25 @@
 
   /* Page foundation (token-driven). Lives in `base`, above the `ngzorro` layer,
      so it wins over ng-zorro's own body styling without !important. */
+  html,
+  body {
+    /* Guard against any horizontal overflow on small screens. */
+    max-width: 100%;
+    overflow-x: hidden;
+  }
   body {
     background: var(--color-page);
     color: var(--color-fg);
     font-family: var(--font-sans);
+  }
+
+  /* Angular component hosts default to display:inline → make full-page view
+     hosts block so their layouts size to the viewport correctly. */
+  app-root,
+  app-login,
+  app-library,
+  app-stylesheet {
+    display: block;
   }
 
   /* Focus ring on NATIVE tags only — exclude ng-zorro elements (they keep
@@ -37,5 +52,17 @@
   textarea:not([class*='ant-']):focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+  }
+}
+
+/* Accessibility: honour the OS "reduce motion" setting (Material guideline). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

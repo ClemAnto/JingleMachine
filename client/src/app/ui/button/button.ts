@@ -7,7 +7,7 @@ export type UiButtonVariant = 'primary' | 'youtube' | 'neutral' | 'alert';
 const BASE =
   'inline-flex items-center justify-center gap-2 h-(--control-height) px-5 ' +
   'rounded-full text-xl font-semibold cursor-pointer border-0 transition ' +
-  'disabled:opacity-40 disabled:cursor-not-allowed';
+  'active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
 
 /** Per-variant colours, all from theme tokens. */
 const VARIANTS: Record<UiButtonVariant, string> = {

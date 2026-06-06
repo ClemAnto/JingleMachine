@@ -13,6 +13,10 @@
   // --- Buttons (brand colours; hover stays on-palette) ----
   .ant-btn {
     border-radius: var(--radius-lg); // moderately rounded (mockup nz-buttons = 20px)
+    transition: all 0.2s ease; // smooth colour/transform feedback (Material-ish)
+  }
+  .ant-btn:active {
+    transform: scale(0.97); // press feedback (ng-zorro keeps its click wave too)
   }
   .ant-btn-circle {
     border-radius: 50%; // keep icon-only circle buttons round
@@ -60,6 +64,11 @@
   }
 
   // --- Inputs --------------------------------------------------
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-select-selector {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease; // smooth focus
+  }
   .ant-input,
   .ant-input-affix-wrapper {
     background: var(--color-control);
@@ -164,6 +173,11 @@
   }
 
   // --- Modal ---------------------------------------------------
+  // Responsive width: nzWidth (e.g. 600) sets an inline width; cap it so the
+  // modal never overflows small screens. (max-width constrains even inline width.)
+  .ant-modal {
+    max-width: calc(100vw - 2rem);
+  }
   .ant-modal-content,
   .ant-modal-header {
     background: var(--color-surface);
