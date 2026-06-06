@@ -190,6 +190,19 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 ### Trappola: verifica responsive con screenshot headless (2026-06-06)
 - Chrome/Edge headless con **`--force-device-scale-factor`** + `--window-size` **falsa il viewport** (`window.innerWidth` ≠ window-size) → il ritaglio sembra mostrare overflow inesistenti. Per verificare il responsive: misurare `document.documentElement.scrollWidth` vs `window.innerWidth` nel DOM (overflow reale solo se `scrollWidth > innerWidth`), non fidarsi del ritaglio. Inoltre **Chrome** può restituire screenshot **stale** se è già aperto → usare un `--user-data-dir` fresco o un binario diverso (Edge).
 
+### Bottoni `ui-button` = `rounded-lg` (NON pill) — corretto 2026-06-07
+- Tutti i bottoni CTA del mockup usano **rx20 = `rounded-lg`** (verificato dai `<rect>` di `Button.svg`/`Home.svg`). La vecchia scelta "pill (`--radius-full`)" è stata **rimossa**: `ui-button` ora usa `rounded-lg`. `--radius-full` resta solo per pill/tag/dot, box ricerca, maniglie/pill dello slider. Doc allineata in `THEMING.md` (tabella radii) e commento in `themes/default.scss`.
+
+### Ricostruire un mockup dall'SVG Figma (tecnica, 2026-06-07)
+- Gli SVG export di Figma hanno **testo vettorializzato** (path, niente `<tspan>`) + immagini raster embedded → non si estrae testo, e sono enormi (>256KB, non leggibili con Read).
+- **Misure esatte**: parsare i `<rect>` (`x,y,width,height,rx,fill`) con un piccolo script Node → si ricavano padding/gap/dimensioni/raggi e i colori. Mappare i fill ai token: `#00201C`=page, `#001714`=surface, `#005147`=control, `#006659`=control-hover, `#45FFF3`=primary.
+- **Vedere/ritagliare**: rasterizzare con Chrome headless (`--screenshot`); per un ritaglio preciso o per scrollare un elemento in vista usare **CDP** via Node 22 (`fetch` + `WebSocket` globali) → `Page.captureScreenshot {clip, captureBeyondViewport:true}` o `Runtime.evaluate` con `scrollIntoView`.
+
+### `ui-trim-slider` — video-trimmer dual-handle (2026-06-07)
+- Componente riusabile in `app/ui/trim-slider/` (`.ts` + `.html`), usato sia in `/stylesheet` sia nella **`youtube-import-modal`** reale (sostituisce `nz-slider`). API: `[max]` (secondi), `[(value)]` `[number,number]`, `[step]` (granularità snap: **0.1 = decimi**, usato per il taglio MP3), `[format]`.
+- **Posizionamento data-driven**: JS scrive solo le CSS var `--s`/`--e` (centro maniglia in px) e `--tw` (larghezza track, da `ResizeObserver`) sul root; il **`clamp()` + `translateX`** stanno **nel CSS statico** (niente ricompute di stringhe; `translateX` = compositing GPU, non `left`). Il fill (selezione) avvolge le maniglie (si estende fino ai loro bordi esterni).
+- **Drag fluido = fuori dalla zone Angular**: listener `pointermove/up/cancel` registrati **una sola volta** in `afterNextRender` (gated su `dragging`, cleanup `DestroyRef`); durante il drag si aggiornano posizione (var) e testo pill **imperativamente, senza toccare il signal**; `value.set` (con snap allo `step`) **solo al rilascio**. ⚠️ Motivo (trappola capita): committare `value` durante il drag innesca la **change detection su tutta la pagina** → fluido nella modale (albero piccolo) ma a **scatti nello `/stylesheet`** (pagina enorme, non-OnPush). Pattern in stile CDK drag-drop.
+
 ---
 
 ## 8. YouTube → audio (ricerca + decisione, storico)

@@ -120,7 +120,8 @@ Stack **100% gratuito e senza carta di credito**.
 - [x] **Responsive** (mobile-first Tailwind, host `display:block`, bottoni icon-only su mobile, modali `max-w`) ✅
 - [x] **Motion** (micro-animazioni CSS + transizione di route `route-enter`; `@angular/animations` deprecato → solo CSS; `prefers-reduced-motion`) ✅
 - [x] **Anteprima immagine** alla selezione (create/edit) + **search nascosta** sotto i 2 jingle ✅
-- [ ] Allineare la UI al mockup Figma aggiornato da DiNardo (tags visibili su card, mockup YouTube)
+- [x] **Modale "Carica da Youtube" allineata al mockup** (2026-06-07): nuovo `ui-trim-slider` (taglio ai decimi, drag fluido fuori-zone), box anteprima + bottoni `rounded-lg` come da `Modal.svg`; integrata nella `youtube-import-modal` reale + sezione in `/stylesheet`. Vedi `MEMO.md` §7.
+- [ ] Allineare il resto della UI al mockup Figma aggiornato da DiNardo (tags visibili su card)
 - [ ] Gestione errori chiara (Mixer offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX
 - [ ] Pagina `/stylesheet` — aggiornare quando il mockup include i tags
@@ -182,6 +183,8 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Libreria PER-UTENTE** + **authGuard** (sessione 24h) · **Refactor UI** (`app/views` + `app/ui`, Tailwind inline, icone CDN) · **rename → Mixer** completo.
 - **Modalità mock** userless (`npm run start:all:mock`) + script `npm run start:all` (client + Mixer) per i test.
 - **Packaging → Electron: PRIMA VERSIONE FUNZIONANTE.** Risolto il bug ESM/CJS di Electron 33 (main → `electron-main.cjs` + `createRequire`); **build CI verificata** (Win + Mac, [run #27059622842](https://github.com/ClemAnto/JingleMachine/actions/runs/27059622842)) → installer `.exe` (~79 MB) e `.dmg` universal (~172 MB). Scaricabili con **`npm run download`** (root). Dettagli e trappole CI in `MEMO.md` §10. Credenziali locali in `CREDENZIALI.local.md` (gitignored).
+
+**Aggiornamento (sessione 2026-06-07, v0.7.0):** creato **`ui-trim-slider`** (video-trimmer dual-handle: CSS-var driven, drag fuori-zone, taglio ai **decimi** via `[step]=0.1`) → sostituisce `nz-slider` nella `youtube-import-modal` + sezione "Carica da Youtube" nello `/stylesheet`. **`ui-button` → `rounded-lg`** (come il mockup; tolto il pill). Tutto allineato a `Modal.svg`. Committato e pubblicato su GitHub Pages.
 
 **Prossimo passo — opzioni:**
 1. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.

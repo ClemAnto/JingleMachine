@@ -74,6 +74,8 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 - **Usare sempre i pattern più recenti consigliati** del framework; se in dubbio, **consultare prima la documentazione ufficiale online** (l'utente preferisce questo a soluzioni a memoria/datate).
 - **Nomi variabili "puliti"**: niente caratteri come `@` `_` `$`, solo camelCase. Per gli Observable **niente suffisso `$`** → usare nomi espliciti tipo `userStream` o `userQueue` (preferenza esplicita dell'utente).
 - Codice **semplice e leggibile**, commenti solo dove servono davvero (senza esagerare).
+- **Nuovi componenti**: template SEMPRE in file `.html` separato (`templateUrl`), mai inline (preferenza esplicita 2026-06-07). I componenti vecchi con template inline (button, color-picker, tag-input) si uniformano se ci si lavora sopra.
+- **Risposte concise** (preferenza esplicita): andare al punto, niente muri di testo.
 - **LINGUA:**
   - **Codice, commenti, log, identificatori SEMPRE in inglese.**
   - **Testi UI visibili all'utente in ITALIANO** (coerenti col mockup Figma e coi colleghi destinatari). Preferenza esplicita dell'utente.
