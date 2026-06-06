@@ -44,6 +44,15 @@
     display: block;
   }
 
+  /* Screen transition (pure CSS — Angular's animations DSL is deprecated in v20+).
+     Each routed view host is recreated on navigation, so this plays on every
+     route change. Disabled automatically by the reduced-motion guard below. */
+  app-login,
+  app-library,
+  app-stylesheet {
+    animation: route-enter 260ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+
   /* Focus ring on NATIVE tags only — exclude ng-zorro elements (they keep
      their own focus styling; e.g. the modal close button is a native <button>). */
   button:not([class*='ant-']):focus-visible,
@@ -52,6 +61,18 @@
   textarea:not([class*='ant-']):focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+  }
+}
+
+/* Entrance used for route/screen transitions (see view hosts above). */
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
