@@ -134,12 +134,13 @@ Chiusura finestra → `app.quit()` → server giù. Libreria su Cloudinary + Fir
 Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 
 - [x] Scelto **Electron + electron-builder** (sostituisce yao-pkg) — finestra vera, no console
-- [x] `electron-main.js`: avvia `startServer()` + `BrowserWindow` su localhost + single-instance + no menu
+- [x] `electron-main.cjs` (CommonJS): avvia `startServer()` + `BrowserWindow` su localhost + single-instance + no menu
 - [x] Refactor server: `src/server.js` (`startServer`) riusato da headless (`index.js`) e da Electron
 - [x] `config.js`: dati mutabili in `%APPDATA%\JingleMachine` via `JM_DATA_DIR` (la cartella app è read-only)
 - [x] `package.json`: `build` electron-builder → **NSIS** (Win) + **dmg universal** (mac); rimossa sezione `pkg`
 - [x] CI `build-packages.yml`: matrix windows/macos → `yarn dist`
-- [ ] **Verificare il primo build Electron in CI** (download Electron/NSIS; non testabile in locale headless)
+- [x] **Primo build Windows verificato in LOCALE** (2026-06-06): installer NSIS `Jingle Machine Setup 0.4.4.exe` (~79 MB), app avviata, server up, binari scaricati, `/health ready=true`. Risolto bug ESM/CJS di Electron 33 (main → `.cjs` + `createRequire`); vedi `MEMO.md` §10.
+- [ ] **Verificare il primo build in CI** (matrix Win+Mac via tag/`yarn release`) — il **dmg macOS** è ancora non testato
 - [ ] Aggiornare `scripts/download-release.js` + `server/README.md` ai nuovi artefatti electron-builder
 - [ ] Icona app (`build/icon.*`) — ora icona Electron di default
 - [ ] **Windows**: SmartScreen → "Esegui comunque" (firma opzionale, a pagamento)

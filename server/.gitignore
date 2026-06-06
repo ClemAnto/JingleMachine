@@ -9,6 +9,8 @@ tmp/
 app/
 # Package build output
 dist/
+# electron-builder output (installers, win-unpacked) — large, not committed
+dist-electron/
 # PnP artefacts (replaced by node-modules linker)
 .pnp.cjs
 .pnp.loader.mjs

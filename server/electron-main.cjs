@@ -1,9 +1,16 @@
-// Electron entry point: starts the embedded Express server, then opens a window
-// pointing at it. Closing the window quits the app, which ends the process and
-// stops the server. The Angular app and all API endpoints are served over HTTP
-// on localhost (same origin → no CORS, and Firebase's default authorized domain
-// "localhost" matches, so Google sign-in works).
-import { app, BrowserWindow, Menu } from "electron";
+// Electron entry point (CommonJS). Starts the embedded Express server, then opens
+// a window pointing at it. Closing the window quits the app, which ends the
+// process and stops the server. The Angular app and all API endpoints are served
+// over HTTP on localhost (same origin → no CORS, and Firebase's default authorized
+// domain "localhost" matches, so Google sign-in works).
+//
+// Why CommonJS (.cjs) and not ESM: Electron's bundled Node (20.18) crashes when an
+// ESM module imports a CommonJS one (cjsPreparseModuleExports bug) — and Electron's
+// own "electron" module is CommonJS. A CJS entry require()s electron normally, then
+// dynamically import()s the ESM server module (import() works fine from CJS).
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
+const { app, BrowserWindow, Menu } = require("electron");
 
 // userData → %APPDATA%\JingleMachine (win) / ~/Library/Application Support/JingleMachine (mac).
 app.setName("JingleMachine");
@@ -26,7 +33,8 @@ if (!app.requestSingleInstanceLock()) {
     // binaries, temp files) in a writable per-user folder. Must be set BEFORE
     // importing the server so config.js reads it.
     process.env.JM_DATA_DIR = app.getPath("userData");
-    const { startServer } = await import("./src/server.js");
+    const serverUrl = pathToFileURL(path.join(__dirname, "src", "server.js")).href;
+    const { startServer } = await import(serverUrl);
     const { port } = await startServer();
 
     Menu.setApplicationMenu(null);

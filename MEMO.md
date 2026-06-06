@@ -325,9 +325,19 @@ video reale → MP3). Avvio/endpoint/comandi di test: vedi [`server/README.md`](
 Scelta motivata: vedi memoria `project-packaging-decision`. yao-pkg **rimosso**.
 
 **Come funziona** (riuso del server, niente riscrittura):
-- `electron-main.js` (main process) → avvia il server Express embedded (`src/server.js` → `startServer()`),
+- `electron-main.cjs` (main process, **CommonJS**) → avvia il server Express embedded (`src/server.js` → `startServer()`),
   poi apre una `BrowserWindow` su **`http://localhost:<port>`** (same-origin → no CORS; `localhost` è dominio
   Firebase autorizzato → login Google ok). Chiusura finestra → `app.quit()` → muore anche il server.
+
+> ⚠️ **Bug Electron 33 + ESM (risolto 2026-06-06).** Electron 33 include Node 20.18, che ha un bug
+> nel loader ESM (`cjsPreparseModuleExports`): **importare un modulo CJS via `import` crasha** la app
+> all'avvio (anche `import { app } from "electron"`, perché `electron` è CJS). Sintomo: la finestra
+> non si apre, il processo muore in ~2s, `%APPDATA%\JingleMachine` non viene nemmeno creata.
+> **Fix**: il main process è **CommonJS** (`electron-main.cjs`) → `require("electron")` + `import()`
+> dinamico dell'ESM `server.js`; e in `server.js`/`binaries.js` i CJS (`express`, `cors`, `adm-zip`)
+> si caricano con **`createRequire(import.meta.url)`**, non con `import`. NB: `createRequire("electron")`
+> NON funziona (risolve al pacchetto npm `electron`, cioè il path-shim, non all'API) → serve un main CJS.
+> Node 22 (headless `yarn start`) non ha il bug: `createRequire` lì è solo innocuo.
 - `src/index.js` resta l'entry **headless** (dev / `yarn start`) con prompt console.
 - **Dati mutabili** (binari yt-dlp/ffmpeg/deno, tmp): in `app.getPath('userData')` (`%APPDATA%\JingleMachine`),
   passato al server via `process.env.JM_DATA_DIR` (la cartella dell'app è read-only). Disinstallare = rimuovere quella cartella.
@@ -340,6 +350,15 @@ Angular build (`--base-href /`) → copia dist in `server/app/` → `yarn instal
 `gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default.
 
 > ⚠️ La build Electron va eseguita in CI o su macchina con GUI (richiede download di Electron + toolchain NSIS).
+
+> ✅ **Build Windows verificata in locale (2026-06-06).** `npm run build -- --base-href=/` (con **PowerShell**:
+> Git Bash mangia lo `/` → `--base-href C:/Program Files/Git/`!) → copia dist in `server/app/` → `yarn dist`.
+> Prodotto `dist-electron/Jingle Machine Setup 0.4.4.exe` (~79 MB, NSIS). Smoke test su `win-unpacked`:
+> server up, Angular servito (HTTP 200), binari scaricati in `%APPDATA%\JingleMachine\bin` → `/health ready=true`
+> in ~27s (ytDlp 2026.03.17, ffmpeg, deno 2.8.2). **macOS dmg ancora non testato.**
+> 🐞 *Robustezza nota (non bloccante)*: se un download binario viene interrotto, resta un file troncato che
+> `ensureBinaries` non riscarica (controlla l'esistenza, non l'integrità) → `yt-dlp -U` poi fallisce con
+> *"Could not load PyInstaller's embedded PKG archive"*. Workaround: cancellare `%APPDATA%\JingleMachine\bin`.
 
 **Note ancora valide (da rispettare):**
 - **SPA fallback `app.get("*")`** DOPO tutte le route API (in `src/server.js`), altrimenti torna `index.html` invece del JSON.

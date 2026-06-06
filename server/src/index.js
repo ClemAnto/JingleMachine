@@ -1,6 +1,6 @@
 // Headless entry point: starts the Mixer and, when packaged, offers to open
 // the web app in the system browser. Used in dev (`yarn start`) and as the
-// standalone GitHub Pages Mixer. The Electron app uses electron-main.js instead.
+// standalone GitHub Pages Mixer. The Electron app uses electron-main.cjs instead.
 import { exec } from "node:child_process";
 import { createInterface } from "node:readline";
 import { config } from "./config.js";

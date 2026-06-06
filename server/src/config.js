@@ -20,7 +20,7 @@ const isPkg = typeof process.pkg !== "undefined";
 const runtimeRoot = isPkg ? dirname(process.execPath) : snapshotRoot;
 
 // Where mutable data (downloaded binaries, temp files) lives. In Electron the
-// app folder is read-only, so electron-main.js sets JM_DATA_DIR to a writable
+// app folder is read-only, so electron-main.cjs sets JM_DATA_DIR to a writable
 // per-user folder (e.g. %APPDATA%\JingleMachine). Otherwise: next to the binary
 // (packaged) or the server/ folder (dev).
 const dataRoot = process.env.JM_DATA_DIR || runtimeRoot;

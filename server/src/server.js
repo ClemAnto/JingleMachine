@@ -1,15 +1,21 @@
 // The Jingle Machine Mixer server, as a reusable module: builds the Express
 // app and starts listening. Two entry points use it:
 //   - src/index.js     → headless (dev / GitHub Pages Mixer), with a console prompt
-//   - electron-main.js  → Electron app, which opens a window instead
-import express from "express";
-import cors from "cors";
+//   - electron-main.cjs → Electron app, which opens a window instead
+import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { config } from "./config.js";
 import { ensureBinaries, updateYtDlp, binaryVersions } from "./binaries.js";
 import { getInfo, extractMp3 } from "./youtube.js";
+
+// Load CommonJS deps via require: Electron's bundled Node (20.18) crashes when
+// importing these CJS modules through ESM (cjsPreparseModuleExports bug).
+// createRequire uses the CJS loader, which is unaffected — and works in headless too.
+const require = createRequire(import.meta.url);
+const express = require("express");
+const cors = require("cors");
 
 // Keep the most recent log lines in memory so the mini page can show them.
 const recentLogs = [];

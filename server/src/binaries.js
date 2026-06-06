@@ -11,8 +11,13 @@ import { createWriteStream } from "node:fs";
 import { mkdir, chmod, readdir, rename, rm, access } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { join } from "node:path";
-import AdmZip from "adm-zip";
+import { createRequire } from "node:module";
 import { config } from "./config.js";
+
+// require (not import) for this CJS dep: Electron's bundled Node (20.18) crashes
+// importing CJS through ESM (cjsPreparseModuleExports). See note in server.js.
+const require = createRequire(import.meta.url);
+const AdmZip = require("adm-zip");
 
 const run = promisify(execFile);
 const isWindows = process.platform === "win32";

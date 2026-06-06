@@ -36,8 +36,11 @@ jobs:
         run: npm ci
         working-directory: client
 
+      # No --base-href: the embedded server serves the app at root, which is
+      # Angular's default ("/"). Passing "--base-href /" would be mangled by Git
+      # Bash on the Windows runner (a lone "/" becomes "C:/Program Files/Git/").
       - name: Build Angular (served at root by the embedded server)
-        run: npm run build -- --base-href /
+        run: npm run build
         working-directory: client
 
       # ── 2. Copy Angular dist into server/app for bundling ───────────────
