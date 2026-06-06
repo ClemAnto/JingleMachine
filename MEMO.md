@@ -171,21 +171,24 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 > (`var(--color-*)`+`color-mix()`, **zero `!important`**). **Ordine layer** (dichiarato esplicito, Tailwind lo onora):
 > **`theme < base(Preflight) < ngzorro < components < utilities`** — ng-zorro DEVE stare *sopra* `base` o il
 > Preflight ne azzera padding/margin. **Z-index** in scala `--z-*` (modal 1000…tooltip 1070). Niente più `theme.less`.
+> **Motion (§13)**: animazioni **solo CSS** — `@angular/animations` (DSL `trigger/transition/animate`) è **deprecato in Angular 20+**;
+> micro-interazioni (`transition`, `active:scale`) + transizioni di schermata via `@keyframes route-enter` sugli host viste + `prefers-reduced-motion`.
+> `provideAnimations()` resta solo per ng-zorro. **Responsive (§14)**: mobile-first coi breakpoint Tailwind, host `display:block`, `--control-height`, `nzSize`.
 
-- Gli stili globali stanno in **`client/src/styles/`** (referenziati in `angular.json` → `styles.css` + `ng-zorro.scss`; gli altri via `@import`): `styles.css` (entry), `themes/default.scss` (`@theme`), `tokens.css` (z-index, body, focus), `ng-zorro.scss` (override).
+- Gli stili globali stanno in **`client/src/styles/`** (referenziati in `angular.json` → `styles.css` + `ng-zorro.scss`; gli altri via `@import`): `styles.css` (entry: ordine layer + import), `themes/default.scss` (`@theme static`), `tokens.css` (`--z-*`, `--control-height`, body, host `display:block`, focus, reduced-motion), `ng-zorro.scss` (override `.ant-*` in `@layer components`).
 - Tailwind v4 si configura con [`.postcssrc.json`](client/.postcssrc.json) (`@tailwindcss/postcss`) e
   `@import "tailwindcss";` in `src/styles/styles.css` (con `@source '../';` perché il file è in una sottocartella). **Niente** `tailwind.config.js`.
-- **NgZorro theming via Less**: `src/styles/theme.less` sovrascrive le variabili Less **prima** di
-  `@import 'ng-zorro-antd/ng-zorro-antd.dark.less'` (Less lazy evaluation: va PRIMA dell'import).
-  `stylePreprocessorOptions.includePaths: ["node_modules"]`. Gli **override dei componenti** ng-zorro stanno in `src/styles/ng-zorro.scss` (caricato per ultimo).
+- **NgZorro**: base = **CSS precompilato** `ng-zorro-antd/ng-zorro-antd.dark.min.css` importato in `@layer ngzorro` (NON più Less/`theme.less`); brand ritoccato negli override `.ant-*` in `ng-zorro.scss` (`@layer components`).
 - **Icone**: caricate **dinamicamente da CDN** via `cdn-icons.service.ts` (Ant Design da jsDelivr + Material Icons via namespace `mi:`/`mi-outlined:`…). Le icone pre-registrate in `app.config.ts` restano istantanee; le altre si scaricano al volo → **non serve più registrarle a mano**.
 - Locale impostato su **it_IT**.
-- **Classi custom `jm-*`** in `src/styles/styles.css` (`jm-btn-*` via `ui-button`, `jm-card`, `jm-tag`, `jm-upload-area`, `jm-search-box`).
 
 ### Trappole NgZorro (imparate il 2026-05-30)
 - `NzMessageService` è un **service**, non un modulo → **non va in `imports[]`** del componente; si inietta con `inject()`.
 - `NgStyle` va importato esplicitamente nei componenti standalone (`import { NgStyle } from '@angular/common'`).
 - Segnali con tipo `const tuple` troppo stretto (es. `JingleColor`): usare `signal<string>()` invece di `signal<JingleColor>()` per evitare errori TS2345.
+
+### Trappola: verifica responsive con screenshot headless (2026-06-06)
+- Chrome/Edge headless con **`--force-device-scale-factor`** + `--window-size` **falsa il viewport** (`window.innerWidth` ≠ window-size) → il ritaglio sembra mostrare overflow inesistenti. Per verificare il responsive: misurare `document.documentElement.scrollWidth` vs `window.innerWidth` nel DOM (overflow reale solo se `scrollWidth > innerWidth`), non fidarsi del ritaglio. Inoltre **Chrome** può restituire screenshot **stale** se è già aperto → usare un `--user-data-dir` fresco o un binario diverso (Edge).
 
 ---
 

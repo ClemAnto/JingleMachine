@@ -396,31 +396,50 @@ Nessun rebuild, nessun flash: le CSS var si ri-risolvono istantaneamente. Le var
 
 ---
 
-## 12. Checklist di migrazione (dallo stato attuale)
+## 12. Migrazione — FATTA ✅
 
-Lo stato di oggi mescola token in 3 posti (Less, `.jm-*` con hex, `.ant-*` con hex e `!important`).
-Migrazione al sistema a token, **a piccoli passi** (ogni passo builda):
+Il sistema è implementato. Storico dei passi (tutti completati):
 
-- [x] In `styles.css`: `@import ng-zorro…dark.min.css layer(ngzorro)` (PRIMA di tailwind) + `@import 'tailwindcss'`
-      + `@import tokens.css` + `@import themes/default.scss`. (Niente order-statement custom: Tailwind lo scarta.)
-- [x] **Rimuovere `theme.less`** da `angular.json` e dal repo (sostituito dall'import precompilato). Build verde.
-- [x] Creare `themes/default.scss` con il blocco `@theme { --color-*, --radius-*, --font-sans }` (valori = §6).
-- [x] Creare `tokens.css`: `@layer base { :root { --z-* (§3.8) }, body, focus tag nativi }` (§8).
-- [x] Riscrivere `ng-zorro.scss` dentro `@layer components`: ridipingere il brand sui `.ant-*` con
-      `var(--color-*)` + `color-mix()`, **senza `!important`** (layer order sufficiente).
-- [ ] Migrare le classi `.jm-btn-*` → varianti di `ui-button` che stilano `.ant-btn`/tag via token
-      (oppure utility-da-token), e `.jm-card`/`.jm-tag`/`.jm-search-box`/`.jm-upload-area` → utility-da-token.
-- [ ] Aggiornare i template (`bg-[#…]`, `rounded-[…]` → utility semantiche; z-index arbitrari → `z-[var(--z-…)]`).
-- [ ] Aggiornare `/stylesheet`: palette, tipografia, i 3 layer (page/surface/control) e la scala z-index dai token.
-- [ ] `cd client && npm run build` verde + verifica visiva che gli `!important` rimossi non abbiano rotto nulla.
-
-> 🔎 **Affinamento valori col Figma**: i valori default qui sono presi dal CSS attuale. Per renderli
-> 1:1 col mockup si può estrarre la palette/raggi via **Figma MCP** (`get_variable_defs`/`get_design_context`)
-> sul file <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>. Step opzionale.
+- [x] `styles.css`: ordine layer esplicito `@layer theme, base, ngzorro, components, utilities;` (onorato da Tailwind, §5),
+      poi `@import 'tailwindcss'` → `@import ng-zorro…dark.min.css layer(ngzorro)` → `@import tokens.css` → `@import themes/default.scss`.
+- [x] **Rimosso `theme.less`** (sostituito dall'import precompilato).
+- [x] `themes/default.scss` con `@theme static { --color-*, --radius-*, --font-sans }` (valori dall'SVG, §6).
+- [x] `tokens.css`: `@layer base { :root{--z-*, --control-height}, body, host display:block, focus tag nativi }` + reduced-motion.
+- [x] `ng-zorro.scss` in `@layer components`: brand sui `.ant-*` con `var(--color-*)` + `color-mix()`, **zero `!important`**.
+- [x] Eliminate tutte le `.jm-*` → `ui-button` / utility-da-token / `.ant-*`; template ripuliti da hex/`rounded-[…]`.
+- [x] `/stylesheet` aggiornata (varianti reali, swatch `on-*`, `nzSize`, contrasto WCAG).
+- [x] Valori tarati 1:1 sul mockup via **SVG export** (cartella `client/mockup_temp/`, gitignored).
 
 ---
 
-## 13. Riferimenti (verificati 2026-06)
+## 13. Motion / animazioni (solo CSS)
+
+⚠️ **Regola**: il DSL di **`@angular/animations`** (`trigger`/`transition`/`animate`, `BrowserAnimationsModule`)
+è **deprecato da Angular 20+** → **niente animazioni applicative con quel pacchetto**, si usano **animazioni/transizioni CSS native**.
+`provideAnimations()` resta in `app.config.ts` **solo** perché lo richiede **ng-zorro** internamente (non per codice nostro).
+
+Linee guida (Material-like: movimento leggero per evidenziare focus/azioni/transizioni):
+- **Micro-interazioni** via CSS: `transition` su hover/focus (bottoni, bordo input/select), **press feedback**
+  (`active:scale-95` su `ui-button`, `.ant-btn:active{transform:scale(.97)}`). I `nz-button` mantengono il **wave** nativo.
+- **Transizione di schermata**: `@keyframes route-enter` (fade + slide-up, easing "emphasized") applicato agli **host
+  delle viste** (`app-login`/`app-library`/`app-stylesheet`) in `tokens.css`. Angular ricrea l'host a ogni navigazione → parte sul mount. **Niente** `@angular/animations`.
+- **Accessibilità**: guard `@media (prefers-reduced-motion: reduce)` (in `tokens.css`) azzera durate/iterazioni.
+
+---
+
+## 14. Responsive
+
+- **Mobile-first** con i **breakpoint nativi di Tailwind** (`sm:`=640, `md:`=768, `lg:`=1024…); niente media query custom dove evitabile.
+- **Host delle viste `display:block`** (in `tokens.css`): gli Angular component host sono `inline` di default → i layout full-page non dimensionano correttamente senza questo.
+- **Pattern in uso** (library): header con bottoni **solo-icona su mobile** (`hidden sm:inline` sulle label), padding
+  ridotti (`p-4 sm:p-10`), titolo+search **impilati** (`flex-col sm:flex-row`, search `w-full`); **modali** `max-width: calc(100vw - 2rem)`;
+  griglia jingle `grid-cols-1` → `sm/md/lg`. Altezza controlli via `--control-height` (`h-(--control-height)`); `nzSize` small/large dove serve.
+- ⚠️ **Trappola di verifica**: gli screenshot headless con `--force-device-scale-factor` **falsano il viewport**
+  (`innerWidth` ≠ `--window-size`) → fanno sembrare overflow inesistenti. Verificare misurando `scrollWidth` vs `innerWidth` nel DOM, non dal ritaglio.
+
+---
+
+## 15. Riferimenti (verificati 2026-06)
 - Tailwind v4 — Theme variables (`@theme`, `@theme inline`, runtime via `data-theme`):
   <https://tailwindcss.com/docs/theme>
 - Tailwind v4 — Cascade layers / overriding di librerie senza `!important`:
