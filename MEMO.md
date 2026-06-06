@@ -28,7 +28,8 @@ JingleMachine/
 ├── MEMO.md · ROADMAP.md · CLAUDE.md · README.md
 ```
 
-> Regola d'oro: i comandi `npm ...` vanno lanciati **dentro la cartella giusta** (`client/` per l'app, `server/` per il server). Non c'è un `package.json` in radice.
+> Regola d'oro: i comandi `npm ...` vanno lanciati **dentro la cartella giusta** (`client/` per l'app, `server/` per il server).
+> In **radice** c'è un `package.json` di **sola orchestrazione** (niente codice app, niente `workspaces`): per ora solo `npm run download` (scarica gli installer completi exe+dmg dalla CI in `dist/v{version}/`, via `scripts/download-packages.mjs`). Il campo `packages` documenta i due sub-package.
 
 > 📌 **Architettura attuale**: **Firebase Auth + Firestore** (gratis, no carta) · **Cloudinary** per i file MP3 (gratis, no carta) ·
 > **Mixer locale** per estrarre da YouTube, **embedded nell'app standalone Electron**. Libreria **privata per utente**.
@@ -379,8 +380,10 @@ Angular build (**senza `--base-href`**: default `/`) → copia dist in `server/a
 - ⚠️ **Rinominare il campo `name` in `server/package.json`** richiede un **`yarn install`** subito dopo, altrimenti
   `yarn start` fallisce con *"Package for jingle-machine-mixer@workspace:. not found"* (Yarn 4 tiene il nome workspace nel `yarn.lock`).
 
-**Da sistemare (eredità yao-pkg)**: `scripts/download-release.js` riferisce ancora i vecchi
-artefatti (`jingle-machine.exe/.dmg` + `version.txt`) → aggiornarlo ai nomi prodotti da electron-builder.
+**Download degli installer** (2026-06-06): il vecchio `server/scripts/download-release.js` (eredità yao-pkg,
+artefatto unico + `version.txt`) è stato **sostituito** da `scripts/download-packages.mjs` in **radice**,
+lanciato con **`npm run download`** (gli installer sono l'app completa client+Mixer → operazione di progetto,
+non del solo server). Scarica `jingle-machine-win` (.exe) + `jingle-machine-mac` (.dmg) in `dist/v{version}/`.
 
 > 🗄️ *Storico yao-pkg (superato)*: bundle esbuild ESM→CJS, `--base-href /`, `lipo`+`hdiutil` per il dmg,
 > `.yarnrc.yml nodeLinker: node-modules`, asset pkg da `package.json` → tutto **non più in uso** con Electron.
@@ -427,6 +430,6 @@ Componente: `views/library/youtube-import-modal/`. Pulsante visibile solo se `/h
 - [x] **Packaging → Electron** (sostituito yao-pkg); GitHub Pages senza YouTube. Vedi §10.
 - [x] **Configurare Firebase + Cloudinary** in `environment.ts` (2026-06-06) + **flusso testato end-to-end** in locale.
 - [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8. → **Fase 4 (prossima)**
-- [ ] Verificare la **build Electron** in CI (primo run) + aggiornare `download-release.js`/`server/README.md` + icona app.
+- [x] **Build Electron in CI verificata** (2026-06-06) + script download riscritto (`npm run download` in radice). Resta: aggiornare `server/README.md` + icona app.
 - [ ] Nessuna paginazione della libreria (ok per pochi elementi).
 - [ ] (eredità) card jingle mostra ancora `uploaderEmail`, ora ridondante in libreria per-utente.

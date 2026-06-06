@@ -49,7 +49,8 @@ Due canali: **app desktop standalone (Electron)** con tutte le funzioni, e **Git
 Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `package.json`):
 - `client/` → app Angular. I comandi usano **`npm`**, lanciati **dentro `client/`**.
 - `server/` → **app desktop Electron + server locale** (estrazione YouTube → MP3). I comandi usano **`yarn`**, lanciati **dentro `server/`**.
-- `firebase/` → security rules (solo Firestore). `.github/` → deploy. **Non c'è `package.json` in radice.**
+- `firebase/` → security rules (solo Firestore). `.github/` → deploy.
+- **`package.json` in radice**: SOLO orchestrazione di progetto (niente codice app, **niente `workspaces`** → client resta npm, server resta yarn). Per ora un comando: `npm run download` (scarica gli installer completi exe+dmg dalla CI in `dist/v{version}/`). Ha anche un campo `packages` che documenta i due sub-package.
 
 ## Documenti del progetto — quando consultarli
 

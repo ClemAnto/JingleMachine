@@ -13,8 +13,7 @@
     "dev": "node --watch src/index.js",
     "electron": "electron .",
     "dist": "electron-builder",
-    "release": "gh workflow run build-packages.yml",
-    "download": "node scripts/download-release.js"
+    "release": "gh workflow run build-packages.yml"
   },
   "build": {
     "appId": "com.jinglemachine.app",

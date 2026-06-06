@@ -1,0 +1,21 @@
+{
+  "name": "jingle-machine",
+  "private": true,
+  "description": "Project-level orchestration only (no app code). The downloadable installers are the COMPLETE app (client + Mixer), so fetching them is a project-level concern, not a server one.",
+  "scripts": {
+    "download": "node scripts/download-packages.mjs"
+  },
+  "//packages": "References to the two independent sub-packages, for clarity. NOT npm/yarn workspaces on purpose: client/ uses npm and server/ uses Yarn 4 — keeping them separate avoids a shared lockfile/linker. Run each package's commands from inside its own folder.",
+  "packages": {
+    "client": {
+      "path": "client",
+      "packageManager": "npm",
+      "role": "Angular webapp (UI). Built and bundled into the desktop app, and deployed standalone to GitHub Pages (without YouTube)."
+    },
+    "server": {
+      "path": "server",
+      "packageManager": "yarn",
+      "role": "Electron desktop app + local Mixer (yt-dlp/ffmpeg). Packages the COMPLETE installer (embeds the built client/) via electron-builder."
+    }
+  }
+}

@@ -142,7 +142,7 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - [x] **Primo build Windows verificato in LOCALE** (2026-06-06): installer NSIS `Jingle Machine Setup 0.4.4.exe` (~79 MB), app avviata, server up, binari scaricati, `/health ready=true`. Risolto bug ESM/CJS di Electron 33 (main → `.cjs` + `createRequire`); vedi `MEMO.md` §10.
 - [x] **Build CI verificata (2026-06-06)**: matrix Win+Mac verde → artifact `jingle-machine-win` (.exe ~79 MB) + `jingle-machine-mac` (.dmg universal ~172 MB). Trappole CI risolte (`--base-href`, `GH_TOKEN`) in `MEMO.md` §10.
 - [ ] **Eseguire il dmg su un Mac reale** (build OK in CI, ma mai avviato su macOS) — verificare Gatekeeper + download binari (yt-dlp_macos/ffmpeg/deno)
-- [ ] Aggiornare `scripts/download-release.js` + `server/README.md` ai nuovi artefatti electron-builder
+- [x] Script di download riscritto → `npm run download` in radice (`scripts/download-packages.mjs`). Resta: aggiornare `server/README.md`
 - [ ] Icona app (`build/icon.*`) — ora icona Electron di default
 - [ ] **Windows**: SmartScreen → "Esegui comunque" (firma opzionale, a pagamento)
 - [ ] **macOS**: Gatekeeper → "tasto destro → Apri" (notarizzazione = Apple Dev $99/anno → rimandata)
@@ -172,5 +172,5 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 
 **Prossimo passo — opzioni:**
 1. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.
-2. **Verificare la build Electron in CI** (tag/`yarn release`) + aggiornare `download-release.js`/`server/README.md` + icona app.
+2. **Build CI verificata** (2026-06-06) + script download riscritto (`npm run download`). Resta: aggiornare `server/README.md` + icona app + eseguire il dmg su un Mac reale.
 3. **Chiudere Fase 1** (Local Network Access + token) e **Fase 6** (deploy GitHub Pages + domini autorizzati).
