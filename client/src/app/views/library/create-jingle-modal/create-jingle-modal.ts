@@ -47,6 +47,7 @@ export class CreateJingleModal {
   protected color = signal<string>(JINGLE_COLORS[0]);
   protected audioFile = signal<File | null>(null);
   protected imageFile = signal<File | null>(null);
+  protected imagePreview = signal<string | null>(null);
   protected saving = signal(false);
   protected audioDuration = signal(0);
   // When set, the audio is already on Cloudinary (YouTube flow): no file upload step.
@@ -86,7 +87,11 @@ export class CreateJingleModal {
 
   protected onImageSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) this.imageFile.set(file);
+    if (!file) return;
+    const prev = this.imagePreview();
+    if (prev) URL.revokeObjectURL(prev);
+    this.imageFile.set(file);
+    this.imagePreview.set(URL.createObjectURL(file));
   }
 
   async save() {
@@ -129,6 +134,9 @@ export class CreateJingleModal {
     this.color.set(JINGLE_COLORS[0]);
     this.audioFile.set(null);
     this.imageFile.set(null);
+    const prevImg = this.imagePreview();
+    if (prevImg) URL.revokeObjectURL(prevImg);
+    this.imagePreview.set(null);
     this.audioDuration.set(0);
     this.preparedAudio.set(null);
   }

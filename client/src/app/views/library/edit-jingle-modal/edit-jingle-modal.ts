@@ -39,6 +39,9 @@ export class EditJingleModal {
   protected tags = signal<string[]>([]);
   protected color = signal<string>(JINGLE_COLORS[0]);
   protected imageFile = signal<File | null>(null);
+  // Preview: the current cover on open, or the newly picked file once selected.
+  protected imagePreview = signal<string | null>(null);
+  private objectUrl: string | null = null;
   protected saving = signal(false);
 
   open(jingle: Jingle) {
@@ -47,16 +50,30 @@ export class EditJingleModal {
     this.tags.set([...jingle.tags]);
     this.color.set(jingle.color);
     this.imageFile.set(null);
+    this.revokeObjectUrl();
+    this.imagePreview.set(jingle.imageUrl ?? null);
     this.visible.set(true);
   }
 
   protected close() {
+    this.revokeObjectUrl();
     this.visible.set(false);
   }
 
   protected onImageSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) this.imageFile.set(file);
+    if (!file) return;
+    this.revokeObjectUrl();
+    this.objectUrl = URL.createObjectURL(file);
+    this.imageFile.set(file);
+    this.imagePreview.set(this.objectUrl);
+  }
+
+  private revokeObjectUrl() {
+    if (this.objectUrl) {
+      URL.revokeObjectURL(this.objectUrl);
+      this.objectUrl = null;
+    }
   }
 
   async save() {
