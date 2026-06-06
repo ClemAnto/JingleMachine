@@ -27,6 +27,8 @@ Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di risponder
   Asseconda: sviscera alternative/costi/rischi **prima** di scrivere codice, senza fretta di codare.
 - **Principiante sul backend** → spiegare i concetti in modo **elementare**, con analogie, e indicare il "perché" delle scelte.
 - Segnalare sempre **refusi/errori** in italiano e inglese (anche fuori task) — vedi istruzioni globali.
+- **"committa"** in questo progetto = **commit + push su `main`** (→ redeploy automatico su GitHub Pages). Non fermarsi al commit locale salvo richiesta esplicita.
+- Apprezza la **verifica visiva** (screenshot headless della webapp) quando si toccano UI/stili. ⚠️ Attenzione alle trappole degli screenshot headless (vedi `MEMO.md` §7).
 - **Versioning delegato a Claude**: bumpa `server/package.json` → `version` autonomamente nello stesso commit della modifica.
   - **patch** (0.1.x) → qualsiasi commit che produce una nuova build (bugfix, CI fix, refactor, script)
   - **minor** (0.x.0) → completamento di una Fase o feature rilevante

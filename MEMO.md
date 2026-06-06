@@ -292,17 +292,19 @@ Automatico via GitHub Actions ([`.github/workflows/deploy.yml`](.github/workflow
 > YouTube (nessun Mixer → il pulsante "Carica da Youtube" resta nascosto); l'**app standalone (Electron)**
 > incorpora il Mixer e ha tutte le funzioni. Il backend cloud è lo stesso (Cloudinary + Firestore); le librerie sono **private per utente**.
 
-> **Stato**: repo già creato e pushato → **https://github.com/ClemAnto/JingleMachine** (pubblico, account `ClemAnto`).
-> ⚠️ Pages **non ancora abilitato**: finché non si fa il punto 2 qui sotto, lo step di deploy del workflow **fallisce**
-> (la build invece passa). Lo abiliteremo nella Fase 6, quando l'app sarà pronta.
+> ✅ **LIVE (2026-06-06)**: **https://clemanto.github.io/JingleMachine/** (HTTP 200, `base href="/JingleMachine/"`).
+> Repo: **https://github.com/ClemAnto/JingleMachine** (pubblico, account `ClemAnto`).
 
-Una tantum:
-1. Crea il repo su GitHub e fai push su `main`.  ✅ (fatto)
-2. Repo → **Settings → Pages → Build and deployment → Source = GitHub Actions**.  ⬅️ ANCORA DA FARE
-3. Ogni push su `main` builda e pubblica. Il workflow imposta `--base-href=/<nome-repo>/` e crea
-   un `404.html` (fallback SPA per i deep-link).
+**Pages abilitato** (era la causa dei deploy `deploy.yml` falliti prima: sorgente "GitHub Actions" mancante).
+Abilitato via API invece che dalla UI:
+```bash
+gh api -X POST repos/ClemAnto/JingleMachine/pages -f build_type=workflow
+```
+Ora **ogni push su `main`** builda e pubblica (`deploy.yml` imposta `--base-href=/JingleMachine/` + `404.html` fallback SPA).
+> 💡 In questo progetto, quando l'utente dice **"committa"** intende **commit + push su `main`** (→ redeploy automatico su Pages).
 
-> Se il login Google non funziona online, controlla i **domini autorizzati** in Firebase Auth (§3.4).
+> ⚠️ **Login Google su Pages NON ancora funzionante**: serve aggiungere **`clemanto.github.io`** ai *Authorized domains*
+> in **Firebase Console → Authentication → Settings** (azione manuale in console, §3.4). Login username/password funziona già.
 
 ---
 

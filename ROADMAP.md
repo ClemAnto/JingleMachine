@@ -117,6 +117,9 @@ Stack **100% gratuito e senza carta di credito**.
   - [x] Template ripuliti dai valori letterali (hex, `rounded-[…]`); valori tarati sull'**SVG del mockup**
   - [x] `/stylesheet` aggiornata (varianti reali, swatch `on-*`, `nzSize`) + **contrasto WCAG verificato**
   - [ ] (Opz. futuro) selezione tema **runtime** (`ThemeService` + `:root[data-theme]` + localStorage)
+- [x] **Responsive** (mobile-first Tailwind, host `display:block`, bottoni icon-only su mobile, modali `max-w`) ✅
+- [x] **Motion** (micro-animazioni CSS + transizione di route `route-enter`; `@angular/animations` deprecato → solo CSS; `prefers-reduced-motion`) ✅
+- [x] **Anteprima immagine** alla selezione (create/edit) + **search nascosta** sotto i 2 jingle ✅
 - [ ] Allineare la UI al mockup Figma aggiornato da DiNardo (tags visibili su card, mockup YouTube)
 - [ ] Gestione errori chiara (Mixer offline, blocco YouTube, quota Cloudinary)
 - [ ] Stati di caricamento / feedback UX
@@ -126,8 +129,8 @@ Stack **100% gratuito e senza carta di credito**.
 
 ## 🚀 Fase 6 — Deploy & verifica end-to-end
 
-- [ ] Domini autorizzati in Firebase Auth (`<utente>.github.io`)
-- [ ] Deploy webapp su GitHub Pages
+- [x] **Deploy webapp su GitHub Pages** ✅ LIVE: https://clemanto.github.io/JingleMachine/ (Pages abilitato via `gh api … -f build_type=workflow`; redeploy automatico a ogni push su `main`)
+- [ ] **Domini autorizzati in Firebase Auth**: aggiungere `clemanto.github.io` (Console → Auth → Settings) → **serve perché il login Google funzioni su Pages** (ora KO online; username/password ok)
 - [ ] Test completo (standalone): login → estrai da YouTube → salva → ricompare nella propria libreria
 - [ ] Test GitHub Pages: login + libreria + upload file (YouTube nascosto, nessun Mixer)
 - [ ] Mini-istruzioni per i colleghi: scaricare/installare l'**app standalone** (il Mixer è incluso)
