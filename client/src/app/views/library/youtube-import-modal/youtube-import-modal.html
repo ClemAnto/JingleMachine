@@ -1,8 +1,11 @@
+<!-- nzMaskClosable=false: releasing a trim-slider drag over the mask would
+     otherwise generate a click on the mask and close the modal mid-edit. -->
 <nz-modal
   [nzVisible]="visible()"
   [nzTitle]="title"
   [nzFooter]="footer"
   [nzWidth]="600"
+  [nzMaskClosable]="false"
   (nzOnCancel)="close()"
 >
   <ng-container *nzModalContent>
@@ -46,13 +49,14 @@
             </button>
           </div>
 
-          <!-- Cut interval -->
+          <!-- Cut interval (the playhead appears once the preview audio is ready) -->
           <ui-trim-slider
             [max]="info()?.durationSeconds ?? 0"
             [step]="0.1"
             [value]="range()"
             (valueChange)="onRangeChange($event)"
             [format]="formatTime"
+            [cursor]="previewReady() ? previewTime() : null"
           />
 
         </div>
@@ -63,7 +67,7 @@
 </nz-modal>
 
 <!-- Title (same for both steps, per the mockup) -->
-<ng-template #title>Carica da Youtube</ng-template>
+<ng-template #title>Carica da YouTube</ng-template>
 
 <!-- Footer -->
 <ng-template #footer>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -36,7 +36,7 @@ const DEFAULT_CLIP_SECONDS = 30;
   ],
   templateUrl: './youtube-import-modal.html',
 })
-export class YoutubeImportModal {
+export class YoutubeImportModal implements OnDestroy {
   private readonly mixer = inject(MixerService);
   private readonly message = inject(NzMessageService);
 
@@ -54,6 +54,8 @@ export class YoutubeImportModal {
   protected readonly previewLoading = signal(false);
   protected readonly previewReady = signal(false);
   protected readonly previewing = signal(false);
+  /** Current preview position (seconds) — drives the playhead on the trim slider. */
+  protected readonly previewTime = signal(0);
   private previewAudio: HTMLAudioElement | null = null;
   private previewObjectUrl: string | null = null;
 
@@ -69,6 +71,10 @@ export class YoutubeImportModal {
 
   protected close() {
     this.visible.set(false);
+    this.disposeAudio();
+  }
+
+  ngOnDestroy() {
     this.disposeAudio();
   }
 
@@ -103,10 +109,11 @@ export class YoutubeImportModal {
       this.disposeAudio();
       this.previewObjectUrl = URL.createObjectURL(blob);
       const audio = new Audio(this.previewObjectUrl);
-      audio.addEventListener('play', () => this.previewing.set(true));
-      audio.addEventListener('pause', () => this.previewing.set(false));
+      audio.addEventListener('play', this.onPreviewPlay);
+      audio.addEventListener('pause', this.onPreviewPause);
       audio.addEventListener('timeupdate', this.onTimeUpdate);
       this.previewAudio = audio;
+      this.previewTime.set(this.range()[0]);
       this.previewReady.set(true);
     } catch (err) {
       console.error(err);
@@ -125,8 +132,12 @@ export class YoutubeImportModal {
       return;
     }
     audio.currentTime = this.range()[0];
+    this.previewTime.set(audio.currentTime);
     audio.play();
   }
+
+  private readonly onPreviewPlay = () => this.previewing.set(true);
+  private readonly onPreviewPause = () => this.previewing.set(false);
 
   /** Stop playback at the end handle and rewind to the start for the next play. */
   private readonly onTimeUpdate = () => {
@@ -137,6 +148,7 @@ export class YoutubeImportModal {
       audio.pause();
       audio.currentTime = start;
     }
+    this.previewTime.set(audio.currentTime);
   };
 
   /** nz-slider (range mode) emits number[]; keep the preview cursor in sync (instant,
@@ -156,6 +168,7 @@ export class YoutubeImportModal {
     } else if (audio.currentTime > end) {
       audio.currentTime = start; // right handle moved past the cursor → rewind
     }
+    this.previewTime.set(audio.currentTime);
   }
 
   /** Step 2 → done: extract only the selected range and hand the blob to the
@@ -201,6 +214,8 @@ export class YoutubeImportModal {
   private disposeAudio() {
     if (this.previewAudio) {
       this.previewAudio.pause();
+      this.previewAudio.removeEventListener('play', this.onPreviewPlay);
+      this.previewAudio.removeEventListener('pause', this.onPreviewPause);
       this.previewAudio.removeEventListener('timeupdate', this.onTimeUpdate);
       this.previewAudio = null;
     }
@@ -210,6 +225,7 @@ export class YoutubeImportModal {
     }
     this.previewReady.set(false);
     this.previewing.set(false);
+    this.previewTime.set(0);
   }
 
   private reset() {

@@ -56,7 +56,7 @@
     <h3 class="subsection-title">App button — <code class="text-xs">ui-button</code> (4 variants, rounded-lg)</h3>
     <div class="flex flex-wrap gap-4 items-center">
       <button ui-button variant="primary"><span nz-icon nzType="upload"></span> Aggiungi file</button>
-      <button ui-button variant="youtube"><span nz-icon nzType="youtube"></span> Carica da Youtube</button>
+      <button ui-button variant="youtube"><span nz-icon nzType="youtube"></span> Carica da YouTube</button>
       <button ui-button variant="neutral"><span nz-icon nzType="logout"></span> Annulla</button>
       <button ui-button variant="alert"><span nz-icon nzType="delete"></span> Elimina</button>
       <button ui-button variant="primary" disabled>Disabled</button>
@@ -212,14 +212,14 @@
     </nz-modal>
   </section>
 
-  <!-- ── Modal — Carica da Youtube ── -->
+  <!-- ── Modal — Carica da YouTube ── -->
   <section class="space-y-4">
-    <h2 class="section-title">Modal — Carica da Youtube</h2>
+    <h2 class="section-title">Modal — Carica da YouTube</h2>
     <p class="text-sm text-muted">Flusso a due step: incolla l'URL → anteprima del video + taglio (range slider).</p>
 
     <!-- Always-visible reference card: the step-2 content (preview + trim) -->
     <div class="w-full max-w-xl rounded-2xl bg-surface p-10 space-y-10">
-      <h3 class="text-3xl font-semibold text-heading">Carica da Youtube</h3>
+      <h3 class="text-3xl font-semibold text-heading">Carica da YouTube</h3>
 
       <div class="flex items-center gap-4 p-3 rounded-lg bg-page">
         <div class="w-20 h-20 shrink-0 rounded-lg bg-surface flex items-center justify-center overflow-hidden">
@@ -244,12 +244,12 @@
     </div>
 
     <button ui-button variant="youtube" (click)="openYoutubeModal()">
-      <span nz-icon nzType="youtube"></span> Carica da Youtube
+      <span nz-icon nzType="youtube"></span> Carica da YouTube
     </button>
 
     <nz-modal
       [nzVisible]="ytModalVisible()"
-      nzTitle="Carica da Youtube"
+      nzTitle="Carica da YouTube"
       [nzFooter]="ytFooter"
       (nzOnCancel)="ytModalVisible.set(false)"
     >

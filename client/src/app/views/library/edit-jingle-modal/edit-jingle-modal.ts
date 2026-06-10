@@ -1,10 +1,11 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, OnDestroy, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { Jingle, JINGLE_COLORS, LibraryService } from '../../../core/library.service';
@@ -19,6 +20,7 @@ import { UiTagInput } from '../../../ui/tag-input/tag-input';
     NzIconModule,
     NzInputModule,
     NzModalModule,
+    NzSliderModule,
     NzSpinModule,
     UiButton,
     UiColorPicker,
@@ -26,7 +28,7 @@ import { UiTagInput } from '../../../ui/tag-input/tag-input';
   ],
   templateUrl: './edit-jingle-modal.html',
 })
-export class EditJingleModal {
+export class EditJingleModal implements OnDestroy {
   private readonly library = inject(LibraryService);
   private readonly message = inject(NzMessageService);
 
@@ -38,6 +40,8 @@ export class EditJingleModal {
   protected name = signal('');
   protected tags = signal<string[]>([]);
   protected color = signal<string>(JINGLE_COLORS[0]);
+  /** Playback volume 0–100 applied when the jingle is played from its card. */
+  protected volume = signal(100);
   protected imageFile = signal<File | null>(null);
   // Preview: the current cover on open, or the newly picked file once selected.
   protected imagePreview = signal<string | null>(null);
@@ -49,6 +53,7 @@ export class EditJingleModal {
     this.name.set(jingle.name);
     this.tags.set([...jingle.tags]);
     this.color.set(jingle.color);
+    this.volume.set(jingle.volume ?? 100);
     this.imageFile.set(null);
     this.revokeObjectUrl();
     this.imagePreview.set(jingle.imageUrl ?? null);
@@ -76,9 +81,13 @@ export class EditJingleModal {
     }
   }
 
+  ngOnDestroy() {
+    this.revokeObjectUrl();
+  }
+
   async save() {
     if (!this.jingle || !this.name().trim()) {
-      this.message.warning('Enter a name for the jingle.');
+      this.message.warning('Inserisci un nome per il jingle.');
       return;
     }
     this.saving.set(true);
@@ -87,14 +96,15 @@ export class EditJingleModal {
         name: this.name().trim(),
         tags: this.tags(),
         color: this.color(),
+        volume: this.volume(),
         imageFile: this.imageFile() ?? undefined,
       });
-      this.message.success('Jingle updated!');
+      this.message.success('Jingle aggiornato!');
       this.visible.set(false);
       this.saved.emit();
     } catch (err) {
       console.error(err);
-      this.message.error('Update failed.');
+      this.message.error('Aggiornamento non riuscito.');
     } finally {
       this.saving.set(false);
     }

@@ -5,12 +5,16 @@ import { join, delimiter } from "node:path";
 import { config } from "./config.js";
 import { binaryPaths } from "./binaries.js";
 
+// Hard cap on a single yt-dlp run: a hung download must not leave the child
+// process alive forever (generous: full-audio extraction of long videos).
+const RUN_TIMEOUT_MS = 10 * 60 * 1000;
+
 // Runs a binary and resolves with its stdout. We prepend the bin folder to PATH
 // so yt-dlp can discover ffmpeg/ffprobe/deno on its own.
 function run(cmd, args) {
   const env = { ...process.env, PATH: config.binDir + delimiter + process.env.PATH };
   return new Promise((resolve, reject) => {
-    execFile(cmd, args, { env, maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
+    execFile(cmd, args, { env, maxBuffer: 64 * 1024 * 1024, timeout: RUN_TIMEOUT_MS }, (error, stdout, stderr) => {
       if (error) {
         reject(new Error(stderr || error.message));
         return;

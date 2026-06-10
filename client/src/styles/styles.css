@@ -25,6 +25,18 @@ body {
   height: 100%;
 }
 
+/* ── CDK drag & drop (jingle reordering) ── */
+.cdk-drag-placeholder {
+  opacity: 0.25;
+}
+.cdk-drag-preview {
+  border-radius: 0.75rem; /* match the card's rounded-xl while dragging */
+}
+.cdk-drop-list-dragging .cdk-drag,
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
 /* ── /stylesheet dev-page helpers (not used by the app UI) ── */
 .section-title {
   @apply text-lg font-semibold text-heading border-b border-border-subtle pb-2;

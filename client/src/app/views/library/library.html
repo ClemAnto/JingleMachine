@@ -15,7 +15,7 @@
       @if (youtubeAvailable()) {
         <button ui-button variant="youtube" (click)="openYoutube()">
           <span nz-icon nzType="youtube"></span>
-          <span class="hidden sm:inline">Carica da Youtube</span>
+          <span class="hidden sm:inline">Carica da YouTube</span>
         </button>
       }
       <button ui-button variant="neutral" (click)="logout()">
@@ -53,9 +53,18 @@
             <p class="text-lg">Nessun jingle trovato.</p>
           </div>
         } @else {
-          <div class="grid grid-cols-4 gap-6.5 max-[1200px]:grid-cols-3 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
+          <!-- "mixed" orientation: the drop list follows the grid's wrapping layout.
+               Reordering is disabled while searching (indexes would not match the full list). -->
+          <div
+            class="grid grid-cols-4 gap-6.5 max-[1200px]:grid-cols-3 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1"
+            cdkDropList
+            cdkDropListOrientation="mixed"
+            [cdkDropListDisabled]="reorderDisabled()"
+            (cdkDropListDropped)="onReorder($event)"
+          >
             @for (jingle of filtered(); track jingle.id) {
               <app-jingle-item
+                cdkDrag
                 [jingle]="jingle"
                 (editRequest)="openEdit($event)"
                 (deleteRequest)="confirmDelete($event)"

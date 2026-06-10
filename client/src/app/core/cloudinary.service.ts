@@ -8,6 +8,13 @@ export interface CloudinaryUploadResult {
   secureUrl: string;
 }
 
+/** Rewrites a Cloudinary image delivery URL to a resized, auto-format/quality
+ *  variant (`f_auto,q_auto,w_*`) so cards don't download the full-size original.
+ *  Non-Cloudinary URLs (e.g. mock object URLs) pass through unchanged. */
+export function cloudinaryImageThumb(url: string, width = 600): string {
+  return url.replace('/image/upload/', `/image/upload/f_auto,q_auto,c_limit,w_${width}/`);
+}
+
 @Injectable({ providedIn: 'root' })
 export class CloudinaryService {
   private readonly baseUrl = `https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}`;

@@ -38,6 +38,23 @@
           <ui-color-picker [value]="color()" (valueChange)="color.set($event)" />
         </div>
 
+        <!-- Playback volume -->
+        <div class="space-y-2">
+          <p class="text-sm font-semibold text-fg">Volume di riproduzione</p>
+          <div class="flex items-center gap-3">
+            <span nz-icon nzType="sound" class="text-muted"></span>
+            <nz-slider
+              class="flex-1"
+              [nzMin]="0"
+              [nzMax]="100"
+              nzTooltipVisible="never"
+              [ngModel]="volume()"
+              (ngModelChange)="volume.set($event)"
+            ></nz-slider>
+            <span class="text-sm text-muted w-10 text-right">{{ volume() }}%</span>
+          </div>
+        </div>
+
       </div>
     </nz-spin>
   </ng-container>

@@ -37,6 +37,7 @@ export interface Jingle {
   imageUrl?: string;          // optional cover image (Cloudinary)
   imagePublicId?: string;
   durationSec: number;
+  volume?: number;            // playback volume 0–100 (older docs lack it → treat as 100)
   createdAt: Timestamp | null;
 }
 
@@ -47,6 +48,7 @@ export interface JingleDraft {
   audioBlob: Blob;
   audioFilename: string;
   durationSec: number;
+  volume: number;
   imageFile?: File;
 }
 
@@ -54,6 +56,7 @@ export interface JingleUpdate {
   name?: string;
   tags?: string[];
   color?: string;
+  volume?: number;
   imageFile?: File;
 }
 
@@ -95,6 +98,7 @@ export class LibraryService {
         imageUrl: image?.secureUrl,
         imagePublicId: image?.publicId,
         durationSec: draft.durationSec,
+        volume: draft.volume,
         createdAt: null,
       });
       return;
@@ -116,6 +120,7 @@ export class LibraryService {
       imageUrl: imageResult?.secureUrl ?? null,
       imagePublicId: imageResult?.publicId ?? null,
       durationSec: draft.durationSec,
+      volume: draft.volume,
       createdAt: serverTimestamp(),
     });
   }
@@ -128,6 +133,7 @@ export class LibraryService {
         if (changes.name !== undefined) target.name = changes.name;
         if (changes.tags !== undefined) target.tags = changes.tags;
         if (changes.color !== undefined) target.color = changes.color;
+        if (changes.volume !== undefined) target.volume = changes.volume;
         if (changes.imageFile) {
           const image = await this.cloudinary.uploadImage(changes.imageFile);
           target.imageUrl = image.secureUrl;
@@ -145,6 +151,7 @@ export class LibraryService {
     if (changes.name !== undefined) payload['name'] = changes.name;
     if (changes.tags !== undefined) payload['tags'] = changes.tags;
     if (changes.color !== undefined) payload['color'] = changes.color;
+    if (changes.volume !== undefined) payload['volume'] = changes.volume;
     if (imageResult) {
       payload['imageUrl'] = imageResult.secureUrl;
       payload['imagePublicId'] = imageResult.publicId;

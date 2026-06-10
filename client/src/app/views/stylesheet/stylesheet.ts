@@ -35,7 +35,7 @@ export class Stylesheet {
   protected searchValue = signal('');
   protected selectValue = signal<string | null>(null);
 
-  // "Carica da Youtube" modal — two-step flow (paste URL → preview + trim).
+  // "Carica da YouTube" modal — two-step flow (paste URL → preview + trim).
   protected ytModalVisible = signal(false);
   protected ytStep = signal<1 | 2>(1);
   protected ytUrl = signal('');

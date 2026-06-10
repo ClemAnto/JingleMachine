@@ -3,8 +3,8 @@
   [ngStyle]="cardStyle()"
   (click)="togglePlay()"
 >
-  <!-- Colour gradient overlay -->
-  <div class="absolute inset-0 rounded-xl pointer-events-none" [ngStyle]="overlayStyle()"></div>
+  <!-- Colour gradient overlay (no own radius: the parent clips it with overflow-hidden) -->
+  <div class="absolute inset-0 pointer-events-none" [ngStyle]="overlayStyle()"></div>
 
   <!-- Progress bar (visible only when playing) -->
   @if (playing()) {

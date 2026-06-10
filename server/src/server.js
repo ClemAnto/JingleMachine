@@ -26,6 +26,18 @@ export function addLog(message) {
   console.log(line);
 }
 
+// Defence in depth: only hand real YouTube URLs to yt-dlp.
+function isYoutubeUrl(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const { protocol, hostname } = new URL(value);
+    if (protocol !== "http:" && protocol !== "https:") return false;
+    return hostname === "youtu.be" || hostname === "youtube.com" || hostname.endsWith(".youtube.com");
+  } catch {
+    return false;
+  }
+}
+
 // Is the Mixer ready to extract? (all required binaries installed)
 async function readiness() {
   const versions = await binaryVersions();
@@ -66,8 +78,8 @@ export function createApp() {
   // Video metadata, without downloading the audio.
   app.get("/info", async (req, res) => {
     const url = req.query.url;
-    if (!url) {
-      res.status(400).json({ error: "Missing 'url' query parameter" });
+    if (!isYoutubeUrl(url)) {
+      res.status(400).json({ error: "'url' must be a valid YouTube URL" });
       return;
     }
     try {
@@ -82,9 +94,19 @@ export function createApp() {
   // Extract (and optionally trim) the audio, returning the MP3.
   app.post("/extract", async (req, res) => {
     const { url, start, end } = req.body ?? {};
-    if (!url) {
-      res.status(400).json({ error: "Missing 'url' in request body" });
+    if (!isYoutubeUrl(url)) {
+      res.status(400).json({ error: "'url' must be a valid YouTube URL" });
       return;
+    }
+    // start/end are optional (omitted = full audio), but when present they
+    // must be a sane numeric range — never strings forwarded to yt-dlp.
+    if (start != null || end != null) {
+      const validRange =
+        Number.isFinite(start) && Number.isFinite(end) && start >= 0 && end > start;
+      if (!validRange) {
+        res.status(400).json({ error: "'start' and 'end' must be numbers with 0 <= start < end" });
+        return;
+      }
     }
     let filePath;
     try {

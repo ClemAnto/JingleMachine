@@ -10,6 +10,14 @@
              right: calc(var(--tw, 100%) - clamp(0.625rem, var(--e, 0px), calc(var(--tw, 100%) - 0.625rem)) - 0.625rem)"
     ></div>
 
+    <!-- Playhead: current playback position (hidden when cursor is null) -->
+    @if (cursor() !== null) {
+      <div
+        class="pointer-events-none absolute top-1/2 left-0 h-10 w-0.5 rounded-full bg-fg/90 transition-transform duration-200 ease-linear"
+        style="transform: translateX(clamp(0px, var(--c, 0px), var(--tw, 100%))) translate(-50%, -50%)"
+      ></div>
+    }
+
     <div
       #startHandle
       class="absolute top-1/2 left-0 flex w-5 h-10 cursor-grab touch-none items-center justify-center rounded-lg bg-primary active:cursor-grabbing"
@@ -28,19 +36,44 @@
     </div>
   </div>
 
-  <!-- Time pills: centred under each handle, clamped to stay inside the track -->
+  <!-- Time pills: centred under each handle, clamped to stay inside the track.
+       Click a pill to type the time by hand (Enter/blur = confirm, Esc = cancel).
+       The spans stay in the DOM even while editing (their refs are written during drags);
+       the input is overlaid at the same position. -->
   <div class="relative h-7 mt-2.5 [--pill-w:3.75rem]">
     <span
       #startPill
-      class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg"
+      class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg cursor-pointer hover:bg-control/70"
       style="transform: translateX(clamp(calc(var(--pill-w) / 2), var(--s, 0px), calc(var(--tw, 100%) - var(--pill-w) / 2))) translateX(-50%)"
+      title="Clicca per inserire il tempo"
+      [class.invisible]="editing() === 0"
+      (click)="startEdit(0)"
       >{{ format()(value()[0]) }}</span
     >
     <span
       #endPill
-      class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg"
+      class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg cursor-pointer hover:bg-control/70"
       style="transform: translateX(clamp(calc(var(--pill-w) / 2), var(--e, 0px), calc(var(--tw, 100%) - var(--pill-w) / 2))) translateX(-50%)"
+      title="Clicca per inserire il tempo"
+      [class.invisible]="editing() === 1"
+      (click)="startEdit(1)"
       >{{ format()(value()[1]) }}</span
     >
+
+    @if (editing() !== null) {
+      <input
+        #editInput
+        class="absolute left-0 w-(--pill-w) py-1.5 text-center rounded-full bg-control text-xs font-mono text-fg outline-none ring-2 ring-primary"
+        [style.transform]="
+          editing() === 0
+            ? 'translateX(clamp(calc(var(--pill-w) / 2), var(--s, 0px), calc(var(--tw, 100%) - var(--pill-w) / 2))) translateX(-50%)'
+            : 'translateX(clamp(calc(var(--pill-w) / 2), var(--e, 0px), calc(var(--tw, 100%) - var(--pill-w) / 2))) translateX(-50%)'
+        "
+        [value]="format()(value()[editing()!])"
+        (keydown.enter)="commitEdit(editInput.value)"
+        (keydown.escape)="cancelEdit(); $event.stopPropagation()"
+        (blur)="commitEdit(editInput.value)"
+      />
+    }
   </div>
 </div>

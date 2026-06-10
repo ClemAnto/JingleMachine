@@ -12,6 +12,7 @@ import { NgStyle } from '@angular/common';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
+import { cloudinaryImageThumb } from '../../../core/cloudinary.service';
 import { Jingle } from '../../../core/library.service';
 
 @Component({
@@ -35,7 +36,7 @@ export class JingleItem implements OnDestroy {
     const j = this.jingle();
     const c = j.color;
     const base = j.imageUrl
-      ? `url(${j.imageUrl})`
+      ? `url(${cloudinaryImageThumb(j.imageUrl)})`
       : 'none';
     return {
       'background-image': base,
@@ -60,6 +61,8 @@ export class JingleItem implements OnDestroy {
     if (this.playing()) {
       el.pause();
     } else {
+      // Per-jingle playback volume (0–100, set in the create/edit form; default full).
+      el.volume = (this.jingle().volume ?? 100) / 100;
       el.play();
     }
   }
@@ -75,6 +78,9 @@ export class JingleItem implements OnDestroy {
   protected onEnded() {
     this.playing.set(false);
     this.progress.set(0);
+    // Rewind so the next listen always starts from the beginning.
+    const el = this.audioEl()?.nativeElement;
+    if (el) el.currentTime = 0;
   }
 
   protected onTimeUpdate(event: Event) {

@@ -1,10 +1,11 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, OnDestroy, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { JINGLE_COLORS, LibraryService } from '../../../core/library.service';
@@ -27,6 +28,7 @@ export interface PreparedAudio {
     NzIconModule,
     NzInputModule,
     NzModalModule,
+    NzSliderModule,
     NzSpinModule,
     UiButton,
     UiColorPicker,
@@ -34,7 +36,7 @@ export interface PreparedAudio {
   ],
   templateUrl: './create-jingle-modal.html',
 })
-export class CreateJingleModal {
+export class CreateJingleModal implements OnDestroy {
   private readonly library = inject(LibraryService);
   private readonly message = inject(NzMessageService);
 
@@ -45,6 +47,8 @@ export class CreateJingleModal {
   protected name = signal('');
   protected tags = signal<string[]>([]);
   protected color = signal<string>(JINGLE_COLORS[0]);
+  /** Playback volume 0–100 applied when the jingle is played from its card. */
+  protected volume = signal(100);
   protected audioFile = signal<File | null>(null);
   protected imageFile = signal<File | null>(null);
   protected imagePreview = signal<string | null>(null);
@@ -111,6 +115,7 @@ export class CreateJingleModal {
         name: this.name().trim(),
         tags: this.tags(),
         color: this.color(),
+        volume: this.volume(),
         durationSec: this.audioDuration(),
         imageFile: this.imageFile() ?? undefined,
         ...(prepared
@@ -132,6 +137,7 @@ export class CreateJingleModal {
     this.name.set('');
     this.tags.set([]);
     this.color.set(JINGLE_COLORS[0]);
+    this.volume.set(100);
     this.audioFile.set(null);
     this.imageFile.set(null);
     const prevImg = this.imagePreview();
@@ -139,5 +145,10 @@ export class CreateJingleModal {
     this.imagePreview.set(null);
     this.audioDuration.set(0);
     this.preparedAudio.set(null);
+  }
+
+  ngOnDestroy() {
+    const prevImg = this.imagePreview();
+    if (prevImg) URL.revokeObjectURL(prevImg);
   }
 }

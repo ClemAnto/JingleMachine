@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -19,6 +20,8 @@ import { YoutubeImportModal } from './youtube-import-modal/youtube-import-modal'
 @Component({
   selector: 'app-library',
   imports: [
+    CdkDrag,
+    CdkDropList,
     FormsModule,
     NzIconModule,
     NzSpinModule,
@@ -58,6 +61,9 @@ export class Library implements OnInit {
     );
   };
 
+  /** Reordering is index-based: it only works when the grid shows the full list. */
+  protected readonly reorderDisabled = () => this.search().trim().length > 0;
+
   async ngOnInit() {
     await this.loadJingles();
     this.youtubeAvailable.set((await this.mixer.health()) !== null);
@@ -91,9 +97,9 @@ export class Library implements OnInit {
 
   protected confirmDelete(jingle: Jingle) {
     this.modal.confirm({
-      nzTitle: `Delete "${jingle.name}"?`,
-      nzContent: 'This action cannot be undone.',
-      nzOkText: 'Delete',
+      nzTitle: `Eliminare "${jingle.name}"?`,
+      nzContent: 'Questa azione non può essere annullata.',
+      nzOkText: 'Elimina',
       nzOkDanger: true,
       nzOnOk: () => this.deleteJingle(jingle),
     });
@@ -101,6 +107,16 @@ export class Library implements OnInit {
 
   protected async onSaved() {
     await this.loadJingles();
+  }
+
+  /** Drag & drop reorder: updates the list and persists the order on this device. */
+  protected onReorder(event: CdkDragDrop<Jingle[]>) {
+    this.jingles.update((list) => {
+      const next = [...list];
+      moveItemInArray(next, event.previousIndex, event.currentIndex);
+      return next;
+    });
+    this.saveOrder();
   }
 
   async logout() {
@@ -111,23 +127,55 @@ export class Library implements OnInit {
   private async loadJingles() {
     this.loading.set(true);
     try {
-      this.jingles.set(await this.libraryService.list());
+      this.jingles.set(this.applySavedOrder(await this.libraryService.list()));
     } catch (err) {
       console.error(err);
-      this.message.error('Failed to load jingles.');
+      this.message.error('Caricamento dei jingle non riuscito.');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  // --- Per-device ordering (localStorage only, NOT shared between devices) ---
+
+  /** Applies the locally saved order; jingles not in it (new ones) stay first. */
+  private applySavedOrder(list: Jingle[]): Jingle[] {
+    const position = new Map(this.readOrder().map((id, index) => [id, index]));
+    if (position.size === 0) return list;
+    const known = list
+      .filter((j) => position.has(j.id))
+      .sort((a, b) => position.get(a.id)! - position.get(b.id)!);
+    const unknown = list.filter((j) => !position.has(j.id));
+    return [...unknown, ...known];
+  }
+
+  private readOrder(): string[] {
+    try {
+      const raw = localStorage.getItem(this.orderKey());
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveOrder() {
+    localStorage.setItem(this.orderKey(), JSON.stringify(this.jingles().map((j) => j.id)));
+  }
+
+  /** Keyed per user so two accounts on the same device keep separate orders. */
+  private orderKey(): string {
+    return `jingle-machine:order:${this.auth.user()?.uid ?? 'anonymous'}`;
   }
 
   private async deleteJingle(jingle: Jingle) {
     try {
       await this.libraryService.remove(jingle);
       this.jingles.update((list) => list.filter((j) => j.id !== jingle.id));
-      this.message.success('Deleted.');
+      this.message.success('Eliminato.');
     } catch (err) {
       console.error(err);
-      this.message.error('Delete failed.');
+      this.message.error('Eliminazione non riuscita.');
     }
   }
 }

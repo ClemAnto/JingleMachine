@@ -8,6 +8,7 @@ import {
   inject,
   input,
   model,
+  signal,
   viewChild,
 } from '@angular/core';
 
@@ -45,6 +46,8 @@ export class UiTrimSlider {
   readonly format = input<(seconds: number) => string>(TO_MMSS);
   /** Snap granularity (seconds) applied on release — e.g. 0.1 for tenths, 1 for whole seconds. */
   readonly step = input(1);
+  /** Playback position (seconds) shown as a vertical playhead on the track; null hides it. */
+  readonly cursor = input<number | null>(null);
 
   private readonly zone = inject(NgZone);
   private readonly root = viewChild.required<ElementRef<HTMLElement>>('root');
@@ -53,6 +56,10 @@ export class UiTrimSlider {
   private readonly endHandle = viewChild.required<ElementRef<HTMLElement>>('endHandle');
   private readonly startPill = viewChild.required<ElementRef<HTMLElement>>('startPill');
   private readonly endPill = viewChild.required<ElementRef<HTMLElement>>('endPill');
+  private readonly editInput = viewChild<ElementRef<HTMLInputElement>>('editInput');
+
+  /** Pill being edited by hand (0 = start, 1 = end); null when not editing. */
+  protected readonly editing = signal<0 | 1 | null>(null);
 
   private trackWidth = 0;
   private dragging: number | null = null;
@@ -96,10 +103,26 @@ export class UiTrimSlider {
       const [start, end] = this.value();
       this.positionTo(start, end);
     });
+
+    // Move the playhead when the cursor position changes.
+    effect(() => {
+      const cursor = this.cursor();
+      if (cursor !== null) this.positionCursor(cursor);
+    });
+
+    // Focus the inline editor as soon as a pill switches to edit mode.
+    effect(() => {
+      const inputEl = this.editInput()?.nativeElement;
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+    });
   }
 
   protected startDrag(handle: number, event: PointerEvent): void {
     event.preventDefault();
+    this.editing.set(null); // dragging takes over any pending manual edit
     this.dragging = handle;
     [this.dragStart, this.dragEnd] = this.value();
     this.trackRect = this.track().nativeElement.getBoundingClientRect();
@@ -131,6 +154,45 @@ export class UiTrimSlider {
     this.zone.run(() => this.value.set([this.snap(this.dragStart), this.snap(this.dragEnd)]));
   };
 
+  // --- Manual time editing (click on a pill) ---
+
+  protected startEdit(handle: 0 | 1): void {
+    this.editing.set(handle);
+  }
+
+  /** Validates the typed time and applies it to the edited handle.
+   *  Invalid text keeps the previous value; valid values are snapped to `step`
+   *  and clamped against the other handle so the range never inverts. */
+  protected commitEdit(text: string): void {
+    const handle = this.editing();
+    if (handle === null) return;
+    this.editing.set(null);
+
+    const parsed = this.parseTime(text);
+    if (parsed === null) return;
+
+    const [start, end] = this.value();
+    const snapped = this.snap(parsed);
+    if (handle === 0) this.value.set([Math.min(Math.max(0, snapped), end), end]);
+    else this.value.set([start, Math.min(Math.max(snapped, start), this.max())]);
+  }
+
+  protected cancelEdit(): void {
+    this.editing.set(null);
+  }
+
+  /** Parses "ss", "m:ss" or "h:mm:ss" (decimals allowed) into seconds; null if malformed. */
+  private parseTime(text: string): number | null {
+    const parts = text.trim().split(':');
+    if (parts.length === 0 || parts.length > 3) return null;
+    let seconds = 0;
+    for (const part of parts) {
+      if (!/^\d+(\.\d+)?$/.test(part)) return null;
+      seconds = seconds * 60 + Number(part);
+    }
+    return seconds;
+  }
+
   /** Writes the two handle centres (px) as CSS vars on the root; CSS clamps + translates. */
   private positionTo(startSeconds: number, endSeconds: number): void {
     if (!this.trackWidth) return;
@@ -140,11 +202,20 @@ export class UiTrimSlider {
     style.setProperty('--e', (endSeconds / max) * this.trackWidth + 'px');
   }
 
+  /** Writes the playhead centre (px) as a CSS var; CSS clamps + translates. */
+  private positionCursor(seconds: number): void {
+    if (!this.trackWidth) return;
+    const max = this.max() || 1;
+    this.root().nativeElement.style.setProperty('--c', (seconds / max) * this.trackWidth + 'px');
+  }
+
   private setTrackWidth(width: number): void {
     this.trackWidth = width;
     this.root().nativeElement.style.setProperty('--tw', width + 'px');
     const [start, end] = this.value();
     this.positionTo(start, end);
+    const cursor = this.cursor();
+    if (cursor !== null) this.positionCursor(cursor);
   }
 
   /** Round to the configured step, clearing float noise (e.g. 5.300000001 → 5.3). */
