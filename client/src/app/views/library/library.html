@@ -24,6 +24,19 @@
     </div>
   </header>
 
+  <!-- Update banner (desktop app only): a newer installer is on GitHub Releases -->
+  @if (updateVersion(); as newVersion) {
+    <div class="px-4 sm:px-10 pb-4">
+      <nz-alert nzType="info" nzShowIcon nzCloseable [nzMessage]="updateMessage" />
+      <ng-template #updateMessage>
+        È disponibile la versione {{ newVersion }} dell'app.
+        <a [href]="releasesUrl" target="_blank" rel="noopener" class="underline text-primary">
+          Scarica l'aggiornamento
+        </a>
+      </ng-template>
+    </div>
+  }
+
   <!-- ── Main content ── -->
   <main class="flex flex-col flex-1 min-w-0 px-4 pb-4 sm:px-10 sm:pb-10">
     <div class="bg-surface rounded-2xl p-5 sm:p-10 lg:p-15 flex-1 flex flex-col gap-6 sm:gap-10 min-w-0 w-full">

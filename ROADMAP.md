@@ -157,6 +157,7 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - [x] **Build CI verificata (2026-06-06)**: matrix Win+Mac verde → artifact `jingle-machine-win` (.exe ~79 MB) + `jingle-machine-mac` (.dmg universal ~172 MB). Trappole CI risolte (`--base-href`, `GH_TOKEN`) in `MEMO.md` §10.
 - [ ] **Eseguire il dmg su un Mac reale** (build OK in CI, ma mai avviato su macOS) — verificare Gatekeeper + download binari (yt-dlp_macos/ffmpeg/deno)
 - [x] Script di download riscritto → `npm run download` in radice (`scripts/download-packages.mjs`). Resta: aggiornare `server/README.md`
+- [x] **Check aggiornamenti in-app** (2026-06-10, v0.9.0): installer pubblicati su **GitHub Releases** al tag `v*` (link pubblico, niente login) + banner nella Library quando esce una versione più nuova (vedi `MEMO.md` §10)
 - [ ] Icona app (`build/icon.*`) — ora icona Electron di default
 - [ ] **Windows**: SmartScreen → "Esegui comunque" (firma opzionale, a pagamento)
 - [ ] **macOS**: Gatekeeper → "tasto destro → Apri" (notarizzazione = Apple Dev $99/anno → rimandata)

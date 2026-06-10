@@ -8,6 +8,7 @@ import { environment } from '../../environments/environment';
 export interface MixerHealth {
   ok: boolean;
   ready: boolean; // true once yt-dlp + ffmpeg + deno are installed
+  version?: string; // Mixer/app version (drives the in-app update check)
   versions: Record<string, string | null>;
 }
 

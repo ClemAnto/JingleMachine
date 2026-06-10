@@ -5,6 +5,10 @@ on:
   push:
     tags: ["v*"]
 
+# Needed by the release step (publishes the installers on tag builds).
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -76,3 +80,21 @@ jobs:
           path: |
             server/dist-electron/*.exe
             server/dist-electron/*.dmg
+
+      # ── 6. Publish to a GitHub Release (tag builds only) ────────────────
+      # The Release gives colleagues a public download link (CI artifacts need
+      # a GitHub login) and feeds the in-app update check (/releases/latest).
+      # GH_TOKEN is scoped to THIS step only: it must never reach "yarn dist"
+      # (see the note on step 4).
+      - name: Publish installers to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(server/dist-electron/*.exe server/dist-electron/*.dmg)
+          # Both matrix legs run this: the first creates the release, the other
+          # finds it (the trailing "|| true" covers the create/create race).
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "Jingle Machine $GITHUB_REF_NAME" --generate-notes || true
+          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber

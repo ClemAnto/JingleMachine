@@ -383,7 +383,18 @@ Angular build (**senza `--base-href`**: default `/`) → copia dist in `server/a
 >    `C:/Program Files/Git/` (path mangling MSYS). L'app Electron è servita dalla root → basta il default Angular `/` → **niente flag**.
 > 2. **NON impostare `GH_TOKEN`** sullo step `yarn dist`: con il token presente electron-builder attiva un publish
 >    provider GitHub e crasha generando i metadati di auto-update (*"Cannot read properties of null (reading 'provider')"*).
->    Noi distribuiamo via **artifact**, non Release → niente token + `--publish never`. Il download di Electron funziona lo stesso.
+>    `yarn dist` resta senza token + `--publish never`. Il download di Electron funziona lo stesso.
+>    Dal 2026-06-10 gli installer vengono **anche pubblicati su GitHub Releases**, ma da uno **step separato**
+>    (`gh release create/upload`, token scoped solo lì) che gira **solo sui build da tag `v*`** → link di download
+>    **pubblico** per i colleghi (gli artifact CI richiedono login GitHub).
+
+**Check aggiornamenti in-app (2026-06-10, v0.9.0)** — solo app desktop (la webapp su Pages è sempre aggiornata):
+- `/health` del Mixer espone `version` (da `server/package.json`).
+- Il client (`core/update.service.ts`), **solo in standalone** (`MixerService.isStandalone`), confronta quella versione
+  con l'ultima **GitHub Release** (`/releases/latest`, API pubblica senza auth) → se più nuova, banner `nz-alert`
+  nella Library con link alla pagina release. Check silenzioso: offline/rate-limit/nessuna release → nessun errore.
+- **Auto-update vero rimandato**: su macOS richiede firma Apple ($99/anno, scartata); su Windows si può aggiungere
+  in futuro con electron-updater sopra le stesse Releases.
 
 **Triggering build**: `gh workflow run build-packages.yml --ref <branch>` (manuale, `workflow_dispatch`) oppure **push di un tag** `v*`.
 `gh` installato in `C:\Program Files\GitHub CLI\` — non nel PATH di default (aggiungerlo a `$env:PATH` nella sessione).

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
@@ -11,6 +12,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { AuthService } from '../../core/auth.service';
 import { MixerService } from '../../core/mixer.service';
 import { Jingle, LibraryService } from '../../core/library.service';
+import { LATEST_RELEASE_PAGE, UpdateService } from '../../core/update.service';
 import { UiButton } from '../../ui/button/button';
 import { CreateJingleModal, PreparedAudio } from './create-jingle-modal/create-jingle-modal';
 import { EditJingleModal } from './edit-jingle-modal/edit-jingle-modal';
@@ -23,6 +25,7 @@ import { YoutubeImportModal } from './youtube-import-modal/youtube-import-modal'
     CdkDrag,
     CdkDropList,
     FormsModule,
+    NzAlertModule,
     NzIconModule,
     NzSpinModule,
     UiButton,
@@ -40,6 +43,7 @@ export class Library implements OnInit {
   private readonly message = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
   private readonly mixer = inject(MixerService);
+  private readonly updates = inject(UpdateService);
 
   private readonly createModal = viewChild.required(CreateJingleModal);
   private readonly editModal = viewChild.required(EditJingleModal);
@@ -52,6 +56,9 @@ export class Library implements OnInit {
   // button stays hidden; in the standalone (Electron) app the embedded Mixer
   // answers and it shows.
   protected readonly youtubeAvailable = signal(false);
+  /** Newer desktop version available on GitHub Releases (null = up to date / not standalone). */
+  protected readonly updateVersion = signal<string | null>(null);
+  protected readonly releasesUrl = LATEST_RELEASE_PAGE;
 
   protected readonly filtered = () => {
     const q = this.search().toLowerCase().trim();
@@ -66,7 +73,12 @@ export class Library implements OnInit {
 
   async ngOnInit() {
     await this.loadJingles();
-    this.youtubeAvailable.set((await this.mixer.health()) !== null);
+    const health = await this.mixer.health();
+    this.youtubeAvailable.set(health !== null);
+    // Update check only in the desktop app: the web app is always up to date.
+    if (this.mixer.isStandalone && health?.version) {
+      this.updateVersion.set(await this.updates.checkForUpdate(health.version));
+    }
   }
 
   protected openCreate() {

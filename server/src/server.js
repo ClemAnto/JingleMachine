@@ -16,6 +16,8 @@ import { getInfo, extractMp3 } from "./youtube.js";
 const require = createRequire(import.meta.url);
 const express = require("express");
 const cors = require("cors");
+// App version, exposed via /health so the client can offer updates.
+const { version: appVersion } = require("../package.json");
 
 // Keep the most recent log lines in memory so the mini page can show them.
 const recentLogs = [];
@@ -67,7 +69,7 @@ export function createApp() {
   // Health: lets the web app show the "Mixer connected" indicator.
   app.get("/health", async (req, res) => {
     const status = await readiness();
-    res.json({ ok: true, ...status });
+    res.json({ ok: true, version: appVersion, ...status });
   });
 
   // Recent server logs, for the mini test page.
