@@ -66,7 +66,6 @@ Monorepo "semplice" con due cartelle sorelle indipendenti (ognuna col suo `packa
 | `CLAUDE.md` (questo) | All'inizio, per orientarti e per le convenzioni. |
 | **`THEMING.md`** | Quando lavori su **tema/stili**. Sistema a **token CSS** (multi-tema, un file per tema), come lo consumano Tailwind/ng-zorro/tag nativi, taxonomy dei token, ricetta per un tema nuovo, checklist di migrazione. |
 | `server/README.md` | Quando lavori sul **Mixer locale** (`server/`): come avviarlo, endpoint, comandi di test. |
-| `PROJECT-BLUEPRINT.md` | **Non serve per lavorare qui.** Guida da copiare in un **nuovo progetto** per ricreare stack, convenzioni e modo di lavorare di questo. |
 
 > Se aggiungi un nuovo `.md`, **aggiungilo a questa tabella**.
 
