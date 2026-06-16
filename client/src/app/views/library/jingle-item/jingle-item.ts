@@ -59,10 +59,15 @@ export class JingleItem implements OnDestroy {
     if (!el) return;
 
     if (this.playing()) {
+      // Jingles are never paused: a click on a playing jingle stops it.
       el.pause();
+      el.currentTime = 0;
+      this.progress.set(0);
     } else {
       // Per-jingle playback volume (0–100, set in the create/edit form; default full).
       el.volume = (this.jingle().volume ?? 100) / 100;
+      // Always (re)start from the beginning.
+      el.currentTime = 0;
       el.play();
     }
   }
