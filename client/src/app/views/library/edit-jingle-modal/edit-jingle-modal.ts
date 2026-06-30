@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
@@ -31,8 +31,10 @@ import { UiTagInput } from '../../../ui/tag-input/tag-input';
 export class EditJingleModal implements OnDestroy {
   private readonly library = inject(LibraryService);
   private readonly message = inject(NzMessageService);
+  private readonly modal = inject(NzModalService);
 
   readonly saved = output<void>();
+  readonly deleted = output<void>();
 
   protected readonly visible = signal(false);
   private jingle: Jingle | null = null;
@@ -83,6 +85,33 @@ export class EditJingleModal implements OnDestroy {
 
   ngOnDestroy() {
     this.revokeObjectUrl();
+  }
+
+  protected confirmDelete() {
+    const jingle = this.jingle;
+    if (!jingle) return;
+    this.modal.confirm({
+      nzTitle: `Eliminare "${jingle.name}"?`,
+      nzContent: 'Questa azione non può essere annullata.',
+      nzOkText: 'Elimina',
+      nzOkDanger: true,
+      nzOnOk: () => this.delete(jingle),
+    });
+  }
+
+  private async delete(jingle: Jingle) {
+    this.saving.set(true);
+    try {
+      await this.library.remove(jingle);
+      this.message.success('Eliminato.');
+      this.visible.set(false);
+      this.deleted.emit();
+    } catch (err) {
+      console.error(err);
+      this.message.error('Eliminazione non riuscita.');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   async save() {

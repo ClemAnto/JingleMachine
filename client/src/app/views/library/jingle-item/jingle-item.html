@@ -11,13 +11,37 @@
     <div class="absolute bottom-0 left-0 h-0.75 bg-white z-2 transition-[width] duration-100" [style.width.%]="progress()"></div>
   }
 
+  <!-- More menu (top-right): Modifica / Programma -->
+  <div class="absolute top-2 right-2 z-2" (click)="$event.stopPropagation()">
+    <button
+      class="flex items-center justify-center w-8 h-8 bg-transparent text-white cursor-pointer border-none transition-transform hover:scale-110 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"
+      aria-label="Altre azioni"
+      nz-dropdown
+      nzTrigger="click"
+      nzPlacement="bottomRight"
+      [nzDropdownMenu]="menu"
+    >
+      <span nz-icon nzType="more" nzRotate="90" class="text-xl"></span>
+    </button>
+    <nz-dropdown-menu #menu="nzDropdownMenu">
+      <ul nz-menu>
+        <li nz-menu-item (click)="editRequest.emit(jingle())">
+          <span nz-icon nzType="edit" class="mr-2"></span>Modifica
+        </li>
+        <li nz-menu-item (click)="scheduleRequest.emit(jingle())">
+          <span nz-icon nzType="clock-circle" class="mr-2"></span>Programma
+        </li>
+      </ul>
+    </nz-dropdown-menu>
+  </div>
+
   <!-- Content -->
   <div class="relative z-1 px-4 pt-3 pb-3.5" (click)="$event.stopPropagation()">
     <!-- Name + play/pause -->
     <div class="flex items-end gap-2">
       <span class="flex-1 text-xl font-semibold text-white leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">{{ jingle().name }}</span>
       <button class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0" (click)="togglePlay()">
-        <span nz-icon [nzType]="playing() ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white"></span>
+        <span nz-icon [nzType]="playing() ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"></span>
       </button>
     </div>
 
@@ -30,17 +54,9 @@
       </div>
     }
 
-    <!-- Uploader + actions -->
-    <div class="flex items-center justify-between mt-1.5">
+    <!-- Uploader -->
+    <div class="mt-1.5">
       <span class="text-[11px] text-white/45 overflow-hidden text-ellipsis whitespace-nowrap max-w-37.5">{{ jingle().uploaderEmail }}</span>
-      <div class="flex gap-2">
-        <button class="bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-white/12" (click)="editRequest.emit(jingle())">
-          <span nz-icon nzType="edit" class="text-sm text-white/60"></span>
-        </button>
-        <button class="bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-white/12" (click)="deleteRequest.emit(jingle())">
-          <span nz-icon nzType="delete" class="text-sm text-danger/80"></span>
-        </button>
-      </div>
     </div>
   </div>
 

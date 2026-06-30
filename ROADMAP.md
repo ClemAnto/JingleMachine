@@ -18,7 +18,7 @@ Stack **100% gratuito e senza carta di credito**.
 **Design:** la UI segue il **mockup Figma** di DiNardo → <https://www.figma.com/design/wKTJuVY5rC1KI6NBEGVxkj/Jingle-Machine?node-id=0-1>
 
 **Architettura:**
-- **Firebase Auth** → login obbligatorio (sessione 24h) · **Firestore** → metadati (privati per `uid`)
+- **Firebase Auth** → login obbligatorio (sessione 7 giorni) · **Firestore** → metadati (privati per `uid`)
 - **Cloudinary** → file MP3 (storage remoto, free, no carta)
 - **Mixer locale** (Node + yt-dlp + ffmpeg) → estrazione YouTube; **embedded in Electron**, separato in dev (`localhost:4321`)
 
@@ -186,6 +186,13 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Packaging → Electron: PRIMA VERSIONE FUNZIONANTE.** Risolto il bug ESM/CJS di Electron 33 (main → `electron-main.cjs` + `createRequire`); **build CI verificata** (Win + Mac, [run #27059622842](https://github.com/ClemAnto/JingleMachine/actions/runs/27059622842)) → installer `.exe` (~79 MB) e `.dmg` universal (~172 MB). Scaricabili con **`npm run download`** (root). Dettagli e trappole CI in `MEMO.md` §10. Credenziali locali in `CREDENZIALI.local.md` (gitignored).
 
 **Aggiornamento (sessione 2026-06-07, v0.7.0):** creato **`ui-trim-slider`** (video-trimmer dual-handle: CSS-var driven, drag fuori-zone, taglio ai **decimi** via `[step]=0.1`) → sostituisce `nz-slider` nella `youtube-import-modal` + sezione "Carica da Youtube" nello `/stylesheet`. **`ui-button` → `rounded-lg`** (come il mockup; tolto il pill). Tutto allineato a `Modal.svg`. Committato e pubblicato su GitHub Pages.
+
+**Aggiornamento (sessione 2026-06-30):**
+- **Login settimanale**: sessione 24h → **7 giorni** (`SESSION_MAX_AGE_MS` in `auth.service.ts`); doc allineata.
+- **Azioni della card** spostate in un **menu kebab** (3 puntini, alto-dx) con **Modifica** + **Programma** (`scheduleRequest`); tolto il cestino e le icone inline. L'**eliminazione** ora è dentro il pannello di Modifica (pulsante "Elimina" variante `alert` + conferma).
+- **Nuova feature "Programma"** (`schedule-jingle-modal`): wired in `library.ts` (`openSchedule`) — **da rifinire/testare end-to-end**.
+- Polish: footer modale allineato a 24px, gap modale uniformati, **scrollbar a tema** (teal). Dettagli tecnici in `MEMO.md` §7.
+- ⚠️ **Pendenze**: icone `more` e `clock-circle` non registrate in `app.config.ts` (caricate via CDN fallback → ok a runtime, ma meglio registrarle statiche per offline/Electron). Verificare che `schedule-jingle-modal` salvi/persista davvero la programmazione.
 
 **Prossimo passo — opzioni:**
 1. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.

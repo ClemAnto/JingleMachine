@@ -199,6 +199,9 @@
   }
   .ant-modal-footer {
     border-top-color: var(--color-border-subtle);
+    // antd insets the footer 16px horizontally while header/body use 24px → the
+    // buttons sit narrower than the content. Match 24px so they align flush.
+    padding: 16px 24px;
   }
 
   // --- Tag -----------------------------------------------------
@@ -218,5 +221,119 @@
   .ant-message-notice-content {
     background: var(--color-surface);
     color: var(--color-fg);
+  }
+
+  // --- Dropdown menu (card more-menu: Modifica / Programma) ---
+  // antd's dark base paints the panel grey + blue hover → repaint to tokens.
+  .ant-dropdown-menu {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 0.25rem;
+  }
+  .ant-dropdown-menu-item {
+    color: var(--color-fg);
+    border-radius: var(--radius-lg);
+  }
+  .ant-dropdown-menu-item:hover {
+    background: color-mix(in srgb, white 8%, transparent);
+  }
+  .ant-dropdown-menu-item .anticon {
+    color: var(--color-muted);
+  }
+
+  // --- Tabs (Tutti / Programmati) -----------------------------
+  // antd defaults the active tab + ink bar to ITS blue → use our primary.
+  .ant-tabs-tab:hover,
+  .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--color-primary);
+  }
+  .ant-tabs-ink-bar {
+    background: var(--color-primary);
+  }
+  // Remove antd's full-width grey baseline under the tab labels (keep the ink bar).
+  .ant-tabs-top > .ant-tabs-nav::before,
+  .ant-tabs-bottom > .ant-tabs-nav::before {
+    border-bottom: none;
+  }
+
+  // --- Switch (toggle: "Ripeti ogni giorno") ------------------
+  // antd's checked track is ITS blue → repaint to our primary. The off track is a
+  // neutral translucent white so the off/on states read on any dark surface.
+  .ant-switch {
+    background: color-mix(in srgb, white 22%, transparent);
+  }
+  .ant-switch:hover:not(.ant-switch-disabled) {
+    background: color-mix(in srgb, white 30%, transparent);
+  }
+  .ant-switch.ant-switch-checked {
+    background: var(--color-primary);
+  }
+  .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) {
+    background: color-mix(in srgb, var(--color-primary) 85%, white);
+  }
+  .ant-switch:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+    outline-offset: 1px;
+  }
+
+  // --- Date/Time picker (nz-time-picker: "Orario") ------------
+  // The field matches the other inputs; the dropdown panel + selected cell use our
+  // tokens instead of antd's grey/blue.
+  .ant-picker {
+    background: var(--color-control);
+    border-color: transparent;
+    border-radius: var(--radius-lg);
+    height: var(--control-height);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .ant-picker:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  }
+  .ant-picker.ant-picker-focused {
+    border-color: var(--color-primary);
+    box-shadow: none;
+  }
+  .ant-picker .ant-picker-input > input {
+    color: var(--color-fg);
+  }
+  .ant-picker .ant-picker-input > input::placeholder {
+    color: var(--color-muted);
+  }
+  .ant-picker .ant-picker-suffix,
+  .ant-picker .ant-picker-clear {
+    color: var(--color-muted);
+  }
+  // The clear icon sits over the value: give it the field background to mask it.
+  .ant-picker .ant-picker-clear {
+    background: var(--color-control);
+  }
+  // Dropdown: panel surface + token-coloured time cells (selected = primary tint).
+  .ant-picker-dropdown .ant-picker-panel-container,
+  .ant-picker-dropdown .ant-picker-panel {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+  }
+  .ant-picker-dropdown .ant-picker-time-panel-column:not(:first-child) {
+    border-inline-start-color: var(--color-border-subtle);
+  }
+  .ant-picker-dropdown .ant-picker-time-panel-cell-inner {
+    color: var(--color-fg);
+    border-radius: var(--radius-lg);
+  }
+  .ant-picker-dropdown
+    .ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-disabled):hover
+    .ant-picker-time-panel-cell-inner {
+    background: color-mix(in srgb, white 8%, transparent);
+  }
+  .ant-picker-dropdown .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner,
+  .ant-picker-dropdown .ant-picker-time-panel-cell-selected:hover .ant-picker-time-panel-cell-inner {
+    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    color: var(--color-fg);
+  }
+  .ant-picker-dropdown .ant-picker-footer {
+    border-top-color: var(--color-border-subtle);
+  }
+  .ant-picker-dropdown .ant-picker-now-btn {
+    color: var(--color-primary);
   }
 }

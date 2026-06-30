@@ -4,7 +4,10 @@
   <header class="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-10">
     <div class="flex items-center gap-3">
       <span nz-icon nzType="sound" class="text-primary text-2xl sm:text-3xl"></span>
-      <span class="text-primary font-bold text-xl sm:text-2xl tracking-widest uppercase">Jingle Machine</span>
+      <div class="flex flex-col leading-none">
+        <span class="text-primary font-bold text-xl sm:text-2xl tracking-widest uppercase">Jingle Machine</span>
+        <span class="text-muted text-[11px] tracking-wide mt-1">v{{ appVersion }}</span>
+      </div>
     </div>
 
     <div class="flex items-center gap-3 sm:gap-5">
@@ -41,58 +44,133 @@
   <main class="flex flex-col flex-1 min-w-0 px-4 pb-4 sm:px-10 sm:pb-10">
     <div class="bg-surface rounded-2xl p-5 sm:p-10 lg:p-15 flex-1 flex flex-col gap-6 sm:gap-10 min-w-0 w-full">
 
-      <!-- Title + search -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-w-0">
-        <h1 class="text-2xl sm:text-3xl font-semibold text-fg">I tuoi Jingle</h1>
-        <!-- Search only makes sense with a few items: hide it below 2 jingles. -->
-        @if (jingles().length >= 2) {
-          <div class="flex items-center gap-2 h-(--control-height) px-5 rounded-full bg-control cursor-text w-full sm:w-auto min-w-0">
-            <span nz-icon nzType="search" class="text-muted"></span>
-            <input
-              class="bg-transparent border-none outline-none text-fg placeholder:text-muted text-lg font-semibold min-w-0 flex-1 sm:flex-none sm:w-48"
-              placeholder="Cerca..."
-              [ngModel]="search()"
-              (ngModelChange)="search.set($event)"
-            />
-          </div>
-        }
-      </div>
+      <!-- Tabs with the search box pinned to the same row (nzTabBarExtraContent). -->
+      <nz-tabs
+        [nzSelectedIndex]="tabIndex()"
+        (nzSelectedIndexChange)="tabIndex.set($event)"
+        [nzTabBarExtraContent]="searchExtra"
+      >
+        <!-- ── Tutti: the full library grid ── -->
+        <nz-tab [nzTitle]="tuttiTitle">
+          <div class="flex flex-col gap-6 sm:gap-10 pt-2">
 
-      <!-- Grid -->
-      <nz-spin [nzSpinning]="loading()">
-        @if (filtered().length === 0 && !loading()) {
-          <div class="flex flex-col items-center justify-center py-20 text-white/25">
-            <span nz-icon nzType="sound" class="text-6xl mb-4"></span>
-            <p class="text-lg">Nessun jingle trovato.</p>
+            <nz-spin [nzSpinning]="loading()">
+              @if (filtered().length === 0 && !loading()) {
+                <div class="flex flex-col items-center justify-center py-20 text-white/25">
+                  <span nz-icon nzType="sound" class="text-6xl mb-4"></span>
+                  <p class="text-lg">Nessun jingle trovato.</p>
+                </div>
+              } @else {
+                <!-- "mixed" orientation: the drop list follows the grid's wrapping layout.
+                     Reordering is disabled while searching (indexes would not match the full list). -->
+                <div
+                  class="grid grid-cols-4 gap-6.5 max-[1200px]:grid-cols-3 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1"
+                  cdkDropList
+                  cdkDropListOrientation="mixed"
+                  [cdkDropListDisabled]="reorderDisabled()"
+                  (cdkDropListDropped)="onReorder($event)"
+                >
+                  @for (jingle of filtered(); track jingle.id) {
+                    <app-jingle-item
+                      cdkDrag
+                      class="w-full max-w-[400px] justify-self-center"
+                      [jingle]="jingle"
+                      (editRequest)="openEdit($event)"
+                      (scheduleRequest)="openSchedule($event)"
+                    />
+                  }
+                </div>
+              }
+            </nz-spin>
+
           </div>
-        } @else {
-          <!-- "mixed" orientation: the drop list follows the grid's wrapping layout.
-               Reordering is disabled while searching (indexes would not match the full list). -->
-          <div
-            class="grid grid-cols-4 gap-6.5 max-[1200px]:grid-cols-3 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1"
-            cdkDropList
-            cdkDropListOrientation="mixed"
-            [cdkDropListDisabled]="reorderDisabled()"
-            (cdkDropListDropped)="onReorder($event)"
-          >
-            @for (jingle of filtered(); track jingle.id) {
-              <app-jingle-item
-                cdkDrag
-                [jingle]="jingle"
-                (editRequest)="openEdit($event)"
-                (deleteRequest)="confirmDelete($event)"
-              />
-            }
+        </nz-tab>
+
+        <!-- ── Programmati: scheduled plays, ordered by time ── -->
+        <nz-tab [nzTitle]="progTitle">
+          <div class="pt-2">
+            <nz-spin [nzSpinning]="schedulesLoading()">
+              @if (scheduledView().length === 0 && !schedulesLoading()) {
+                <div class="flex flex-col items-center justify-center py-20 text-white/25">
+                  <span nz-icon nzType="clock-circle" class="text-6xl mb-4"></span>
+                  <p class="text-lg">Nessun jingle programmato.</p>
+                </div>
+              } @else {
+                <div class="grid grid-cols-4 gap-6.5 max-[1200px]:grid-cols-3 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
+                  @for (item of scheduledView(); track item.entry.id) {
+                    <app-scheduled-jingle-item
+                      class="w-full max-w-[400px] justify-self-center"
+                      [entry]="item.entry"
+                      [jingle]="item.jingle"
+                      (editRequest)="openScheduleEdit($event)"
+                      (deleteRequest)="removeSchedule($event)"
+                      (toggleRequest)="toggleSchedule($event)"
+                    />
+                  }
+                </div>
+              }
+            </nz-spin>
           </div>
-        }
-      </nz-spin>
+        </nz-tab>
+      </nz-tabs>
 
     </div>
   </main>
 
 </div>
 
+<!-- Enlarged tab labels -->
+<ng-template #tuttiTitle><span class="text-xl sm:text-2xl font-semibold">Tutti</span></ng-template>
+<ng-template #progTitle><span class="text-xl sm:text-2xl font-semibold">Programmati</span></ng-template>
+
+<!-- Search box pinned to the tab-bar row. Shown on the "Tutti" tab only (it
+     filters the grid) and only with a few jingles — searching one is pointless. -->
+<ng-template #searchExtra>
+  @if (tabIndex() === 0 && jingles().length >= 2) {
+    <div class="flex items-center gap-2 h-(--control-height) px-5 rounded-full bg-control cursor-text min-w-0 w-40 sm:w-56">
+      <span nz-icon nzType="search" class="text-muted"></span>
+      <input
+        class="bg-transparent border-none outline-none text-fg placeholder:text-muted text-lg font-semibold min-w-0 flex-1"
+        placeholder="Cerca..."
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </div>
+  }
+</ng-template>
+
 <!-- Modals -->
 <app-youtube-import-modal (imported)="onYoutubeImported($event)" />
 <app-create-jingle-modal (saved)="onSaved()" />
-<app-edit-jingle-modal (saved)="onSaved()" />
+<app-edit-jingle-modal (saved)="onSaved()" (deleted)="onDeleted()" />
+<app-schedule-jingle-modal />
+
+<!-- Countdown toast: appears 10s before a scheduled jingle fires, with a "Blocca"
+     button. It reads scheduler.pending(), which clears itself if the schedule or
+     its jingle is removed mid-countdown → the toast disappears on its own. -->
+@if (scheduler.pending(); as fire) {
+  <div
+    class="fixed bottom-6 right-6 z-(--z-notification) w-80 max-w-[calc(100vw-3rem)] rounded-xl bg-surface border border-border-subtle shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden animate-[route-enter_220ms_ease-out]"
+  >
+    <div class="flex items-start gap-3 p-4">
+      <span nz-icon [nzType]="fire.phase === 'playing' ? 'sound' : 'clock-circle'" class="text-primary text-2xl shrink-0"></span>
+      <div class="flex-1 min-w-0">
+        @if (fire.phase === 'playing') {
+          <p class="text-fg font-semibold leading-tight">In riproduzione: «{{ fire.jingleName }}»</p>
+          <p class="text-muted text-sm mt-0.5">Riproduzione programmata in corso.</p>
+        } @else {
+          <p class="text-fg font-semibold leading-tight">Tra {{ fire.secondsLeft }}s parte «{{ fire.jingleName }}»</p>
+          <p class="text-muted text-sm mt-0.5">Riproduzione programmata in arrivo.</p>
+        }
+      </div>
+      <button
+        class="shrink-0 px-3 h-9 rounded-lg border border-danger/40 text-danger font-semibold cursor-pointer bg-transparent transition-colors hover:bg-danger/10"
+        (click)="scheduler.cancel()"
+      >
+        {{ fire.phase === 'playing' ? 'Interrompi' : 'Blocca' }}
+      </button>
+    </div>
+    <!-- Countdown bar while waiting, playback "time left" bar while playing. -->
+    <div class="h-1 bg-primary transition-[width] duration-200 ease-linear" [style.width.%]="fire.progress"></div>
+  </div>
+}

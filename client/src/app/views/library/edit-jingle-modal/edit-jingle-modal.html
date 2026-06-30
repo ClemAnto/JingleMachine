@@ -7,7 +7,7 @@
 >
   <ng-container *nzModalContent>
     <nz-spin [nzSpinning]="saving()">
-      <div class="space-y-5 py-2">
+      <div class="flex flex-col gap-6">
 
         <!-- Cover image -->
         <label
@@ -61,8 +61,14 @@
 </nz-modal>
 
 <ng-template #footer>
-  <button ui-button variant="primary" class="w-full justify-center" [disabled]="saving()" (click)="save()">
-    <span nz-icon nzType="save"></span>
-    {{ saving() ? 'Salvataggio...' : 'Salva modifiche' }}
-  </button>
+  <div class="flex items-center gap-3">
+    <button ui-button variant="alert" [disabled]="saving()" (click)="confirmDelete()">
+      <span nz-icon nzType="delete"></span>
+      <span class="hidden sm:inline">Elimina</span>
+    </button>
+    <button ui-button variant="primary" class="flex-1 justify-center" [disabled]="saving()" (click)="save()">
+      <span nz-icon nzType="save"></span>
+      {{ saving() ? 'Salvataggio...' : 'Salva modifiche' }}
+    </button>
+  </div>
 </ng-template>

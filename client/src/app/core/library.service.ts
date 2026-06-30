@@ -16,6 +16,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { CloudinaryService } from './cloudinary.service';
 import { FIRESTORE } from './firebase.providers';
+import { ScheduleService } from './schedule.service';
 
 /** Accent colours available for jingle cards (from the Figma mockup SVG). */
 export const JINGLE_COLORS = [
@@ -65,6 +66,7 @@ export class LibraryService {
   private readonly db = inject(FIRESTORE);
   private readonly auth = inject(AuthService);
   private readonly cloudinary = inject(CloudinaryService);
+  private readonly schedule = inject(ScheduleService);
 
   private readonly COLLECTION = 'jingles';
 
@@ -171,13 +173,15 @@ export class LibraryService {
     return jingles.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
   }
 
-  /** Deletes a jingle's Firestore document.
+  /** Deletes a jingle's Firestore document + any schedules pointing to it.
    *  Cloudinary assets are NOT deleted here (unsigned preset limitation). */
   async remove(jingle: Jingle): Promise<void> {
     if (environment.mock) {
       this.mockStore = this.mockStore.filter((j) => j.id !== jingle.id);
+      await this.schedule.removeForJingle(jingle.id);
       return;
     }
     await deleteDoc(doc(this.db, this.COLLECTION, jingle.id));
+    await this.schedule.removeForJingle(jingle.id);
   }
 }

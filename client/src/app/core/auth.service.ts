@@ -17,8 +17,8 @@ import { AUTH } from './firebase.providers';
  * `user` is `undefined` until Firebase has determined the initial state,
  * then `User | null`. Use `ready` to know when it has been resolved.
  */
-/** Daily login policy: a session older than this forces a fresh login. */
-const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+/** Weekly login policy: a session older than this forces a fresh login. */
+const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const LAST_LOGIN_KEY = 'jm.lastLoginAt';
 
 /**
@@ -106,8 +106,8 @@ export class AuthService {
   }
 
   /**
-   * True when the session is older than the daily limit (or never stamped).
-   * Firebase keeps users signed in indefinitely; this enforces a once-a-day login.
+   * True when the session is older than the weekly limit (or never stamped).
+   * Firebase keeps users signed in indefinitely; this enforces a once-a-week login.
    */
   isSessionExpired(): boolean {
     if (environment.mock) return false; // never expire in userless mode

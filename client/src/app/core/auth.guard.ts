@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
-/** Allows access only if authenticated AND the daily session has not expired;
+/** Allows access only if authenticated AND the weekly session has not expired;
  *  otherwise redirects to login. */
 export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -14,7 +14,7 @@ export const authGuard: CanActivateFn = async () => {
   if (!auth.isLoggedIn()) {
     return router.createUrlTree(['/login']);
   }
-  // Firebase keeps the session forever; enforce a once-a-day login.
+  // Firebase keeps the session forever; enforce a once-a-week login.
   if (auth.isSessionExpired()) {
     await auth.logout();
     return router.createUrlTree(['/login']);

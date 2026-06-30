@@ -9,7 +9,7 @@ quando qualcosa cambia (versioni, decisioni architetturali, trucchi), **aggiorna
 
 Webapp per una **libreria di jingle PRIVATA per utente**. Permette di:
 
-1. Autenticarsi (Firebase Authentication: email/password + Google). **Login obbligatorio** (`authGuard`), sessione **24h** → si rilogga una volta al giorno.
+1. Autenticarsi (Firebase Authentication: email/password + Google). **Login obbligatorio** (`authGuard`), sessione **7 giorni** → si rilogga una volta a settimana.
 2. Caricare un file audio (o **estrarlo da YouTube**), tagliarlo in **MP3**, salvarlo nella **propria** libreria.
 3. Storage: **Cloudinary** per i file MP3 (storage remoto) + **Firestore** per i metadati. **Due utenti vedono librerie diverse** (filtro per `uid`).
 
@@ -123,7 +123,7 @@ client/src/
     app.ts                         # shell: <router-outlet /> + heartbeat al Mixer (template inline)
     core/
       firebase.providers.ts        # initializeApp + token DI: AUTH, FIRESTORE (no STORAGE)
-      auth.service.ts              # stato auth (signal) + login/registrazione/logout + scadenza sessione 24h
+      auth.service.ts              # stato auth (signal) + login/registrazione/logout + scadenza sessione 7 giorni
       auth.guard.ts                # authGuard (login + sessione non scaduta) + guestGuard
       cdn-icons.service.ts         # icone caricate da CDN (Ant Design + Material via namespace)
       cloudinary.service.ts        # upload audio (resource_type=video) e immagini su Cloudinary
@@ -144,7 +144,7 @@ client/src/
 
 **Convenzioni**: componenti standalone, signals, niente NgModule. **Niente `.scss` per-componente** (Tailwind inline; override ng-zorro nello `.scss` globale). Componenti riusabili in `app/ui` (`ui-*`), pagine in `app/views`.
 Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
-**authGuard ATTIVO** in `app.routes.ts` (login obbligatorio, sessione 24h).
+**authGuard ATTIVO** in `app.routes.ts` (login obbligatorio, sessione 7 giorni).
 
 ---
 
@@ -189,6 +189,18 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 
 ### Trappola: verifica responsive con screenshot headless (2026-06-06)
 - Chrome/Edge headless con **`--force-device-scale-factor`** + `--window-size` **falsa il viewport** (`window.innerWidth` ≠ window-size) → il ritaglio sembra mostrare overflow inesistenti. Per verificare il responsive: misurare `document.documentElement.scrollWidth` vs `window.innerWidth` nel DOM (overflow reale solo se `scrollWidth > innerWidth`), non fidarsi del ritaglio. Inoltre **Chrome** può restituire screenshot **stale** se è già aperto → usare un `--user-data-dir` fresco o un binario diverso (Edge).
+
+### Modale NgZorro: footer disallineato dal body (2026-06-30)
+- antd insetta `.ant-modal-footer` a **16px** orizzontali mentre `.ant-modal-header`/`.ant-modal-body` sono a **24px** → i bottoni del footer risultano più stretti del contenuto. Fix in `ng-zorro.scss` (`@layer components`): `.ant-modal-footer { padding: 16px 24px }`. La modale di **conferma** (`.ant-modal-confirm`) ha un suo padding (`32px 32px 24px`) e non è toccata.
+
+### Scrollbar a tema — webkit vs standard sono mutuamente esclusivi (2026-06-30)
+- In **Chromium**, se imposti le proprietà standard `scrollbar-color`/`scrollbar-width`, il browser **ignora del tutto** `::-webkit-scrollbar*`. Quindi non puoi avere il thumb arrotondato webkit *e* il colore standard insieme: scegli un approccio.
+- Scelta nel progetto (`tokens.css`, `@layer base`): **standard props** come primarie (`scrollbar-width: thin` + `scrollbar-color: var(--color-control) transparent`) → coprono Chromium/Electron, Firefox, Safari 18+; `::-webkit-scrollbar` resta solo come fallback per WebKit vecchi.
+- ⚠️ **Non screenshot-abile in headless**: su Win11 Chromium la scrollbar è **overlay** e si auto-nasconde a riposo (uno `scrollTop` via JS non la fa apparire) → nei ritagli headless non si vede anche se è corretta. **Verificare via computed style** (`getComputedStyle(el).scrollbarColor` deve dare `rgb(0, 81, 71) ...`), non con lo screenshot.
+
+### Verifica visiva in mock + seeding via CDP (2026-06-30)
+- Per screenshottare viste dietro login: avviare il **mock** (`ng serve --configuration mock`) su una **porta libera** (es. `--port 4300`) così non confligge con l'`ng serve` già attivo su 4200; il mock bypassa Firebase (authGuard passa).
+- Lo store mock parte **vuoto**: per popolarlo si automatizza il vero flusso "Crea" via CDP → `DOM.setFileInputFiles` con un file fittizio (anche `fake.mp3` con bytes a caso: il mock fa solo un object URL, non valida l'audio) sull'`input[type=file][accept*=audio]`, poi click su "Crea Jingle". Node 24 ha `fetch`+`WebSocket` globali per parlare col CDP. Script in scratchpad.
 
 ### Bottoni `ui-button` = `rounded-lg` (NON pill) — corretto 2026-06-07
 - Tutti i bottoni CTA del mockup usano **rx20 = `rounded-lg`** (verificato dai `<rect>` di `Button.svg`/`Home.svg`). La vecchia scelta "pill (`--radius-full`)" è stata **rimossa**: `ui-button` ora usa `rounded-lg`. `--radius-full` resta solo per pill/tag/dot, box ricerca, maniglie/pill dello slider. Doc allineata in `THEMING.md` (tabella radii) e commento in `themes/default.scss`.

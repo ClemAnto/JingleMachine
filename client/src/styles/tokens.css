@@ -35,6 +35,31 @@
     font-family: var(--font-sans);
   }
 
+  /* Themed scrollbars (colours from theme tokens): teal thumb, transparent track.
+     The standard properties cover the primary targets — modern Chromium (the
+     Electron desktop build), Firefox and Safari 18+. The ::-webkit-scrollbar
+     block is a fallback for older WebKit that predates scrollbar-color; where
+     the standard props apply, Chromium ignores those ::-webkit rules (expected). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-control) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-control);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-control-hover);
+  }
+
   /* Angular component hosts default to display:inline → make full-page view
      hosts block so their layouts size to the viewport correctly. */
   app-root,

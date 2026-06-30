@@ -1,0 +1,94 @@
+<div
+  class="relative w-full h-50 overflow-hidden rounded-xl flex flex-col justify-end border-2 bg-cover bg-center cursor-pointer transition-[transform,opacity] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+  [class.opacity-50]="!enabled()"
+  [ngStyle]="cardStyle()"
+  (click)="togglePlay()"
+>
+  <!-- Colour gradient overlay (no own radius: the parent clips it with overflow-hidden) -->
+  <div class="absolute inset-0 pointer-events-none" [ngStyle]="overlayStyle()"></div>
+
+  <!-- Progress bar (visible only when playing) -->
+  @if (playing()) {
+    <div class="absolute bottom-0 left-0 h-0.75 bg-white z-2 transition-[width] duration-100" [style.width.%]="progress()"></div>
+  }
+
+  <!-- Schedule info (top-left): scheduled time + optional "every day" badge -->
+  <div class="absolute top-2.5 left-3 z-2 flex flex-col items-start gap-1" (click)="$event.stopPropagation()">
+    <span class="inline-flex items-center gap-1.5 text-white text-2xl font-bold tabular-nums [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
+      <span nz-icon nzType="clock-circle" class="text-lg drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"></span>{{ entry().time }}
+    </span>
+    @if (entry().repeatDaily) {
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 text-white text-xs font-medium [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">
+        <span nz-icon nzType="reload" class="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"></span>Ogni giorno
+      </span>
+    }
+    <!-- On/off toggle: pauses the schedule without deleting it. -->
+    <nz-switch
+      class="mt-1"
+      nzSize="small"
+      [ngModel]="enabled()"
+      (ngModelChange)="toggleRequest.emit(entry())"
+      title="Attiva/disattiva programmazione"
+    ></nz-switch>
+  </div>
+
+  <!-- More menu (top-right): Modifica programmazione / Elimina -->
+  <div class="absolute top-2 right-2 z-2" (click)="$event.stopPropagation()">
+    <button
+      class="flex items-center justify-center w-8 h-8 bg-transparent text-white cursor-pointer border-none transition-transform hover:scale-110 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"
+      aria-label="Altre azioni"
+      nz-dropdown
+      nzTrigger="click"
+      nzPlacement="bottomRight"
+      [nzDropdownMenu]="menu"
+    >
+      <span nz-icon nzType="more" nzRotate="90" class="text-xl"></span>
+    </button>
+    <nz-dropdown-menu #menu="nzDropdownMenu">
+      <ul nz-menu>
+        <li nz-menu-item (click)="editRequest.emit(entry())">
+          <span nz-icon nzType="edit" class="mr-2"></span>Modifica
+        </li>
+        <li nz-menu-item (click)="deleteRequest.emit(entry())">
+          <span nz-icon nzType="delete" class="mr-2"></span>Elimina
+        </li>
+      </ul>
+    </nz-dropdown-menu>
+  </div>
+
+  <!-- Content -->
+  <div class="relative z-1 px-4 pt-3 pb-3.5" (click)="$event.stopPropagation()">
+    <!-- Name + play/pause -->
+    <div class="flex items-end gap-2">
+      <span class="flex-1 text-xl font-semibold text-white leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">{{ name() }}</span>
+      @if (jingle()?.audioUrl) {
+        <button class="bg-transparent border-none cursor-pointer p-0 leading-none shrink-0" (click)="togglePlay()">
+          <span nz-icon [nzType]="playing() ? 'pause-circle' : 'play-circle'" class="text-[32px] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"></span>
+        </button>
+      }
+    </div>
+
+    <!-- Tags -->
+    @if (jingle()?.tags?.length) {
+      <div class="flex flex-wrap gap-1 mt-1">
+        @for (tag of jingle()!.tags; track tag) {
+          <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-xs font-medium">{{ tag }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Hidden audio element (only when the jingle still exists) -->
+  @if (jingle()?.audioUrl; as audioUrl) {
+    <audio
+      #audioEl
+      class="hidden"
+      [src]="audioUrl"
+      preload="none"
+      (play)="onPlay()"
+      (pause)="onPause()"
+      (ended)="onEnded()"
+      (timeupdate)="onTimeUpdate($event)"
+    ></audio>
+  }
+</div>

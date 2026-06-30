@@ -1,0 +1,50 @@
+<nz-modal
+  [nzVisible]="visible()"
+  [nzTitle]="editing() ? 'Modifica programmazione' : 'Programma Jingle'"
+  [nzFooter]="footer"
+  [nzWidth]="480"
+  (nzOnCancel)="close()"
+>
+  <ng-container *nzModalContent>
+    <div class="flex flex-col gap-6">
+
+      <p class="text-sm text-muted">
+        Programma la riproduzione di <span class="font-semibold text-fg">{{ jingleName() }}</span>.
+      </p>
+
+      <!-- Time -->
+      <div class="space-y-2">
+        <p class="text-sm font-semibold text-fg">Orario</p>
+        <nz-time-picker
+          class="w-full"
+          nzFormat="HH:mm:ss"
+          [nzAllowEmpty]="false"
+          [ngModel]="time()"
+          (ngModelChange)="time.set($event)"
+        ></nz-time-picker>
+      </div>
+
+      <!-- Repeat flag -->
+      <label class="flex items-center justify-between gap-3 cursor-pointer">
+        <span class="flex items-center gap-2 text-sm font-semibold text-fg">
+          <span nz-icon nzType="clock-circle" class="text-muted"></span>
+          Ripeti ogni giorno
+        </span>
+        <nz-switch [ngModel]="repeatDaily()" (ngModelChange)="repeatDaily.set($event)"></nz-switch>
+      </label>
+
+    </div>
+  </ng-container>
+</nz-modal>
+
+<ng-template #footer>
+  <div class="flex items-center gap-3">
+    <button ui-button variant="neutral" [disabled]="saving()" (click)="close()">
+      Annulla
+    </button>
+    <button ui-button variant="primary" class="flex-1 justify-center" [disabled]="saving()" (click)="save()">
+      <span nz-icon nzType="clock-circle"></span>
+      {{ saving() ? 'Salvataggio...' : (editing() ? 'Salva' : 'Programma') }}
+    </button>
+  </div>
+</ng-template>

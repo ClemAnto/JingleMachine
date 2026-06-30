@@ -41,7 +41,7 @@ Webapp Angular per creare una **libreria di jingle PER-UTENTE**: audio caricati 
 Due canali: **app desktop standalone (Electron)** con tutte le funzioni, e **GitHub Pages** (stessa webapp ma **senza** YouTube). Dettagli in `MEMO.md`.
 
 **Architettura:**
-- **Firebase Auth** → login **obbligatorio** (`authGuard`); sessione **24h** → ci si rilogga una volta al giorno (non a ogni refresh).
+- **Firebase Auth** → login **obbligatorio** (`authGuard`); sessione **7 giorni** → ci si rilogga una volta a settimana (non a ogni refresh).
 - **Firebase Firestore** → metadati jingle. Libreria **privata per utente** (filtro `uid`): due utenti vedono librerie diverse.
 - **Cloudinary** (free, no carta) → file MP3 = **storage remoto**. ⚠️ NON usare Firebase Storage (richiede Blaze+carta).
 - **Mixer locale** Node + yt-dlp + ffmpeg (in `server/`) → carica/taglia audio da YouTube. In **standalone è embedded in Electron**; in **dev** gira a parte su `localhost:4321`. Su GitHub Pages non c'è → il pulsante YouTube resta nascosto.

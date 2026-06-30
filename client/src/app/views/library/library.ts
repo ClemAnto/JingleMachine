@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -8,16 +8,28 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth.service';
 import { MixerService } from '../../core/mixer.service';
 import { Jingle, LibraryService } from '../../core/library.service';
+import { ScheduledJingle, ScheduleService } from '../../core/schedule.service';
+import { SchedulerService } from '../../core/scheduler.service';
 import { LATEST_RELEASE_PAGE, UpdateService } from '../../core/update.service';
 import { UiButton } from '../../ui/button/button';
 import { CreateJingleModal, PreparedAudio } from './create-jingle-modal/create-jingle-modal';
 import { EditJingleModal } from './edit-jingle-modal/edit-jingle-modal';
 import { JingleItem } from './jingle-item/jingle-item';
+import { ScheduledJingleItem } from './scheduled-jingle-item/scheduled-jingle-item';
+import { ScheduleJingleModal } from './schedule-jingle-modal/schedule-jingle-modal';
 import { YoutubeImportModal } from './youtube-import-modal/youtube-import-modal';
+
+/** A scheduled entry joined with the jingle it refers to (for the list view). */
+export interface ScheduledView {
+  entry: ScheduledJingle;
+  jingle: Jingle | undefined;
+}
 
 @Component({
   selector: 'app-library',
@@ -28,30 +40,50 @@ import { YoutubeImportModal } from './youtube-import-modal/youtube-import-modal'
     NzAlertModule,
     NzIconModule,
     NzSpinModule,
+    NzTabsModule,
     UiButton,
     JingleItem,
+    ScheduledJingleItem,
     CreateJingleModal,
     EditJingleModal,
+    ScheduleJingleModal,
     YoutubeImportModal,
   ],
   templateUrl: './library.html',
 })
 export class Library implements OnInit {
   private readonly libraryService = inject(LibraryService);
+  private readonly scheduleService = inject(ScheduleService);
+  protected readonly scheduler = inject(SchedulerService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly message = inject(NzMessageService);
   private readonly modal = inject(NzModalService);
   private readonly mixer = inject(MixerService);
   private readonly updates = inject(UpdateService);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly createModal = viewChild.required(CreateJingleModal);
   private readonly editModal = viewChild.required(EditJingleModal);
+  private readonly scheduleModal = viewChild.required(ScheduleJingleModal);
   private readonly youtubeModal = viewChild.required(YoutubeImportModal);
 
   protected readonly jingles = signal<Jingle[]>([]);
   protected readonly loading = signal(false);
   protected readonly search = signal('');
+  /** Active tab (0 = Tutti, 1 = Programmati). The search box on the tab bar shows
+   *  only on Tutti, where it actually filters the grid. */
+  protected readonly tabIndex = signal(0);
+
+  // Scheduled plays live in ScheduleService as a signal (source of truth). Here
+  // we just join each entry with its jingle for display; the list reacts to any
+  // add/update/remove automatically (no manual reload).
+  protected readonly schedulesLoading = signal(false);
+  protected readonly scheduledView = computed<ScheduledView[]>(() => {
+    const byId = new Map(this.jingles().map((j) => [j.id, j]));
+    // scheduleService.schedules() is already sorted by time of day.
+    return this.scheduleService.schedules().map((entry) => ({ entry, jingle: byId.get(entry.jingleId) }));
+  });
   // YouTube import needs the local Mixer. On GitHub Pages there is none, so the
   // button stays hidden; in the standalone (Electron) app the embedded Mixer
   // answers and it shows.
@@ -59,6 +91,7 @@ export class Library implements OnInit {
   /** Newer desktop version available on GitHub Releases (null = up to date / not standalone). */
   protected readonly updateVersion = signal<string | null>(null);
   protected readonly releasesUrl = LATEST_RELEASE_PAGE;
+  protected readonly appVersion = environment.version;
 
   protected readonly filtered = () => {
     const q = this.search().toLowerCase().trim();
@@ -72,7 +105,13 @@ export class Library implements OnInit {
   protected readonly reorderDisabled = () => this.search().trim().length > 0;
 
   async ngOnInit() {
-    await this.loadJingles();
+    await Promise.all([this.loadJingles(), this.loadSchedules()]);
+
+    // Fire scheduled jingles while this view is open. Reads scheduledView() live,
+    // so add/edit/delete (and the one-shot self-removal) are picked up automatically.
+    this.scheduler.start(this.scheduledView);
+    this.destroyRef.onDestroy(() => this.scheduler.stop());
+
     const health = await this.mixer.health();
     this.youtubeAvailable.set(health !== null);
     // Update check only in the desktop app: the web app is always up to date.
@@ -107,17 +146,45 @@ export class Library implements OnInit {
     this.editModal().open(jingle);
   }
 
-  protected confirmDelete(jingle: Jingle) {
+  protected openSchedule(jingle: Jingle) {
+    this.scheduleModal().open(jingle);
+  }
+
+  /** From the "Programmati" list: edit only the schedule (time + repeat flag). */
+  protected openScheduleEdit(entry: ScheduledJingle) {
+    const jingle = this.jingles().find((j) => j.id === entry.jingleId);
+    this.scheduleModal().openForEdit(entry, jingle?.name ?? 'Jingle non disponibile');
+  }
+
+  /** Toggle from the scheduled card: pause/resume without deleting. */
+  protected toggleSchedule(entry: ScheduledJingle) {
+    void this.scheduleService.setEnabled(entry.id, entry.enabled === false);
+  }
+
+  protected removeSchedule(entry: ScheduledJingle) {
     this.modal.confirm({
-      nzTitle: `Eliminare "${jingle.name}"?`,
-      nzContent: 'Questa azione non può essere annullata.',
-      nzOkText: 'Elimina',
+      nzTitle: 'Rimuovere questa programmazione?',
+      nzContent: 'Il jingle non verrà più riprodotto a quell\'orario.',
+      nzOkText: 'Rimuovi',
       nzOkDanger: true,
-      nzOnOk: () => this.deleteJingle(jingle),
+      nzOnOk: async () => {
+        try {
+          await this.scheduleService.remove(entry.id);
+        } catch (err) {
+          console.error(err);
+          this.message.error('Rimozione non riuscita.');
+        }
+      },
     });
   }
 
   protected async onSaved() {
+    await this.loadJingles();
+  }
+
+  /** A jingle was deleted: its schedules are cascaded away in the service (signal
+   *  updates the list on its own), so we only need to refresh the jingles here. */
+  protected async onDeleted() {
     await this.loadJingles();
   }
 
@@ -145,6 +212,18 @@ export class Library implements OnInit {
       this.message.error('Caricamento dei jingle non riuscito.');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private async loadSchedules() {
+    this.schedulesLoading.set(true);
+    try {
+      await this.scheduleService.load();
+    } catch (err) {
+      console.error(err);
+      this.message.error('Caricamento delle programmazioni non riuscito.');
+    } finally {
+      this.schedulesLoading.set(false);
     }
   }
 
@@ -180,14 +259,4 @@ export class Library implements OnInit {
     return `jingle-machine:order:${this.auth.user()?.uid ?? 'anonymous'}`;
   }
 
-  private async deleteJingle(jingle: Jingle) {
-    try {
-      await this.libraryService.remove(jingle);
-      this.jingles.update((list) => list.filter((j) => j.id !== jingle.id));
-      this.message.success('Eliminato.');
-    } catch (err) {
-      console.error(err);
-      this.message.error('Eliminazione non riuscita.');
-    }
-  }
 }
