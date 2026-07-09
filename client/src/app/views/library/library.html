@@ -208,33 +208,7 @@
 <app-edit-jingle-modal (saved)="onSaved()" (deleted)="onDeleted()" />
 <app-schedule-jingle-modal />
 
-<!-- Playback toast. Same alert for a scheduled fire (10s countdown → playback,
-     with "Blocca") and a voice-recognized fire (playback only, with "Interrompi").
-     Reads activeFire(): it clears itself if the schedule/jingle is removed
-     mid-countdown or the audio ends → the toast disappears on its own. -->
-@if (activeFire(); as fire) {
-  <div
-    class="fixed bottom-6 right-6 z-(--z-notification) w-80 max-w-[calc(100vw-3rem)] rounded-xl bg-surface border border-border-subtle shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden animate-[route-enter_220ms_ease-out]"
-  >
-    <div class="flex items-start gap-3 p-4">
-      <span nz-icon [nzType]="fire.phase === 'playing' ? 'sound' : 'clock-circle'" class="text-primary text-2xl shrink-0"></span>
-      <div class="flex-1 min-w-0">
-        @if (fire.phase === 'playing') {
-          <p class="text-fg font-semibold leading-tight">In riproduzione: «{{ fire.jingleName }}»</p>
-          <p class="text-muted text-sm mt-0.5">{{ fireFromVoice() ? 'Attivata dalla voce.' : 'Riproduzione programmata in corso.' }}</p>
-        } @else {
-          <p class="text-fg font-semibold leading-tight">Tra {{ fire.secondsLeft }}s parte «{{ fire.jingleName }}»</p>
-          <p class="text-muted text-sm mt-0.5">Riproduzione programmata in arrivo.</p>
-        }
-      </div>
-      <button
-        class="shrink-0 px-3 h-9 rounded-lg border border-danger/40 text-danger font-semibold cursor-pointer bg-transparent transition-colors hover:bg-danger/10"
-        (click)="cancelFire()"
-      >
-        {{ fire.phase === 'playing' ? 'Interrompi' : 'Blocca' }}
-      </button>
-    </div>
-    <!-- Countdown bar while waiting, playback "time left" bar while playing. -->
-    <div class="h-1 bg-primary transition-[width] duration-200 ease-linear" [style.width.%]="fire.progress"></div>
-  </div>
-}
+<!-- The scheduled/voice "now playing" toast is rendered by <ui-playback-toast>
+     in the app shell (app.ts): kept out of this routed view because the view
+     host's route-enter transform would break its position:fixed. -->
+

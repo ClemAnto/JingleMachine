@@ -107,14 +107,6 @@ export class Library implements OnInit {
   protected readonly releasesUrl = LATEST_RELEASE_PAGE;
   protected readonly appVersion = environment.version;
 
-  // The bottom-right toast shows either a scheduled countdown/playback or a
-  // voice-fired playback — the same alert for both. Scheduler wins if both fire
-  // at once. `cancelFire()` routes the button to the right source.
-  protected readonly activeFire = computed(() => this.scheduler.pending() ?? this.voice.pending());
-  protected readonly fireFromVoice = computed(
-    () => !this.scheduler.pending() && !!this.voice.pending(),
-  );
-
   /** Account avatar + dropdown labels. */
   protected readonly userLabel = computed(() => {
     const user = this.auth.user();
@@ -242,12 +234,6 @@ export class Library implements OnInit {
   /** Take the voice command on this device (the "Diventa capo" button). */
   protected claimCapo() {
     void this.leader.claim();
-  }
-
-  /** Toast button: stop/block the active fire, whichever source raised it. */
-  protected cancelFire() {
-    if (this.scheduler.pending()) this.scheduler.cancel();
-    else this.voice.stopPlayback();
   }
 
   async logout() {

@@ -1,6 +1,6 @@
 {
   "name": "jingle-machine-mixer",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Local Mixer that loads and trims audio from YouTube for Jingle Machine",
   "type": "module",

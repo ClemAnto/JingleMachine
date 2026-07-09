@@ -1,0 +1,26 @@
+@if (fire(); as f) {
+  <div
+    class="fixed bottom-6 right-6 z-(--z-notification) w-80 max-w-[calc(100vw-3rem)] rounded-xl bg-surface border border-border-subtle shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden animate-[route-enter_220ms_ease-out]"
+  >
+    <div class="flex items-start gap-3 p-4">
+      <span nz-icon [nzType]="f.phase === 'playing' ? 'sound' : 'clock-circle'" class="text-primary text-2xl shrink-0"></span>
+      <div class="flex-1 min-w-0">
+        @if (f.phase === 'playing') {
+          <p class="text-fg font-semibold leading-tight">In riproduzione: «{{ f.jingleName }}»</p>
+          <p class="text-muted text-sm mt-0.5">{{ fromVoice() ? 'Attivata dalla voce.' : 'Riproduzione programmata in corso.' }}</p>
+        } @else {
+          <p class="text-fg font-semibold leading-tight">Tra {{ f.secondsLeft }}s parte «{{ f.jingleName }}»</p>
+          <p class="text-muted text-sm mt-0.5">Riproduzione programmata in arrivo.</p>
+        }
+      </div>
+      <button
+        class="shrink-0 px-3 h-9 rounded-lg border border-danger/40 text-danger font-semibold cursor-pointer bg-transparent transition-colors hover:bg-danger/10"
+        (click)="cancel()"
+      >
+        {{ f.phase === 'playing' ? 'Interrompi' : 'Blocca' }}
+      </button>
+    </div>
+    <!-- Countdown bar while waiting, playback "time left" bar while playing. -->
+    <div class="h-1 bg-primary transition-[width] duration-200 ease-linear" [style.width.%]="f.progress"></div>
+  </div>
+}
