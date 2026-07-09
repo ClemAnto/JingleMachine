@@ -15,15 +15,50 @@
         <span nz-icon nzType="plus"></span>
         <span class="hidden sm:inline">Aggiungi file</span>
       </button>
+      @if (voiceAvailable) {
+        <!-- Attivazione vocale: on/off (pulsa mentre ascolta, spinner mentre carica il modello) -->
+        <button
+          ui-button
+          variant="neutral"
+          nz-tooltip
+          [nzTooltipTitle]="voice.enabled() ? 'Disattiva attivazione vocale' : 'Attiva attivazione vocale'"
+          [class.ring-2]="voice.pending()"
+          [class.ring-primary]="voice.pending()"
+          (click)="voice.toggle()"
+        >
+          <span
+            nz-icon
+            [nzType]="voice.status() === 'loading' ? 'loading' : (voice.enabled() ? 'audio' : 'audio-muted')"
+            [nzSpin]="voice.status() === 'loading'"
+            [class.text-primary]="voice.enabled()"
+            [class.animate-pulse]="voice.status() === 'listening'"
+            [class.scale-125]="voice.pending()"
+          ></span>
+        </button>
+      }
+
       @if (youtubeAvailable()) {
         <button ui-button variant="youtube" (click)="openYoutube()">
           <span nz-icon nzType="youtube"></span>
           <span class="hidden sm:inline">Carica da YouTube</span>
         </button>
       }
-      <button ui-button variant="neutral" (click)="logout()">
-        <span nz-icon nzType="logout" class="text-white/60"></span>
-      </button>
+
+      <!-- Account avatar → dropdown (utente, capo/dispositivi, esci).
+           Badge col numero e anello "capo" appaiono solo con più di un client aperto. -->
+      <nz-badge [nzCount]="voiceAvailable && leader.clientCount() > 1 ? leader.clientCount() : 0" nzSize="small">
+        <nz-avatar
+          nz-dropdown
+          nzTrigger="click"
+          nzPlacement="bottomRight"
+          [nzDropdownMenu]="accountMenu"
+          [nzSize]="56"
+          [nzText]="userInitial()"
+          class="cursor-pointer align-middle bg-primary text-on-primary font-bold text-2xl"
+          [class.ring-2]="voiceAvailable && leader.isCapo() && leader.clientCount() > 1"
+          [class.ring-primary]="voiceAvailable && leader.isCapo() && leader.clientCount() > 1"
+        ></nz-avatar>
+      </nz-badge>
     </div>
   </header>
 
@@ -139,16 +174,45 @@
   }
 </ng-template>
 
+<!-- Account dropdown: utente, stato "capo"/dispositivi collegati, logout. -->
+<nz-dropdown-menu #accountMenu="nzDropdownMenu">
+  <ul nz-menu class="min-w-56">
+    <li class="px-4 py-2 border-b border-border-subtle">
+      <span class="block text-fg font-semibold truncate">{{ userLabel() }}</span>
+      @if (voiceAvailable && leader.clientCount() > 1) {
+        <span class="text-xs text-muted">{{ leader.clientCount() }} dispositivi collegati</span>
+      }
+    </li>
+
+    @if (voiceAvailable && leader.clientCount() > 1) {
+      <li nz-menu-item nzDisabled>
+        <span nz-icon nzType="crown" class="mr-2" [class.text-primary]="leader.isCapo()"></span>
+        {{ leader.isCapo() ? 'Sei tu il capo' : 'Capo: ' + (leader.capoName() || '—') }}
+      </li>
+      @if (!leader.isCapo()) {
+        <li nz-menu-item (click)="claimCapo()">
+          <span nz-icon nzType="crown" class="mr-2"></span>Diventa capo
+        </li>
+      }
+    }
+
+    <li nz-menu-item (click)="logout()">
+      <span nz-icon nzType="logout" class="mr-2"></span>Esci
+    </li>
+  </ul>
+</nz-dropdown-menu>
+
 <!-- Modals -->
 <app-youtube-import-modal (imported)="onYoutubeImported($event)" />
 <app-create-jingle-modal (saved)="onSaved()" />
 <app-edit-jingle-modal (saved)="onSaved()" (deleted)="onDeleted()" />
 <app-schedule-jingle-modal />
 
-<!-- Countdown toast: appears 10s before a scheduled jingle fires, with a "Blocca"
-     button. It reads scheduler.pending(), which clears itself if the schedule or
-     its jingle is removed mid-countdown → the toast disappears on its own. -->
-@if (scheduler.pending(); as fire) {
+<!-- Playback toast. Same alert for a scheduled fire (10s countdown → playback,
+     with "Blocca") and a voice-recognized fire (playback only, with "Interrompi").
+     Reads activeFire(): it clears itself if the schedule/jingle is removed
+     mid-countdown or the audio ends → the toast disappears on its own. -->
+@if (activeFire(); as fire) {
   <div
     class="fixed bottom-6 right-6 z-(--z-notification) w-80 max-w-[calc(100vw-3rem)] rounded-xl bg-surface border border-border-subtle shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden animate-[route-enter_220ms_ease-out]"
   >
@@ -157,7 +221,7 @@
       <div class="flex-1 min-w-0">
         @if (fire.phase === 'playing') {
           <p class="text-fg font-semibold leading-tight">In riproduzione: «{{ fire.jingleName }}»</p>
-          <p class="text-muted text-sm mt-0.5">Riproduzione programmata in corso.</p>
+          <p class="text-muted text-sm mt-0.5">{{ fireFromVoice() ? 'Attivata dalla voce.' : 'Riproduzione programmata in corso.' }}</p>
         } @else {
           <p class="text-fg font-semibold leading-tight">Tra {{ fire.secondsLeft }}s parte «{{ fire.jingleName }}»</p>
           <p class="text-muted text-sm mt-0.5">Riproduzione programmata in arrivo.</p>
@@ -165,7 +229,7 @@
       </div>
       <button
         class="shrink-0 px-3 h-9 rounded-lg border border-danger/40 text-danger font-semibold cursor-pointer bg-transparent transition-colors hover:bg-danger/10"
-        (click)="scheduler.cancel()"
+        (click)="cancelFire()"
       >
         {{ fire.phase === 'playing' ? 'Interrompi' : 'Blocca' }}
       </button>

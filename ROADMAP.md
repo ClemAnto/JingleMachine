@@ -192,9 +192,17 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Azioni della card** spostate in un **menu kebab** (3 puntini, alto-dx) con **Modifica** + **Programma** (`scheduleRequest`); tolto il cestino e le icone inline. L'**eliminazione** ora è dentro il pannello di Modifica (pulsante "Elimina" variante `alert` + conferma).
 - **Nuova feature "Programma"** (`schedule-jingle-modal`): wired in `library.ts` (`openSchedule`) — **da rifinire/testare end-to-end**.
 - Polish: footer modale allineato a 24px, gap modale uniformati, **scrollbar a tema** (teal). Dettagli tecnici in `MEMO.md` §7.
-- ⚠️ **Pendenze**: icone `more` e `clock-circle` non registrate in `app.config.ts` (caricate via CDN fallback → ok a runtime, ma meglio registrarle statiche per offline/Electron). Verificare che `schedule-jingle-modal` salvi/persista davvero la programmazione.
+- ✅ Pendenze del 2026-06-30 **risolte** in v0.10.0: icone `more`/`clock-circle`/`reload` **registrate** in `app.config.ts`; la programmazione **persiste** (Firestore, collezione `schedules`).
+
+**Aggiornamento (sessione 2026-07-01, v0.10.0) — Programmazione jingle COMPLETA & pubblicata:**
+- Feature completa: menu kebab (Modifica/Programma) · modale con orario **HH:mm:ss** + "ripeti ogni giorno" · tab **Tutti | Programmati** · card programmate identiche + orario/badge/**toggle attiva-disattiva** · **scheduler** che suona all'orario con **toast countdown animato + Blocca**, che **resta durante la riproduzione** (Interrompi) e sparisce se la voce viene rimossa/disattivata.
+- `ScheduleService` refactor a **signal-store** (fonte di verità, update ottimistici → meno letture). **Cascade delete** (jingle → sue programmazioni). Tick via **Web Worker** (no throttling tab in background). **Audio solo dallo standalone** se anche il browser è aperto. Dettagli in `MEMO.md` §14.
+- **Regole Firestore** (`schedules`) **deployate** su `jingle-machine-2026` (account `syndacate.dev@gmail.com`; config `firebase.json`+`.firebaserc`).
+- **Pubblicato**: push su `main` (Pages) + tag **`v0.10.0`** → Release con installer Win (.exe) + Mac (.dmg): <https://github.com/ClemAnto/JingleMachine/releases/tag/v0.10.0>
 
 **Prossimo passo — opzioni:**
-1. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.
-2. **Rifinire Fase 7**: eseguire il **dmg su un Mac reale** (build OK ma mai avviato su macOS), **icona app** (`build/icon.*`), aggiornare `server/README.md`.
-3. **Chiudere Fase 1** (Local Network Access + token) e **Fase 6** (deploy GitHub Pages + domini autorizzati).
+1. **Scheduler a finestra chiusa** (consigliato): tray + background + (opz.) avvio automatico nello standalone Electron → oggi la programmazione suona solo ad app aperta. Vedi `MEMO.md` §14/§13.
+2. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.
+3. **Rifinire Fase 7**: eseguire il **dmg su un Mac reale** (build OK ma mai avviato su macOS), **icona app** (`build/icon.*`), aggiornare `server/README.md`.
+4. **Chiudere Fase 1** (Local Network Access + token) e **Fase 6** (deploy GitHub Pages + domini autorizzati).
+5. Nice-to-have scheduler: badge "programmato" sulle card in **Tutti**, "prossima esecuzione", gestione di 2+ jingle allo stesso secondo.

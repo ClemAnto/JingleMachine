@@ -8,10 +8,12 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzSliderModule } from 'ng-zorro-antd/slider';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
-import { Jingle, JINGLE_COLORS, LibraryService } from '../../../core/library.service';
+import { ImagePosition, Jingle, JINGLE_COLORS, LibraryService } from '../../../core/library.service';
 import { UiButton } from '../../../ui/button/button';
 import { UiColorPicker } from '../../../ui/color-picker/color-picker';
+import { UiImagePicker } from '../../../ui/image-picker/image-picker';
 import { UiTagInput } from '../../../ui/tag-input/tag-input';
+import { TriggerPhraseField } from '../trigger-phrase-field/trigger-phrase-field';
 
 @Component({
   selector: 'app-edit-jingle-modal',
@@ -24,7 +26,9 @@ import { UiTagInput } from '../../../ui/tag-input/tag-input';
     NzSpinModule,
     UiButton,
     UiColorPicker,
+    UiImagePicker,
     UiTagInput,
+    TriggerPhraseField,
   ],
   templateUrl: './edit-jingle-modal.html',
 })
@@ -44,9 +48,12 @@ export class EditJingleModal implements OnDestroy {
   protected color = signal<string>(JINGLE_COLORS[0]);
   /** Playback volume 0–100 applied when the jingle is played from its card. */
   protected volume = signal(100);
+  /** Spoken word/phrase that fires this jingle when voice mode is on. Empty = none. */
+  protected triggerPhrase = signal('');
   protected imageFile = signal<File | null>(null);
   // Preview: the current cover on open, or the newly picked file once selected.
   protected imagePreview = signal<string | null>(null);
+  protected imagePosition = signal<ImagePosition>({ x: 50, y: 50 });
   private objectUrl: string | null = null;
   protected saving = signal(false);
 
@@ -56,9 +63,11 @@ export class EditJingleModal implements OnDestroy {
     this.tags.set([...jingle.tags]);
     this.color.set(jingle.color);
     this.volume.set(jingle.volume ?? 100);
+    this.triggerPhrase.set(jingle.triggerPhrase ?? '');
     this.imageFile.set(null);
     this.revokeObjectUrl();
     this.imagePreview.set(jingle.imageUrl ?? null);
+    this.imagePosition.set(jingle.imagePosition ?? { x: 50, y: 50 });
     this.visible.set(true);
   }
 
@@ -67,13 +76,13 @@ export class EditJingleModal implements OnDestroy {
     this.visible.set(false);
   }
 
-  protected onImageSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+  /** Cover image picked (or replaced): reframe from centre. */
+  protected onImageSelected(file: File) {
     this.revokeObjectUrl();
     this.objectUrl = URL.createObjectURL(file);
     this.imageFile.set(file);
     this.imagePreview.set(this.objectUrl);
+    this.imagePosition.set({ x: 50, y: 50 });
   }
 
   private revokeObjectUrl() {
@@ -126,7 +135,9 @@ export class EditJingleModal implements OnDestroy {
         tags: this.tags(),
         color: this.color(),
         volume: this.volume(),
+        triggerPhrase: this.triggerPhrase().trim(),
         imageFile: this.imageFile() ?? undefined,
+        imagePosition: this.imagePreview() ? this.imagePosition() : undefined,
       });
       this.message.success('Jingle aggiornato!');
       this.visible.set(false);

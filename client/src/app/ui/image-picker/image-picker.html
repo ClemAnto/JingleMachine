@@ -1,0 +1,39 @@
+<div [class]="rootClass()">
+  @if (src()) {
+    <img
+      [src]="src()!"
+      alt="Anteprima immagine"
+      draggable="false"
+      class="absolute inset-0 w-full h-full object-cover cursor-move touch-none"
+      [style.object-position]="objectPosition()"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp()"
+      (pointercancel)="onPointerUp()"
+    />
+
+    <!-- Replace image -->
+    <label
+      class="absolute top-2 right-2 z-1 flex items-center justify-center w-8 h-8 rounded-full bg-black/50 text-white cursor-pointer hover:bg-black/70 transition-colors"
+      title="Sostituisci immagine"
+    >
+      <input type="file" accept="image/*" class="hidden" (change)="onFile($event)" />
+      <span nz-icon nzType="picture"></span>
+    </label>
+
+    <!-- Drag hint -->
+    <span
+      class="absolute inset-x-0 bottom-0 z-1 px-3 py-1.5 text-xs font-medium text-center text-white/90 bg-linear-to-t from-black/70 to-transparent pointer-events-none"
+    >
+      Trascina per centrare
+    </span>
+  } @else {
+    <label
+      class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-5 border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors"
+    >
+      <input type="file" accept="image/*" class="hidden" (change)="onFile($event)" />
+      <span nz-icon nzType="picture" class="text-2xl text-primary"></span>
+      <span class="text-sm font-semibold text-center">{{ emptyLabel() }}</span>
+    </label>
+  }
+</div>

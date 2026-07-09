@@ -2,6 +2,7 @@ import { Injectable, NgZone, Signal, inject, signal } from '@angular/core';
 
 import { Jingle } from './library.service';
 import { MixerService } from './mixer.service';
+import { PlaybackService } from './playback.service';
 import { ScheduledJingle, ScheduleService } from './schedule.service';
 
 /** A scheduled entry paired with the jingle it should play. */
@@ -46,6 +47,7 @@ const TICK_MS = 250;
 export class SchedulerService {
   private readonly scheduleService = inject(ScheduleService);
   private readonly mixer = inject(MixerService);
+  private readonly playback = inject(PlaybackService);
   private readonly zone = inject(NgZone);
 
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -63,6 +65,9 @@ export class SchedulerService {
   constructor() {
     this.audio.addEventListener('timeupdate', () => this.onAudioProgress());
     this.audio.addEventListener('ended', () => this.onAudioEnded());
+    // Report activity so the voice trigger can inhibit itself while audio plays.
+    this.audio.addEventListener('play', () => this.playback.begin(this));
+    this.audio.addEventListener('pause', () => this.playback.end(this));
   }
 
   start(entries: Signal<SchedulerEntry[]>): void {
@@ -222,6 +227,7 @@ export class SchedulerService {
 
   private onAudioEnded(): void {
     this.playingPending = null;
+    this.playback.end(this);
     this.refreshPending();
   }
 

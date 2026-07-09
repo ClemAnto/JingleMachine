@@ -4,18 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzAvatarModule } from 'ng-zorro-antd/avatar';
+import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth.service';
 import { MixerService } from '../../core/mixer.service';
+import { LeaderService } from '../../core/leader.service';
 import { Jingle, LibraryService } from '../../core/library.service';
 import { ScheduledJingle, ScheduleService } from '../../core/schedule.service';
 import { SchedulerService } from '../../core/scheduler.service';
+import { VoiceTriggerService } from '../../core/voice-trigger.service';
 import { LATEST_RELEASE_PAGE, UpdateService } from '../../core/update.service';
 import { UiButton } from '../../ui/button/button';
 import { CreateJingleModal, PreparedAudio } from './create-jingle-modal/create-jingle-modal';
@@ -38,9 +44,13 @@ export interface ScheduledView {
     CdkDropList,
     FormsModule,
     NzAlertModule,
+    NzAvatarModule,
+    NzBadgeModule,
+    NzDropdownModule,
     NzIconModule,
     NzSpinModule,
     NzTabsModule,
+    NzTooltipModule,
     UiButton,
     JingleItem,
     ScheduledJingleItem,
@@ -61,6 +71,8 @@ export class Library implements OnInit {
   private readonly modal = inject(NzModalService);
   private readonly mixer = inject(MixerService);
   private readonly updates = inject(UpdateService);
+  protected readonly leader = inject(LeaderService);
+  protected readonly voice = inject(VoiceTriggerService);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly createModal = viewChild.required(CreateJingleModal);
@@ -88,10 +100,28 @@ export class Library implements OnInit {
   // button stays hidden; in the standalone (Electron) app the embedded Mixer
   // answers and it shows.
   protected readonly youtubeAvailable = signal(false);
+  /** Voice trigger is a desktop feature: shown everywhere except the public Pages site. */
+  protected readonly voiceAvailable = !location.hostname.endsWith('github.io');
   /** Newer desktop version available on GitHub Releases (null = up to date / not standalone). */
   protected readonly updateVersion = signal<string | null>(null);
   protected readonly releasesUrl = LATEST_RELEASE_PAGE;
   protected readonly appVersion = environment.version;
+
+  // The bottom-right toast shows either a scheduled countdown/playback or a
+  // voice-fired playback — the same alert for both. Scheduler wins if both fire
+  // at once. `cancelFire()` routes the button to the right source.
+  protected readonly activeFire = computed(() => this.scheduler.pending() ?? this.voice.pending());
+  protected readonly fireFromVoice = computed(
+    () => !this.scheduler.pending() && !!this.voice.pending(),
+  );
+
+  /** Account avatar + dropdown labels. */
+  protected readonly userLabel = computed(() => {
+    const user = this.auth.user();
+    const name = user?.displayName || user?.email || '';
+    return name.split('@')[0] || 'Utente';
+  });
+  protected readonly userInitial = computed(() => this.userLabel().charAt(0).toUpperCase() || 'U');
 
   protected readonly filtered = () => {
     const q = this.search().toLowerCase().trim();
@@ -111,6 +141,17 @@ export class Library implements OnInit {
     // so add/edit/delete (and the one-shot self-removal) are picked up automatically.
     this.scheduler.start(this.scheduledView);
     this.destroyRef.onDestroy(() => this.scheduler.stop());
+
+    // Voice trigger (desktop): one machine (the "capo") listens and fires jingles
+    // by voice. Coordinated via LeaderService so a shared account never double-fires.
+    if (this.voiceAvailable) {
+      this.voice.start(this.jingles);
+      this.leader.start();
+      this.destroyRef.onDestroy(() => {
+        this.voice.stop();
+        this.leader.stop();
+      });
+    }
 
     const health = await this.mixer.health();
     this.youtubeAvailable.set(health !== null);
@@ -196,6 +237,17 @@ export class Library implements OnInit {
       return next;
     });
     this.saveOrder();
+  }
+
+  /** Take the voice command on this device (the "Diventa capo" button). */
+  protected claimCapo() {
+    void this.leader.claim();
+  }
+
+  /** Toast button: stop/block the active fire, whichever source raised it. */
+  protected cancelFire() {
+    if (this.scheduler.pending()) this.scheduler.cancel();
+    else this.voice.stopPlayback();
   }
 
   async logout() {

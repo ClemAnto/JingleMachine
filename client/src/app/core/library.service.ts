@@ -26,6 +26,12 @@ export const JINGLE_COLORS = [
 
 export type JingleColor = typeof JINGLE_COLORS[number];
 
+/** Cover framing as object-position percentages (0–100). Absent = centered (50/50). */
+export interface ImagePosition {
+  x: number;
+  y: number;
+}
+
 export interface Jingle {
   id: string;
   uid: string;                // uploader uid (used by Firestore rules)
@@ -37,8 +43,10 @@ export interface Jingle {
   audioPublicId: string;      // for future server-side deletion
   imageUrl?: string;          // optional cover image (Cloudinary)
   imagePublicId?: string;
+  imagePosition?: ImagePosition; // cover framing (object-position %); absent = centered
   durationSec: number;
   volume?: number;            // playback volume 0–100 (older docs lack it → treat as 100)
+  triggerPhrase?: string;     // spoken word/phrase that fires this jingle (voice trigger); empty = none
   createdAt: Timestamp | null;
 }
 
@@ -50,7 +58,9 @@ export interface JingleDraft {
   audioFilename: string;
   durationSec: number;
   volume: number;
+  triggerPhrase: string;
   imageFile?: File;
+  imagePosition?: ImagePosition;
 }
 
 export interface JingleUpdate {
@@ -58,7 +68,9 @@ export interface JingleUpdate {
   tags?: string[];
   color?: string;
   volume?: number;
+  triggerPhrase?: string;
   imageFile?: File;
+  imagePosition?: ImagePosition;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -99,8 +111,10 @@ export class LibraryService {
         audioPublicId: audio.publicId,
         imageUrl: image?.secureUrl,
         imagePublicId: image?.publicId,
+        imagePosition: draft.imagePosition,
         durationSec: draft.durationSec,
         volume: draft.volume,
+        triggerPhrase: draft.triggerPhrase || undefined,
         createdAt: null,
       });
       return;
@@ -121,8 +135,10 @@ export class LibraryService {
       audioPublicId: audioResult.publicId,
       imageUrl: imageResult?.secureUrl ?? null,
       imagePublicId: imageResult?.publicId ?? null,
+      imagePosition: draft.imagePosition ?? null,
       durationSec: draft.durationSec,
       volume: draft.volume,
+      triggerPhrase: draft.triggerPhrase || null,
       createdAt: serverTimestamp(),
     });
   }
@@ -136,6 +152,8 @@ export class LibraryService {
         if (changes.tags !== undefined) target.tags = changes.tags;
         if (changes.color !== undefined) target.color = changes.color;
         if (changes.volume !== undefined) target.volume = changes.volume;
+        if (changes.triggerPhrase !== undefined) target.triggerPhrase = changes.triggerPhrase || undefined;
+        if (changes.imagePosition !== undefined) target.imagePosition = changes.imagePosition;
         if (changes.imageFile) {
           const image = await this.cloudinary.uploadImage(changes.imageFile);
           target.imageUrl = image.secureUrl;
@@ -154,6 +172,8 @@ export class LibraryService {
     if (changes.tags !== undefined) payload['tags'] = changes.tags;
     if (changes.color !== undefined) payload['color'] = changes.color;
     if (changes.volume !== undefined) payload['volume'] = changes.volume;
+    if (changes.triggerPhrase !== undefined) payload['triggerPhrase'] = changes.triggerPhrase || null;
+    if (changes.imagePosition !== undefined) payload['imagePosition'] = changes.imagePosition ?? null;
     if (imageResult) {
       payload['imageUrl'] = imageResult.secureUrl;
       payload['imagePublicId'] = imageResult.publicId;

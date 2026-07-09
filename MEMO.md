@@ -202,6 +202,13 @@ Firebase: `inject(AUTH | FIRESTORE)` — STORAGE rimosso, si usa Cloudinary.
 - Per screenshottare viste dietro login: avviare il **mock** (`ng serve --configuration mock`) su una **porta libera** (es. `--port 4300`) così non confligge con l'`ng serve` già attivo su 4200; il mock bypassa Firebase (authGuard passa).
 - Lo store mock parte **vuoto**: per popolarlo si automatizza il vero flusso "Crea" via CDP → `DOM.setFileInputFiles` con un file fittizio (anche `fake.mp3` con bytes a caso: il mock fa solo un object URL, non valida l'audio) sull'`input[type=file][accept*=audio]`, poi click su "Crea Jingle". Node 24 ha `fetch`+`WebSocket` globali per parlare col CDP. Script in scratchpad.
 
+### NgZorro dropdown/tabs/icone + Tailwind v4 (fatti verificati 2026-06-30)
+- **Dropdown**: usare `NzDropdownModule` — `NzDropDownModule` (con la D maiuscola) è **deprecato**. Il modulo **ri-esporta `NzMenuModule`** → `nz-menu`/`nz-menu-item` disponibili col solo import del dropdown. ⚠️ Gli attributi `nz-menu`/`nz-dropdown` **non danno errore di compile** se il modulo manca (Angular non valida gli attributi) → la build passa ma il menu non è stilizzato: verificare l'import.
+- **Tabs**: API corrente **`nz-tabs`/`nz-tab`** (`NzTabsModule`); `nz-tabset` è la vecchia. Il baseline grigio sotto i tab è `.ant-tabs-nav::before` → per toglierlo `border-bottom: none` (override in `ng-zorro.scss`).
+- **Tre puntini verticali**: `<span nz-icon nzType="more" nzRotate="90">` (meccanismo nativo NgZorro, affidabile) — **non** la utility `rotate-90` di Tailwind.
+- **Ombra sulle icone**: `nz-icon` renderizza un **SVG** → `text-shadow` **non** lo tocca; serve `drop-shadow-[...]` (utility filter di Tailwind). Il `text-shadow` vale solo per il testo (es. l'orario, non l'icona orologio accanto).
+- **Tailwind v4 — forme canoniche** (il linter le suggerisce): `z-(--z-notification)` per z-index da var; `border-border-subtle` (il token `--color-border-subtle` **è** un color di `@theme` → utility valida); `max-w-100` = `max-w-[400px]` (scala 4px).
+
 ### Bottoni `ui-button` = `rounded-lg` (NON pill) — corretto 2026-06-07
 - Tutti i bottoni CTA del mockup usano **rx20 = `rounded-lg`** (verificato dai `<rect>` di `Button.svg`/`Home.svg`). La vecchia scelta "pill (`--radius-full`)" è stata **rimossa**: `ui-button` ora usa `rounded-lg`. `--radius-full` resta solo per pill/tag/dot, box ricerca, maniglie/pill dello slider. Doc allineata in `THEMING.md` (tabella radii) e commento in `themes/default.scss`.
 
@@ -476,10 +483,48 @@ Componente: `views/library/youtube-import-modal/`. Pulsante visibile solo se `/h
 - [x] **Migrare lo storage file da Firebase Storage → Cloudinary** (✅ fatto il 2026-05-30)
 - [x] **Mixer locale** Node + yt-dlp + ffmpeg con endpoint `/health`, `/info`, `/extract` (HTTP localhost). Vedi §10.
 - [x] **Fase 2**: estrazione da YouTube via Mixer (✅ vedi §12).
-- [x] **Libreria privata per utente** + **authGuard riabilitato** con sessione 24h (login giornaliero).
+- [x] **Libreria privata per utente** + **authGuard riabilitato** con sessione **7 giorni** (login settimanale).
 - [x] **Packaging → Electron** (sostituito yao-pkg); GitHub Pages senza YouTube. Vedi §10.
 - [x] **Configurare Firebase + Cloudinary** in `environment.ts` (2026-06-06) + **flusso testato end-to-end** in locale.
 - [ ] **REQUISITO: ottimizzazione consumo letture** (cache HTTP + IndexedDB + file piccoli + monitoraggio). Vedi §8. → **Fase 4 (prossima)**
 - [x] **Build Electron in CI verificata** (2026-06-06) + script download riscritto (`npm run download` in radice). Resta: aggiornare `server/README.md` + icona app.
+- [x] **Programmazione jingle a orario** (v0.10.0, vedi §14).
+- [ ] **Scheduler: girare a finestra chiusa** — oggi suona SOLO ad app aperta e lo standalone si chiude con la finestra (`app.quit()`). Per rendere la feature davvero utile → **tray + background + (opz.) avvio automatico**. ⇒ prossimo passo consigliato.
 - [ ] Nessuna paginazione della libreria (ok per pochi elementi).
 - [ ] (eredità) card jingle mostra ancora `uploaderEmail`, ora ridondante in libreria per-utente.
+
+---
+
+## 14. Programmazione jingle (scheduler) — v0.10.0
+
+Feature: programmare la riproduzione di un jingle a un orario (una tantum o ogni giorno). Menu kebab
+sulla card → **Modifica** / **Programma**; tab **Tutti | Programmati**; toast di avviso 10s prima con
+countdown e possibilità di bloccare.
+
+### Modello dati e decisioni (con l'utente)
+- **Storage: Firestore sincronizzato per-utente** (scelto vs localStorage per-device). Collezione `schedules`,
+  regole identiche a `jingles` (`resource.data.uid == request.auth.uid`).
+- **Un jingle può avere più programmazioni** (una per voce). Voce = `{ id, uid, jingleId, time, repeatDaily, enabled?, createdAt }`.
+- **`time` = `"HH:mm:ss"`** (secondi modificabili, `nz-time-picker nzFormat="HH:mm:ss"`). Vecchie voci `"HH:mm"` gestite (secondi→0).
+- **`enabled`** (default assente = attiva): toggle **attiva/disattiva** senza eliminare (card attenuata quando off).
+
+### `ScheduleService` — signal come UNICA fonte di verità
+- `schedules` è un **signal** (non più `list()` async). `load()` legge da Firestore una volta; `add/update/remove/removeForJingle/setEnabled`
+  aggiornano il signal **in modo ottimistico** → l'UI reagisce da sola, **niente reload** dopo ogni modifica (⇒ meno letture Firestore, requisito §8).
+- In **mock** il signal È lo store (Firestore saltato). `add` recupera l'id reale da `addDoc`.
+- **Cascade delete**: `LibraryService.remove()` chiama `scheduleService.removeForJingle(jingleId)`. Trova le voci **dal signal** (query solo `uid`, filtro client) → **niente indice composito** (Firestore rifiuterebbe una query multi-equality senza indice).
+
+### `SchedulerService` — esecuzione + toast
+- Suona SOLO ad app aperta (Library montata). Tick da **Web Worker** (blob inline) → **non subisce il throttling a 1/min delle tab in background** (fallback `setInterval`). Gira **fuori dalla zona Angular**: `zone.run` solo quando cambia `pending` o si spara.
+- **10s prima** compare `pending` (signal) → toast con **countdown animato** + **Blocca**. Allo scoccare, se non bloccato, suona; il toast **resta durante la riproduzione** (fase `playing`, barra "tempo rimasto" + **Interrompi**) fino a fine audio.
+- **Auto-dismiss**: il toast legge la lista live; se la programmazione/jingle viene **eliminata o disattivata**, esce da `entries()` → `pending` si azzera → toast sparisce.
+- Spara solo se **armato** (nessun fire "a sorpresa" per orari già passati all'apertura). **Una tantum** = consumata (rimossa) all'orario; **giornaliera** ripete.
+- **Audio solo dallo standalone** quando anche il browser è aperto: `playable = isStandalone || (mixer NON raggiungibile)`, deciso 10s prima con `mixer.health()`. ⚠️ **In dev con `start:all`** (mixer su :4321) il browser crede ci sia uno standalone e **non suona** → testare lo scheduler con `npm start` (senza mixer).
+- ⚠️ **Autoplay**: serve un gesto utente prima (dopo login/click ok), altrimenti il browser blocca `audio.play()`.
+
+### Deploy regole Firestore (operativo)
+- CLI loggata come `a.clemente@quadronica.com` **non** ha accesso a `jingle-machine-2026` (solo `quadronica-net`). Il progetto è dell'account **`syndacate.dev@gmail.com`**.
+- Config nel repo: `firebase.json` (→ `firebase/firestore.rules`) + `.firebaserc` (default `jingle-machine-2026`). Deploy: `firebase deploy --only firestore:rules --account syndacate.dev@gmail.com`.
+
+### Versione mostrata nella UI
+- Sotto il titolo compare `v{environment.version}`. ⚠️ `environment.version` (client) va tenuto **in sync con `server/package.json`** ad ogni bump (due file).

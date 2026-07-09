@@ -10,7 +10,7 @@
 // dynamically import()s the ESM server module (import() works fine from CJS).
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu, session } = require("electron");
 
 // userData → %APPDATA%\JingleMachine (win) / ~/Library/Application Support/JingleMachine (mac).
 app.setName("JingleMachine");
@@ -36,6 +36,14 @@ if (!app.requestSingleInstanceLock()) {
     const serverUrl = pathToFileURL(path.join(__dirname, "src", "server.js")).href;
     const { startServer } = await import(serverUrl);
     const { port } = await startServer();
+
+    // Allow the renderer to use the microphone (voice trigger). This is our own
+    // trusted localhost app; granting requests here matches Electron's prior
+    // default (no handler) while guaranteeing 'media'. The OS still gates the
+    // actual hardware. We must NOT deny the rest: this shared session also governs
+    // the Google sign-in popup and any future permission the app needs.
+    session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(true));
+    session.defaultSession.setPermissionCheckHandler(() => true);
 
     Menu.setApplicationMenu(null);
     mainWindow = new BrowserWindow({

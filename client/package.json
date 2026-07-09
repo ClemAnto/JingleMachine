@@ -9,6 +9,7 @@
     "start:all": "concurrently -k -n client,mixer -c cyan,green \"npm run start\" \"npm run mixer\"",
     "start:all:mock": "concurrently -k -n client,mixer -c cyan,green \"npm run start:mock\" \"npm run mixer\"",
     "build": "ng build",
+    "voice:model": "node scripts/fetch-voice-model.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -40,6 +41,7 @@
     "ng-zorro-antd": "^21.3.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "vosk-browser": "^0.0.8",
     "zone.js": "~0.16.0"
   },
   "devDependencies": {
@@ -47,11 +49,13 @@
     "@angular/cli": "^21.1.2",
     "@angular/compiler-cli": "^21.1.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "adm-zip": "^0.5.18",
     "concurrently": "^10.0.3",
     "jsdom": "^27.1.0",
     "less": "^4.6.4",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",
+    "tar": "^7.5.19",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

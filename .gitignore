@@ -46,3 +46,7 @@ Thumbs.db
 
 # Materiale di riferimento mockup (export Figma, non sorgente)
 client/mockup_temp/
+
+# Modello vocale Vosk (~48 MB): scaricato/ripacchettizzato, mai committato.
+# Recupero: cd client && npm run voice:model  (la CI lo fa prima del build).
+client/public/models/

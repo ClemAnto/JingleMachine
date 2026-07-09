@@ -1,6 +1,6 @@
 {
   "name": "jingle-machine-mixer",
-  "version": "0.10.0",
+  "version": "0.12.0",
   "private": true,
   "description": "Local Mixer that loads and trims audio from YouTube for Jingle Machine",
   "type": "module",
@@ -45,7 +45,10 @@
         "target": "dmg",
         "arch": "universal"
       },
-      "category": "public.app-category.music"
+      "category": "public.app-category.music",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Jingle Machine usa il microfono per l'attivazione vocale dei jingle."
+      }
     }
   },
   "dependencies": {

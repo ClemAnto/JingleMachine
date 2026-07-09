@@ -28,11 +28,14 @@ Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di risponder
 - **Principiante sul backend** → spiegare i concetti in modo **elementare**, con analogie, e indicare il "perché" delle scelte.
 - Segnalare sempre **refusi/errori** in italiano e inglese (anche fuori task) — vedi istruzioni globali.
 - **"committa"** in questo progetto = **commit + push su `main`** (→ redeploy automatico su GitHub Pages). Non fermarsi al commit locale salvo richiesta esplicita.
+- **"crea i pacchetti" / "pubblica gli installer"** = creare e pushare un **tag `v<versione>`** (deve corrispondere a `server/package.json`) → fa partire la CI Electron (`build-packages.yml`, matrix Win+Mac) e pubblica gli installer su **GitHub Releases**. Il solo push su `main` aggiorna **solo** Pages, NON ricostruisce l'app desktop.
+- **Signals-first (preferenza esplicita 2026-07-01)**: l'utente preferisce i **signals** al posto di callback/stato imperativo. Per lo stato condiviso → **signal-store nel service** (fonte di verità unica, update ottimistici; i componenti leggono via `computed`), niente `load()` ripetuti. Timer/tempo restano necessariamente imperativi (es. scheduler), ma i dati che alimentano la UI sono signal. Esempio: `ScheduleService` (vedi `MEMO.md` §14).
 - Apprezza la **verifica visiva** (screenshot headless della webapp) quando si toccano UI/stili. ⚠️ Attenzione alle trappole degli screenshot headless (vedi `MEMO.md` §7).
 - **Versioning delegato a Claude**: bumpa `server/package.json` → `version` autonomamente nello stesso commit della modifica.
   - **patch** (0.1.x) → qualsiasi commit che produce una nuova build (bugfix, CI fix, refactor, script)
   - **minor** (0.x.0) → completamento di una Fase o feature rilevante
   - **major** (x.0.0) → solo su indicazione esplicita dell'utente
+  - ⚠️ Bumpa **anche** `client/src/environments/environment.ts` **e** `environment.mock.ts` → campo `version` (mostrato nella UI sotto il titolo): va tenuto in sync con `server/package.json`.
   - ⚠️ Ogni volta che si triggera una nuova build (`yarn release` o tag), la versione deve essere già stata bumpata nel commit precedente.
   - Quando si crea un tag git, assicurarsi che corrisponda alla versione nel `package.json`.
 

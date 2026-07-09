@@ -12,7 +12,7 @@
 export const environment = {
   production: false,
   // App version shown in the UI. Keep in sync with server/package.json on release.
-  version: '0.10.0',
+  version: '0.12.0',
   // Userless local test mode: bypass Firebase auth + Cloudinary (in-memory library,
   // object-URL audio). Enabled by the `mock` build configuration (environment.mock.ts).
   mock: false,
@@ -35,5 +35,11 @@ export const environment = {
   // even from an https page).
   mixer: {
     baseUrl: 'http://127.0.0.1:4321',
+  },
+  // Offline speech-recognition model (vosk-browser) for the voice trigger.
+  // Bundled as a static asset (see client/scripts/fetch-voice-model.mjs): served
+  // at the app root in dev (public/) and by the embedded server in the desktop app.
+  voice: {
+    modelUrl: '/models/vosk-model-small-it.tar.gz',
   },
 };

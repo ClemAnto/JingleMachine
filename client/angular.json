@@ -25,6 +25,7 @@
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": ["vosk-browser"],
             "inlineStyleLanguage": "scss",
             "assets": [
               {

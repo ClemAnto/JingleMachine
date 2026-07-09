@@ -7,7 +7,7 @@
  */
 export const environment = {
   production: false,
-  version: '0.10.0',
+  version: '0.12.0',
   mock: true,
   emailAndGoogleAuth: false,
   firebase: {
@@ -23,5 +23,8 @@ export const environment = {
   },
   mixer: {
     baseUrl: 'http://127.0.0.1:4321',
+  },
+  voice: {
+    modelUrl: '/models/vosk-model-small-it.tar.gz',
   },
 };

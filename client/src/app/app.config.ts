@@ -14,9 +14,12 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { it_IT, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { NzIconService, provideNzIcons } from 'ng-zorro-antd/icon';
 import {
+  AudioMutedOutline,
   AudioOutline,
   CaretRightOutline,
+  CheckCircleOutline,
   ClockCircleOutline,
+  CrownOutline,
   DeleteOutline,
   EditOutline,
   GoogleOutline,
@@ -48,9 +51,12 @@ registerLocaleData(it);
 const MATERIAL_ICONS_CDN = 'https://cdn.jsdelivr.net/npm/@material-design-icons/svg@latest/';
 
 const icons = [
+  AudioMutedOutline,
   AudioOutline,
   CaretRightOutline,
+  CheckCircleOutline,
   ClockCircleOutline,
+  CrownOutline,
   DeleteOutline,
   EditOutline,
   GoogleOutline,

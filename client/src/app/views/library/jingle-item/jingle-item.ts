@@ -3,6 +3,7 @@ import {
   ElementRef,
   OnDestroy,
   computed,
+  inject,
   input,
   output,
   signal,
@@ -15,6 +16,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 
 import { cloudinaryImageThumb } from '../../../core/cloudinary.service';
 import { Jingle } from '../../../core/library.service';
+import { PlaybackService } from '../../../core/playback.service';
 
 @Component({
   selector: 'app-jingle-item',
@@ -28,6 +30,7 @@ export class JingleItem implements OnDestroy {
   readonly editRequest = output<Jingle>();
   readonly scheduleRequest = output<Jingle>();
 
+  private readonly playback = inject(PlaybackService);
   private readonly audioEl = viewChild<ElementRef<HTMLAudioElement>>('audioEl');
 
   protected readonly playing = signal(false);
@@ -39,10 +42,11 @@ export class JingleItem implements OnDestroy {
     const base = j.imageUrl
       ? `url(${cloudinaryImageThumb(j.imageUrl)})`
       : 'none';
+    const pos = j.imagePosition;
     return {
       'background-image': base,
       'background-size': 'cover',
-      'background-position': 'center',
+      'background-position': pos ? `${pos.x}% ${pos.y}%` : 'center',
       'border-color': c,
       '--card-color': c,
     };
@@ -75,15 +79,18 @@ export class JingleItem implements OnDestroy {
 
   protected onPlay() {
     this.playing.set(true);
+    this.playback.begin(this);
   }
 
   protected onPause() {
     this.playing.set(false);
+    this.playback.end(this);
   }
 
   protected onEnded() {
     this.playing.set(false);
     this.progress.set(0);
+    this.playback.end(this);
     // Rewind so the next listen always starts from the beginning.
     const el = this.audioEl()?.nativeElement;
     if (el) el.currentTime = 0;
@@ -98,5 +105,6 @@ export class JingleItem implements OnDestroy {
 
   ngOnDestroy() {
     this.audioEl()?.nativeElement.pause();
+    this.playback.end(this);
   }
 }

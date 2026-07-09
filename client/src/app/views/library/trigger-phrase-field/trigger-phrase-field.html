@@ -1,0 +1,42 @@
+<div class="space-y-2">
+  <p class="text-sm font-semibold text-fg">Parola di attivazione vocale</p>
+
+  <div class="flex items-center gap-2">
+    <input
+      nz-input
+      class="flex-1"
+      placeholder="Es. «applausi» — vuoto = nessun trigger"
+      [ngModel]="phrase()"
+      (ngModelChange)="onPhraseChange($event)"
+    />
+    <button
+      ui-button
+      type="button"
+      [variant]="testing() ? 'alert' : 'neutral'"
+      [disabled]="!phrase().trim()"
+      (click)="toggleTest()"
+    >
+      <span nz-icon [nzType]="testing() ? 'audio-muted' : 'audio'"></span>
+      <span class="hidden sm:inline">{{ testing() ? 'Stop' : 'Prova' }}</span>
+    </button>
+  </div>
+
+  @if (testing()) {
+    <div class="rounded-lg border border-border-subtle bg-black/20 p-3 space-y-2">
+      <div class="flex items-center gap-2 text-sm">
+        @if (matched()) {
+          <span nz-icon nzType="check-circle" class="text-lg text-success"></span>
+          <span class="font-semibold text-success">Parola riconosciuta!</span>
+        } @else {
+          <span nz-icon nzType="audio" class="text-primary animate-pulse"></span>
+          <span class="text-muted">In ascolto… pronuncia la parola</span>
+        }
+      </div>
+      <p class="min-h-5 text-sm break-words text-fg">{{ transcript() || '…' }}</p>
+    </div>
+  }
+
+  <p class="text-xs text-muted">
+    A microfono attivo, pronunciare questa parola/frase fa partire il jingle da solo.
+  </p>
+</div>

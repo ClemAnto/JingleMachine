@@ -40,6 +40,12 @@ jobs:
         run: npm ci
         working-directory: client
 
+      # Fetch + repackage the Italian speech model into public/models so the
+      # build bundles it (offline voice trigger in the desktop app).
+      - name: Fetch voice-recognition model
+        run: npm run voice:model
+        working-directory: client
+
       # No --base-href: the embedded server serves the app at root, which is
       # Angular's default ("/"). Passing "--base-href /" would be mangled by Git
       # Bash on the Windows runner (a lone "/" becomes "C:/Program Files/Git/").
