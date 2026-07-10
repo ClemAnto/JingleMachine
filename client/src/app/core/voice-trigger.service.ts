@@ -12,12 +12,19 @@ import { PlaybackService } from './playback.service';
 import type { PendingFire } from './scheduler.service';
 
 /** Engine state (what the microphone/recognizer is doing right now). */
-export type VoiceStatus = 'off' | 'loading' | 'listening' | 'error';
+export type VoiceStatus = 'off' | 'loading' | 'listening' | 'denied' | 'error';
+
+/** Microphone permission as remembered on THIS device. 'unknown' = not yet decided
+ *  (may still prompt). Kept per-device (localStorage), never per-account. */
+export type MicPermission = 'unknown' | 'granted' | 'denied';
 
 /** The recognizer's messages carry either a final `text` or a live `partial`. */
 type VoskResult = { result?: { text?: string; partial?: string } };
 
 const VOICE_ENABLED_KEY = 'jingle-machine:voice-enabled';
+/** Per-device memory of the mic permission answer (NOT per-account: the mic is
+ *  hardware-local, and the account is shared across office PCs). */
+const MIC_PERMISSION_KEY = 'jingle-machine:mic-permission';
 /** Debounce after a jingle fires; also re-applied per jingle when its playback
  *  ENDS, so a long jingle's own tail can't re-trigger it once the mic reopens. */
 const COOLDOWN_MS = 3000;
@@ -25,6 +32,9 @@ const COOLDOWN_MS = 3000;
 const RESUME_AFTER_PLAY_MS = 800;
 /** After a transient start failure, retry while still capo + enabled + mounted. */
 const RETRY_MS = 5000;
+/** Permissions API descriptor for the mic ('microphone' isn't in every lib's
+ *  PermissionName union → cast so the build is version-independent). */
+const MIC_QUERY = { name: 'microphone' } as unknown as PermissionDescriptor;
 
 /**
  * Fires a jingle when its trigger phrase is spoken into the microphone.
@@ -46,6 +56,12 @@ export class VoiceTriggerService {
   // Per-device preference (localStorage). Voice actually runs only if capo too.
   private readonly enabledSignal = signal(localStorage.getItem(VOICE_ENABLED_KEY) === '1');
   readonly enabled = this.enabledSignal.asReadonly();
+
+  // Per-device memory of the mic permission (persisted). Reconciled with the real
+  // OS/browser status on start (syncMicStatus) so a value fixed in System Settings
+  // between sessions is picked up. Only 'denied' actually gates the engine.
+  private readonly micSignal = signal<MicPermission>(readMicPermission());
+  readonly mic = this.micSignal.asReadonly();
 
   /** Live engine state, for the UI indicator. */
   readonly status = signal<VoiceStatus>('off');
@@ -126,6 +142,10 @@ export class VoiceTriggerService {
       if (this.wasPlaying && !playing) this.resumeAt = Date.now() + RESUME_AFTER_PLAY_MS;
       this.wasPlaying = playing;
     });
+
+    // Reconcile the remembered permission with the real OS/browser status and
+    // watch for later changes (e.g. the user flips it in System Settings).
+    void this.wireMicPermission();
   }
 
   /** Called by the library view: provides the live jingle list and marks it active. */
@@ -147,6 +167,35 @@ export class VoiceTriggerService {
 
   toggle(): void {
     this.setEnabled(!this.enabled());
+  }
+
+  /**
+   * User-driven re-request after a denial (the UI "Consenti microfono" action),
+   * following each OS's rules. In Electron the bridge reports the real OS status:
+   *  - already denied/restricted (macOS TCC or Windows privacy) → can't re-prompt;
+   *    deep-link to System Settings, then resume via the focus/onchange watcher.
+   *  - undecided → ask the OS (shows the prompt once), then start if granted.
+   * On the web (no bridge) just clear the remembered denial and let the engine
+   * re-attempt — getUserMedia surfaces Chromium's own prompt.
+   */
+  async requestPermission(): Promise<void> {
+    const bridge = getBridge();
+    if (bridge) {
+      const status = await bridge.getMicStatus().catch(() => 'unknown');
+      if (status === 'denied' || status === 'restricted') {
+        await bridge.openMicSettings().catch(() => undefined);
+        return; // recovery happens on return (focus / permission change)
+      }
+      if (status === 'not-determined') {
+        const granted = await bridge.requestMic().catch(() => false);
+        this.setMic(granted ? 'granted' : 'denied');
+        if (granted) this.kickEngine();
+        return;
+      }
+      // 'granted' / 'unknown' → fall through and let the engine attempt getUserMedia.
+    }
+    this.setMic('unknown');
+    this.kickEngine();
   }
 
   /**
@@ -239,12 +288,20 @@ export class VoiceTriggerService {
 
   private async startEngine(): Promise<void> {
     if (this.starting || this.stream) return; // already running or starting
+    // Known-denied on this device: do NOT hammer getUserMedia (that endless retry
+    // is exactly what looped the macOS prompt). Surface it; recovery is user-driven
+    // (requestPermission) or automatic when the OS status flips back.
+    if (this.mic() === 'denied') {
+      this.status.set('denied');
+      return;
+    }
     this.starting = true;
     try {
       this.status.set('loading');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
       });
+      this.setMic('granted'); // getUserMedia resolved → permission is granted here
       let model = this.model;
       if (!model) {
         const { createModel } = await import('vosk-browser');
@@ -282,12 +339,19 @@ export class VoiceTriggerService {
 
       this.status.set('listening');
     } catch (err) {
-      console.error('Voice trigger failed to start:', err);
-      this.status.set('error');
       this.teardownAudio();
-      // Recover from transient failures, but not from an explicit mic denial
-      // (re-calling getUserMedia would just keep rejecting).
-      if ((err as { name?: string })?.name !== 'NotAllowedError') this.scheduleRetry();
+      // An explicit denial: remember it per-device and STOP (re-calling getUserMedia
+      // would just keep rejecting — and on macOS keep re-prompting). The UI offers a
+      // user-driven re-request; recovery is otherwise automatic (see gotPermission).
+      if ((err as { name?: string })?.name === 'NotAllowedError') {
+        console.warn('Voice trigger: microphone permission denied.');
+        this.setMic('denied');
+        this.status.set('denied');
+      } else {
+        console.error('Voice trigger failed to start:', err);
+        this.status.set('error');
+        this.scheduleRetry(); // transient failure → retry while still applicable
+      }
     } finally {
       this.starting = false;
     }
@@ -319,6 +383,69 @@ export class VoiceTriggerService {
       this.retryTimer = null;
       this.retryToken.update((n) => n + 1); // re-runs the engine effect
     }, RETRY_MS);
+  }
+
+  /** Reconcile the remembered permission with reality and watch for changes. */
+  private async wireMicPermission(): Promise<void> {
+    await this.refreshMicStatus();
+    // Live updates from the browser (fires when the user changes the setting).
+    try {
+      const perm = await navigator.permissions?.query(MIC_QUERY);
+      if (perm) perm.onchange = () => this.applyPermState(perm.state);
+    } catch {
+      // 'microphone' not queryable here — the focus re-check below covers it.
+    }
+    // Returning to the app may follow a change in the OS settings (macOS can't
+    // notify us): re-check the real status on focus.
+    window.addEventListener('focus', () => void this.refreshMicStatus());
+  }
+
+  /** Read the current mic status (OS bridge = authoritative on macOS, else the
+   *  browser Permissions API) and fold it into our per-device memory. */
+  private async refreshMicStatus(): Promise<void> {
+    const bridge = getBridge();
+    if (bridge) {
+      const status = await bridge.getMicStatus().catch(() => 'unknown');
+      if (status !== 'unknown') return this.applyStatus(status);
+    }
+    try {
+      const perm = await navigator.permissions?.query(MIC_QUERY);
+      if (perm) this.applyPermState(perm.state);
+    } catch {
+      // Not supported → rely on the getUserMedia outcome to set the state.
+    }
+  }
+
+  /** macOS TCC status → per-device memory. */
+  private applyStatus(status: string): void {
+    if (status === 'granted') this.gotPermission();
+    else if (status === 'denied' || status === 'restricted') this.setMic('denied');
+    else this.setMic('unknown'); // 'not-determined'
+  }
+
+  /** Browser Permissions API state → per-device memory. */
+  private applyPermState(state: PermissionState): void {
+    if (state === 'granted') this.gotPermission();
+    else if (state === 'denied') this.setMic('denied');
+    else this.setMic('unknown'); // 'prompt'
+  }
+
+  /** Permission is (now) granted: clear any denial and resume if we should run. */
+  private gotPermission(): void {
+    const wasBlocked = this.mic() !== 'granted';
+    this.setMic('granted');
+    if (this.status() === 'denied') this.status.set('off');
+    if (wasBlocked) this.kickEngine();
+  }
+
+  /** Re-runs the engine effect (starts now if shouldRun()). */
+  private kickEngine(): void {
+    this.retryToken.update((n) => n + 1);
+  }
+
+  private setMic(value: MicPermission): void {
+    this.micSignal.set(value);
+    localStorage.setItem(MIC_PERMISSION_KEY, value);
   }
 
   /** True when this device is allowed to be listening right now. */
@@ -428,4 +555,27 @@ function normalize(text: string): string {
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** Native OS mic status reported by the Electron bridge (macOS TCC values;
+ *  'unknown' on platforms without an OS-level gate). */
+type MicStatus = 'granted' | 'denied' | 'not-determined' | 'restricted' | 'unknown';
+
+/** Optional Electron preload bridge (see server/preload.cjs). Absent on the web
+ *  build (dev / GitHub Pages) → the service falls back to pure web APIs. */
+interface JingleMachineBridge {
+  platform: string; // 'darwin' | 'win32' | ...
+  getMicStatus(): Promise<MicStatus>;
+  requestMic(): Promise<boolean>;
+  openMicSettings(): Promise<void>;
+}
+
+function getBridge(): JingleMachineBridge | null {
+  return (globalThis as { jingleMachine?: JingleMachineBridge }).jingleMachine ?? null;
+}
+
+/** Reads the per-device remembered permission; defaults to 'unknown'. */
+function readMicPermission(): MicPermission {
+  const value = localStorage.getItem(MIC_PERMISSION_KEY);
+  return value === 'granted' || value === 'denied' ? value : 'unknown';
 }
