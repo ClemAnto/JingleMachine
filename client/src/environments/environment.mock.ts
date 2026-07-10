@@ -7,7 +7,7 @@
  */
 export const environment = {
   production: false,
-  version: '0.12.2',
+  version: '0.12.3',
   mock: true,
   emailAndGoogleAuth: false,
   firebase: {

@@ -12,7 +12,7 @@
 export const environment = {
   production: false,
   // App version shown in the UI. Keep in sync with server/package.json on release.
-  version: '0.12.2',
+  version: '0.12.3',
   // Userless local test mode: bypass Firebase auth + Cloudinary (in-memory library,
   // object-URL audio). Enabled by the `mock` build configuration (environment.mock.ts).
   mock: false,
