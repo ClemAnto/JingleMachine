@@ -200,6 +200,11 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Regole Firestore** (`schedules`) **deployate** su `jingle-machine-2026` (account `syndacate.dev@gmail.com`; config `firebase.json`+`.firebaserc`).
 - **Pubblicato**: push su `main` (Pages) + tag **`v0.10.0`** → Release con installer Win (.exe) + Mac (.dmg): <https://github.com/ClemAnto/JingleMachine/releases/tag/v0.10.0>
 
+**Aggiornamento (sessione 2026-07-10, v0.12.3) — Fix permessi microfono (voice trigger) su macOS:**
+- Loop infinito del prompt microfono su Mac risolto lato **packaging**: `mac.hardenedRuntime: false` (electron-builder lo attiva di default → macOS bloccava il mic senza l'entitlement `audio-input` sugli Helper; ad-hoc+HR rompeva anche la library validation). Coerente con "no notarizzazione". Dettagli in `MEMO.md` §15.
+- Gestione permessi **OS-aware + per-device** (v0.12.2): bridge TCC nel main (`askForMediaAccess`) + preload IPC (`window.jingleMachine`) + memoria in `localStorage` + stop retry su rifiuto + re-richiesta guidata (deep-link Impostazioni) + recupero automatico (`focus`/`onchange`). Banner "Consenti microfono".
+- Pubblicato: push su `main` + tag **`v0.12.3`** → Release con installer Win (.exe) + Mac (.dmg). ⚠️ **Da confermare su un Mac reale** (build/fix OK ma non verificabile da Windows).
+
 **Prossimo passo — opzioni:**
 1. **Scheduler a finestra chiusa** (consigliato): tray + background + (opz.) avvio automatico nello standalone Electron → oggi la programmazione suona solo ad app aperta. Vedi `MEMO.md` §14/§13.
 2. **Fase 4**: ottimizzazione letture Cloudinary (cache HTTP + IndexedDB + lazy-load) — anche via **PWA**.

@@ -528,3 +528,23 @@ countdown e possibilità di bloccare.
 
 ### Versione mostrata nella UI
 - Sotto il titolo compare `v{environment.version}`. ⚠️ `environment.version` (client) va tenuto **in sync con `server/package.json`** ad ogni bump (due file).
+
+---
+
+## 15. Attivazione vocale (voice trigger) — permessi microfono
+
+Feature (v0.12.0): un jingle parte quando si pronuncia la sua *trigger phrase* (riconoscimento **offline** vosk-browser, modello IT lazy-loaded ~5.8 MB). Ascolta solo il device **capo** (`LeaderService`) con voice attivo e Library montata. Codice: [`core/voice-trigger.service.ts`](client/src/app/core/voice-trigger.service.ts).
+
+### ⚠️ macOS: `hardenedRuntime: false` è OBBLIGATORIO (trappola risolta 2026-07-10, v0.12.3)
+- **Sintomo riportato**: sul Mac il prompt del microfono si ripresentava **all'infinito** anche concedendolo.
+- **Causa**: `electron-builder` attiva **hardenedRuntime di default** (dalla v21.1.3; noi su v25). Con l'hardened runtime, macOS **blocca il microfono** se manca l'entitlement `com.apple.security.device.audio-input` — che serve anche sui **processi Helper** di Electron (dove avviene la cattura audio, ereditano dal file *inherit*). In più **ad-hoc signing + hardened runtime** rompe la *library validation*.
+- **Fix**: `mac.hardenedRuntime: false` in `server/package.json`. Coerente con la scelta **"no notarizzazione"** (che invece richiederebbe l'HR). Nessun entitlement da gestire; il mic funziona col normale prompt TCC (una volta sola, poi ricordato per quel binario).
+- 🔗 Fonti (2026-07-10): BigBinary "Requesting camera/microphone permission in an Electron app"; electron-builder docs (`hardenedRuntime` default `true` dalla 21.1.3, entitlement audio-input su HR).
+
+### Gestione permessi (OS-aware, per-device) — v0.12.2/0.12.3
+- **Main process** ([`electron-main.cjs`](server/electron-main.cjs)): risolve il **TCC macOS** con `systemPreferences.askForMediaAccess` (prompt **una volta**); il *permission check handler* riporta lo **stato reale** — se rispondesse "true" fisso, Chromium salterebbe la richiesta e colpirebbe l'hardware ⇒ loop di prompt (era la causa lato-codice della v0.12.1). IPC `mic:status` / `mic:request` / `mic:openSettings` (deep-link alle Impostazioni di sistema).
+- **Preload** ([`preload.cjs`](server/preload.cjs), `contextBridge`): espone `window.jingleMachine` (`platform`, `getMicStatus`, `requestMic`, `openMicSettings`). **Assente sul web** (dev / Pages) → il client usa solo le API browser. Va aggiunto ai `files` di electron-builder.
+- **Client**: memoria del permesso **PER-DEVICE** (`localStorage`, **mai** per-account: il mic è hardware-locale e l'account è condiviso); su rifiuto **niente retry** (era un altro vettore di loop); re-richiesta guidata (`requestPermission()`: apre le Impostazioni se già negato — mac/win **non** ri-promptano dopo un "no"); **recupero automatico** su `focus` + Permissions API `onchange`. Banner "Consenti microfono" in `library.html`.
+
+### ⚠️ Non testabile da Windows
+Il bug è **macOS-specifico** → da Windows non riproducibile. Lezione: per bug platform-specific **verificare la causa via fonti autorevoli PRIMA di taggare** (la fix "a memoria" della v0.12.2 non ha risolto — mancava il pezzo di **packaging**, l'hardened runtime). ⏳ **Ancora da confermare su un Mac reale** che la v0.12.3 chiuda il problema.
