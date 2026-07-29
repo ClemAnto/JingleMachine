@@ -10,7 +10,7 @@
 // dynamically import()s the ESM server module (import() works fine from CJS).
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { app, BrowserWindow, Menu, session } = require("electron");
+const { app, BrowserWindow, Menu, session, systemPreferences } = require("electron");
 
 // userData → %APPDATA%\JingleMachine (win) / ~/Library/Application Support/JingleMachine (mac).
 app.setName("JingleMachine");
@@ -28,6 +28,22 @@ if (!app.requestSingleInstanceLock()) {
     mainWindow.focus();
   });
 
+  // macOS gates the microphone itself (TCC), on top of Chromium's permission.
+  // The system prompt only appears if the app explicitly asks for access, and
+  // Electron rejects getUserMedia outright once the status is denied/restricted
+  // — so ask on the first request and report the OS's real answer. Elsewhere
+  // (Windows/Linux) there is no such gate: the request is simply granted.
+  async function hasMicrophoneAccess() {
+    if (process.platform !== "darwin") return true;
+    const status = systemPreferences.getMediaAccessStatus("microphone");
+    if (status === "granted") return true;
+    if (status === "not-determined") return systemPreferences.askForMediaAccess("microphone");
+    // 'denied' / 'restricted': only the user can lift it, in System Settings →
+    // Privacy & Security → Microphone (the app must be relaunched afterwards).
+    console.warn(`Microphone access ${status}: enable Jingle Machine in System Settings.`);
+    return false;
+  }
+
   async function start() {
     // The packaged app folder is read-only, so keep mutable data (downloaded
     // binaries, temp files) in a writable per-user folder. Must be set BEFORE
@@ -42,7 +58,9 @@ if (!app.requestSingleInstanceLock()) {
     // default (no handler) while guaranteeing 'media'. The OS still gates the
     // actual hardware. We must NOT deny the rest: this shared session also governs
     // the Google sign-in popup and any future permission the app needs.
-    session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(true));
+    session.defaultSession.setPermissionRequestHandler(async (_wc, permission, callback) => {
+      callback(permission === "media" ? await hasMicrophoneAccess() : true);
+    });
     session.defaultSession.setPermissionCheckHandler(() => true);
 
     Menu.setApplicationMenu(null);

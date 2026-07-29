@@ -14,6 +14,44 @@ import type { PendingFire } from './scheduler.service';
 /** Engine state (what the microphone/recognizer is doing right now). */
 export type VoiceStatus = 'off' | 'loading' | 'listening' | 'error';
 
+/** Why a listening session could not start (drives the message shown to the user). */
+export type VoiceFailure = 'permission' | 'no-microphone' | 'microphone-busy' | 'model' | 'unknown';
+
+/**
+ * A start failure with its cause already classified.
+ *
+ * Without it every failure looked the same to the UI, so a model that failed to
+ * load was reported as a denied microphone (misleading on macOS especially).
+ */
+export class VoiceStartError extends Error {
+  constructor(
+    readonly reason: VoiceFailure,
+    override readonly cause: unknown,
+  ) {
+    super(`Voice start failed (${reason}): ${describeError(cause)}`);
+    this.name = 'VoiceStartError';
+  }
+}
+
+/** What to tell the user for each way a listening session can fail to start. */
+const FAILURE_MESSAGES: Record<VoiceFailure, string> = {
+  permission: 'Permesso microfono negato dal sistema. Consentilo nelle impostazioni di privacy e riavvia l’app.',
+  'no-microphone': 'Nessun microfono rilevato.',
+  'microphone-busy': 'Microfono occupato da un’altra applicazione.',
+  model: 'Modello di riconoscimento vocale non caricato.',
+  unknown: 'Impossibile avviare il riconoscimento vocale.',
+};
+
+/**
+ * Ready-to-show message for a start failure. The technical tag travels with it:
+ * the desktop app has no developer console, so it is the only way a user can
+ * report what actually went wrong.
+ */
+export function voiceFailureMessage(err: unknown): string {
+  const { reason, cause } = (err ?? {}) as Partial<VoiceStartError>;
+  return `${FAILURE_MESSAGES[reason ?? 'unknown']} (${describeError(cause ?? err)})`;
+}
+
 /** The recognizer's messages carry either a final `text` or a live `partial`. */
 type VoskResult = { result?: { text?: string; partial?: string } };
 
@@ -49,6 +87,10 @@ export class VoiceTriggerService {
 
   /** Live engine state, for the UI indicator. */
   readonly status = signal<VoiceStatus>('off');
+  /** Why the engine last failed to start (null while fine). The library view
+   *  turns it into a message: the microphone button alone gives no clue why it
+   *  never starts listening — on macOS the OS can deny it outright. */
+  readonly lastError = signal<VoiceStartError | null>(null);
   /** Last transcript heard (a hint shown in the UI while listening). */
   readonly lastHeard = signal('');
 
@@ -161,16 +203,13 @@ export class VoiceTriggerService {
     this.testTranscript.set('');
     this.testMatched.set(false);
     this.testing.set(true); // the engine effect reads this and releases the mic
+    // That effect runs asynchronously, so the engine would still hold the input
+    // device while we ask for a second capture of it — which macOS refuses.
+    // Release it now; the effect then finds nothing left to stop.
+    this.stopEngine();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
-      });
-      let model = this.model;
-      if (!model) {
-        const { createModel } = await import('vosk-browser');
-        model = await createModel(environment.voice.modelUrl);
-        this.model = model;
-      }
+      const stream = await this.openMicrophone();
+      const model = await this.loadModel();
       if (!this.testing()) {
         // Stopped (or modal closed) during the load.
         stream.getTracks().forEach((t) => t.stop());
@@ -242,15 +281,8 @@ export class VoiceTriggerService {
     this.starting = true;
     try {
       this.status.set('loading');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
-      });
-      let model = this.model;
-      if (!model) {
-        const { createModel } = await import('vosk-browser');
-        model = await createModel(environment.voice.modelUrl);
-        this.model = model;
-      }
+      const stream = await this.openMicrophone();
+      const model = await this.loadModel();
 
       // The toggle may have flipped off (or leadership lost) during the load.
       if (!this.shouldRun()) {
@@ -281,15 +313,44 @@ export class VoiceTriggerService {
       this.processor.connect(this.audioContext.destination);
 
       this.status.set('listening');
+      this.lastError.set(null);
     } catch (err) {
       console.error('Voice trigger failed to start:', err);
       this.status.set('error');
       this.teardownAudio();
+      // Only on a NEW kind of failure: retries repeat the same one every few
+      // seconds, and the view would pop a message for each attempt.
+      const failure = err as VoiceStartError;
+      if (this.lastError()?.reason !== failure?.reason) this.lastError.set(failure);
       // Recover from transient failures, but not from an explicit mic denial
       // (re-calling getUserMedia would just keep rejecting).
-      if ((err as { name?: string })?.name !== 'NotAllowedError') this.scheduleRetry();
+      if ((err as VoiceStartError)?.reason !== 'permission') this.scheduleRetry();
     } finally {
       this.starting = false;
+    }
+  }
+
+  /** Opens the input device, classifying the browser's error for the UI. */
+  private async openMicrophone(): Promise<MediaStream> {
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
+      });
+    } catch (err) {
+      throw new VoiceStartError(microphoneFailure(err), err);
+    }
+  }
+
+  /** Loads the speech model once (~48 MB) and keeps it for later sessions. */
+  private async loadModel(): Promise<Model> {
+    if (this.model) return this.model;
+    try {
+      const { createModel } = await import('vosk-browser');
+      this.model = await createModel(environment.voice.modelUrl);
+      return this.model;
+    } catch (err) {
+      // Missing/unreachable asset, or the WASM runtime failed to start.
+      throw new VoiceStartError('model', err);
     }
   }
 
@@ -310,6 +371,7 @@ export class VoiceTriggerService {
       this.teardownAudio();
       if (this.status() !== 'error') this.status.set('off');
     }
+    this.lastError.set(null); // a later re-enable may fail again → notify again
     this.lastHeard.set('');
   }
 
@@ -411,6 +473,34 @@ export class VoiceTriggerService {
       progress: duration ? (remaining / duration) * 100 : 100,
     });
   }
+}
+
+/**
+ * Maps a getUserMedia rejection to our failure kinds.
+ * Names per the Media Capture spec; macOS reports an OS-level block (privacy
+ * settings, unsigned app) as NotAllowedError, and a device held by someone else
+ * as NotReadableError.
+ */
+function microphoneFailure(err: unknown): VoiceFailure {
+  switch ((err as { name?: string })?.name) {
+    case 'NotAllowedError':
+    case 'SecurityError':
+      return 'permission';
+    case 'NotFoundError':
+    case 'OverconstrainedError':
+      return 'no-microphone';
+    case 'NotReadableError':
+    case 'AbortError':
+      return 'microphone-busy';
+    default:
+      return 'unknown';
+  }
+}
+
+/** Short technical tag for an error, so the UI can show what actually happened. */
+export function describeError(err: unknown): string {
+  const { name, message } = (err ?? {}) as { name?: string; message?: string };
+  return name || message || String(err);
 }
 
 /** Pulls the transcript out of a recognizer message (final text or live partial). */

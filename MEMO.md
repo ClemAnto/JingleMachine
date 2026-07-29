@@ -528,3 +528,39 @@ countdown e possibilità di bloccare.
 
 ### Versione mostrata nella UI
 - Sotto il titolo compare `v{environment.version}`. ⚠️ `environment.version` (client) va tenuto **in sync con `server/package.json`** ad ogni bump (due file).
+
+## 15. Microfono su macOS (TCC) — v0.12.2
+
+Il permesso microfono su Mac passa da **tre** cancelli, non uno. Se salta un cancello l'errore che arriva
+al browser è sempre lo stesso (`NotAllowedError`), quindi vanno verificati in ordine.
+
+1. **Chromium** — `session.setPermissionRequestHandler` in `electron-main.cjs` (già a posto).
+2. **TCC (privacy di sistema)** — macOS mostra il prompt **solo se l'app lo chiede esplicitamente**
+   (`systemPreferences.askForMediaAccess`), e da Electron 30+ `getUserMedia` viene rifiutato in partenza
+   se lo stato è `denied`/`restricted` ([PR #42899](https://github.com/electron/electron/pull/42899)).
+   → `hasMicrophoneAccess()` in `electron-main.cjs` interroga `getMediaAccessStatus` e chiede l'accesso.
+3. **Firma del bundle** — TCC attribuisce il permesso alla **firma** dell'app.
+   ✅ **Verificato sul .dmg v0.12.1 (2026-07-29)**: il bundle **è firmato ad-hoc** e integro —
+   `Signature=adhoc`, `flags=0x2(adhoc)` (niente `runtime` → hardened runtime già inattivo),
+   `TeamIdentifier=not set`, `Sealed Resources version=2`. Non è electron-builder a firmarlo (salta la
+   firma: nessun certificato Apple in CI), ma **`@electron/universal`**, che ri-firma ad-hoc il bundle
+   dopo il merge `lipo`. `NSMicrophoneUsageDescription` risulta alla **radice** dell'Info.plist.
+   → Questo cancello **non era il problema**: la causa era il punto 2 (nessuno chiedeva il permesso).
+
+⚠️ **Conseguenza della firma ad-hoc**: il cdhash cambia a ogni build, e TCC lega il consenso a quello.
+Dopo ogni aggiornamento il permesso microfono **va riconcesso** (l'interruttore in Impostazioni può
+restare acceso ma non valere più) → `tccutil reset Microphone com.jinglemachine.app` e riavvio dell'app.
+Solo un **Developer ID Apple** (a pagamento, 99 $/anno) darebbe una firma stabile: scartato.
+
+- ⚠️ Se un giorno si firma davvero: `identity: "-"` **NON è supportato da app-builder-lib 25.1.8**
+  (il valore finisce in `findIdentity()`, non trova nulla e fa **fallire** la build) e la ≥26.0.13 ha una
+  [regressione nota su mic/camera con firma ad-hoc](https://github.com/electron-userland/electron-builder/issues/9529).
+  Con `hardenedRuntime: true` servirebbe l'entitlement `com.apple.security.device.audio-input` **anche nel
+  plist "inherit"** (l'audio lo cattura il processo *Helper*, che eredita quello). Per questo teniamo
+  `hardenedRuntime: false`: serve solo alla notarizzazione, che senza Developer ID non possiamo fare.
+- **`extendInfo`** ha un [bug noto](https://github.com/electron-userland/electron-builder/issues/8971)
+  (25.1.8 inclusa) che può annidare le chiavi sotto indici numerici invece che alla radice → macOS non le
+  vede. Da noi non si manifesta, ma lo step *"Inspect the Mac bundle"* in CI lo intercetterebbe.
+- **Diagnosi sul Mac** (nessuna build necessaria):
+  `codesign -dv --verbose=2 "/Applications/Jingle Machine.app"` e
+  `plutil -p "/Applications/Jingle Machine.app/Contents/Info.plist" | grep -i microphone`.

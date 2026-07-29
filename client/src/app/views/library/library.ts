@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -21,7 +21,7 @@ import { LeaderService } from '../../core/leader.service';
 import { Jingle, LibraryService } from '../../core/library.service';
 import { ScheduledJingle, ScheduleService } from '../../core/schedule.service';
 import { SchedulerService } from '../../core/scheduler.service';
-import { VoiceTriggerService } from '../../core/voice-trigger.service';
+import { VoiceTriggerService, voiceFailureMessage } from '../../core/voice-trigger.service';
 import { LATEST_RELEASE_PAGE, UpdateService } from '../../core/update.service';
 import { UiButton } from '../../ui/button/button';
 import { CreateJingleModal, PreparedAudio } from './create-jingle-modal/create-jingle-modal';
@@ -125,6 +125,14 @@ export class Library implements OnInit {
 
   /** Reordering is index-based: it only works when the grid shows the full list. */
   protected readonly reorderDisabled = () => this.search().trim().length > 0;
+
+  /** A failing voice engine is otherwise invisible — the microphone button just
+   *  never starts pulsing — so say why. Mostly for macOS, which can deny the
+   *  microphone at OS level however the app is configured. */
+  private readonly voiceErrorNotice = effect(() => {
+    const err = this.voice.lastError();
+    if (err) this.message.error(voiceFailureMessage(err));
+  });
 
   async ngOnInit() {
     await Promise.all([this.loadJingles(), this.loadSchedules()]);

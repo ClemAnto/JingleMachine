@@ -5,7 +5,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 
-import { VoiceTriggerService } from '../../../core/voice-trigger.service';
+import { VoiceTriggerService, voiceFailureMessage } from '../../../core/voice-trigger.service';
 import { UiButton } from '../../../ui/button/button';
 
 /**
@@ -44,8 +44,8 @@ export class TriggerPhraseField implements OnDestroy {
     }
     try {
       await this.voice.startTest(this.phrase());
-    } catch {
-      this.message.error('Microfono non disponibile o permesso negato.');
+    } catch (err) {
+      this.message.error(voiceFailureMessage(err));
     }
   }
 
