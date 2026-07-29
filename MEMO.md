@@ -535,11 +535,39 @@ countdown e possibilità di bloccare.
 
 Feature (v0.12.0): un jingle parte quando si pronuncia la sua *trigger phrase* (riconoscimento **offline** vosk-browser, modello IT lazy-loaded ~5.8 MB). Ascolta solo il device **capo** (`LeaderService`) con voice attivo e Library montata. Codice: [`core/voice-trigger.service.ts`](client/src/app/core/voice-trigger.service.ts).
 
-### ⚠️ macOS: `hardenedRuntime: false` è OBBLIGATORIO (trappola risolta 2026-07-10, v0.12.3)
-- **Sintomo riportato**: sul Mac il prompt del microfono si ripresentava **all'infinito** anche concedendolo.
-- **Causa**: `electron-builder` attiva **hardenedRuntime di default** (dalla v21.1.3; noi su v25). Con l'hardened runtime, macOS **blocca il microfono** se manca l'entitlement `com.apple.security.device.audio-input` — che serve anche sui **processi Helper** di Electron (dove avviene la cattura audio, ereditano dal file *inherit*). In più **ad-hoc signing + hardened runtime** rompe la *library validation*.
-- **Fix**: `mac.hardenedRuntime: false` in `server/package.json`. Coerente con la scelta **"no notarizzazione"** (che invece richiederebbe l'HR). Nessun entitlement da gestire; il mic funziona col normale prompt TCC (una volta sola, poi ricordato per quel binario).
-- 🔗 Fonti (2026-07-10): BigBinary "Requesting camera/microphone permission in an Electron app"; electron-builder docs (`hardenedRuntime` default `true` dalla 21.1.3, entitlement audio-input su HR).
+### ⚠️ macOS: il bundle NON era firmato (causa reale, verificata in CI 2026-07-29, v0.12.6)
+> ❌ **Corregge la voce precedente** («`hardenedRuntime: false` è OBBLIGATORIO», v0.12.3): **falsa**.
+> L'hardened runtime è un flag di `codesign`, e noi non firmavamo affatto → non è mai stato attivo
+> (`flags` senza `runtime`). Verificato: il bundle esce **identico** con e senza quel campo
+> (v0.12.4 con, v0.12.5 senza). Il campo è stato rimosso perché inutile, non perché dannoso.
+
+- **Causa**: senza certificato Apple, `electron-builder` **salta del tutto la firma**, e
+  `@electron/universal` **non** ri-firma il bundle unito. Il `.dmg` pubblicato usciva con la firma che
+  il *linker* lascia sul binario Electron originale:
+  `Identifier=Electron` · `flags=adhoc,linker-signed` · `Info.plist=not bound` · `Sealed Resources=none`.
+  Con identificatore generico e risorse non sigillate, macOS **non fissa un'identità stabile** per
+  l'app: TCC non aggancia il consenso al microfono, e `tccutil reset com.jinglemachine.app` agisce su
+  un record che non è il nostro.
+- **Fix**: hook `build.afterPack` → [`server/build/after-pack.cjs`](server/build/after-pack.cjs).
+  Firma ad-hoc **solo il bundle unito** (`mac-universal`) con `--identifier` forzato al bundle id reale.
+  ⚠️ Le due cartelle temporanee per-arch vanno **saltate**: firmarle romperebbe il merge di
+  `@electron/universal`. Nessun account Apple richiesto.
+- **Esito verificato (v0.12.6)**: `Identifier=com.jinglemachine.app` · `flags=0x2(adhoc)` ·
+  `Sealed Resources version=2 rules=13 files=28`.
+- ⚠️ **Il cdhash cambia a ogni build** → dopo ogni aggiornamento il permesso microfono va **riconcesso**.
+  Solo un Developer ID (99 $/anno, scartato) darebbe una firma stabile.
+- 🔎 Lo step **"Inspect the Mac bundle"** del job macOS stampa firma e `NSMicrophoneUsageDescription`:
+  permette di verificare il packaging **senza un Mac**, in ~3 minuti. Iterare con
+  `gh workflow run build-packages.yml` (artefatti, nessuna Release) e taggare solo a esito buono.
+- ❌ Scartata anche l'ipotesi del bug di `extendInfo`: `NSMicrophoneUsageDescription` è sempre risultata
+  alla radice dell'Info.plist.
+
+### ⚠️ La memoria del rifiuto sopravvive a tutto
+`localStorage` (`jingle-machine:mic-permission`): quando vale `denied`, `startEngine()` **non chiama
+`getUserMedia`** → macOS non può mostrare alcun prompt. Vive in `~/Library/Application Support/JingleMachine`
+e **non** lo azzerano `tccutil reset`, la ri-firma o la reinstallazione dell'app. In-app si sblocca col
+banner «Consenti microfono»; da fuori solo cancellando quella cartella. Da tenere presente quando si
+debugga: può **mascherare** un fix del packaging (e viceversa).
 
 ### Gestione permessi (OS-aware, per-device) — v0.12.2/0.12.3
 - **Main process** ([`electron-main.cjs`](server/electron-main.cjs)): risolve il **TCC macOS** con `systemPreferences.askForMediaAccess` (prompt **una volta**); il *permission check handler* riporta lo **stato reale** — se rispondesse "true" fisso, Chromium salterebbe la richiesta e colpirebbe l'hardware ⇒ loop di prompt (era la causa lato-codice della v0.12.1). IPC `mic:status` / `mic:request` / `mic:openSettings` (deep-link alle Impostazioni di sistema).
