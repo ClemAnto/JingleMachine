@@ -39,6 +39,33 @@ Quando l'utente scrive **`chiudo`** (da solo o in una frase), PRIMA di risponder
   - ⚠️ Ogni volta che si triggera una nuova build (`yarn release` o tag), la versione deve essere già stata bumpata nel commit precedente.
   - Quando si crea un tag git, assicurarsi che corrisponda alla versione nel `package.json`.
 
+## Come scrivere in MEMO/ROADMAP: separare «verificato» da «ipotesi»
+
+Lezione pagata cara il 2026-07-29. Una voce di `MEMO.md` affermava come **acquisito**
+(«`hardenedRuntime: false` è OBBLIGATORIO») quello che era solo una **congettura mai testata su un Mac**.
+Era falsa, ha indirizzato male la sessione successiva e sono serviti due giri di build per smontarla.
+
+- Marcare sempre lo stato di una conclusione: **✅ verificato** (con *come* è stato verificato e la data)
+  oppure **⏳ ipotesi, non ancora confermata**. Mai scrivere una causa presunta come fosse dimostrata.
+- Quando un'ipotesi viene smentita, **correggere la voce vecchia** (barrarla + rimando alla nuova), non
+  solo aggiungerne una nuova: chi legge trova prima quella vecchia.
+- Annotare le **ipotesi scartate e perché**: valgono quanto la soluzione, evitano di riproporle.
+
+## Bug platform-specific (macOS) non riproducibili da Windows
+
+Non tirare a indovinare a colpi di release: **far dimostrare il fatto alla CI**.
+
+1. Aggiungere al workflow uno **step di ispezione** che stampa lo stato reale dell'artefatto
+   (es. *"Inspect the Mac bundle"*: `codesign -dv` + `plutil -p` dell'Info.plist nel job macOS).
+2. Iterare con **`gh workflow run build-packages.yml`** → costruisce e ispeziona in **~3 minuti**,
+   **senza** pubblicare una Release (lo step di publish è vincolato ai tag) e senza coinvolgere il Mac.
+3. **Taggare solo a esito verificato**, per non riempire le Release di tentativi.
+4. Chiedere all'utente comandi diagnostici sul Mac (`codesign -dv --verbose=2`, `plutil -p`) **prima** di
+   proporre un fix: costano 10 secondi e hanno smentito due mie ipotesi di fila.
+
+⚠️ L'app desktop **non ha DevTools** (`Menu.setApplicationMenu(null)`): sul Mac non si legge nessuna
+console. Gli errori vanno resi **visibili nella UI**, altrimenti si debugga alla cieca.
+
 ## Cos'è il progetto
 Webapp Angular per creare una **libreria di jingle PER-UTENTE**: audio caricati o **estratti da YouTube**, tagliati in MP3.
 Due canali: **app desktop standalone (Electron)** con tutte le funzioni, e **GitHub Pages** (stessa webapp ma **senza** YouTube). Dettagli in `MEMO.md`.

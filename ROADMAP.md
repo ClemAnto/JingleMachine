@@ -201,9 +201,17 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Pubblicato**: push su `main` (Pages) + tag **`v0.10.0`** → Release con installer Win (.exe) + Mac (.dmg): <https://github.com/ClemAnto/JingleMachine/releases/tag/v0.10.0>
 
 **Aggiornamento (sessione 2026-07-10, v0.12.3) — Fix permessi microfono (voice trigger) su macOS:**
-- Loop infinito del prompt microfono su Mac risolto lato **packaging**: `mac.hardenedRuntime: false` (electron-builder lo attiva di default → macOS bloccava il mic senza l'entitlement `audio-input` sugli Helper; ad-hoc+HR rompeva anche la library validation). Coerente con "no notarizzazione". Dettagli in `MEMO.md` §15.
-- Gestione permessi **OS-aware + per-device** (v0.12.2): bridge TCC nel main (`askForMediaAccess`) + preload IPC (`window.jingleMachine`) + memoria in `localStorage` + stop retry su rifiuto + re-richiesta guidata (deep-link Impostazioni) + recupero automatico (`focus`/`onchange`). Banner "Consenti microfono".
-- Pubblicato: push su `main` + tag **`v0.12.3`** → Release con installer Win (.exe) + Mac (.dmg). ⚠️ **Da confermare su un Mac reale** (build/fix OK ma non verificabile da Windows).
+- ~~Loop infinito del prompt microfono risolto con `mac.hardenedRuntime: false`~~ → ❌ **conclusione errata, smentita il 2026-07-29** (vedi sotto). Il campo è stato rimosso: non faceva nulla.
+- Gestione permessi **OS-aware + per-device** (v0.12.2): bridge TCC nel main (`askForMediaAccess`) + preload IPC (`window.jingleMachine`) + memoria in `localStorage` + stop retry su rifiuto + re-richiesta guidata (deep-link Impostazioni) + recupero automatico (`focus`/`onchange`). Banner "Consenti microfono". ✅ Resta valida.
+- Pubblicato: tag **`v0.12.3`** → Release con installer Win (.exe) + Mac (.dmg).
+
+**Aggiornamento (sessione 2026-07-29, v0.12.4→v0.12.6) — Il bundle Mac non era firmato:**
+- **Causa reale trovata e verificata**: senza certificato Apple, electron-builder **salta la firma** e `@electron/universal` non ri-firma il bundle unito → il `.dmg` usciva con `Identifier=Electron`, `linker-signed`, `Sealed Resources=none`. macOS non fissa un'identità stabile ⇒ TCC non aggancia il consenso al microfono e `tccutil reset com.jinglemachine.app` agisce su un record che non è il nostro.
+- **Fix**: hook `build.afterPack` (`server/build/after-pack.cjs`) → firma ad-hoc del solo bundle unito con `--identifier` forzato. Esito verificato in CI: `Identifier=com.jinglemachine.app` · `Sealed Resources version=2 files=28`.
+- **Step CI "Inspect the Mac bundle"** (job macOS): stampa firma + `NSMicrophoneUsageDescription` ⇒ il packaging si verifica **senza un Mac**, in ~3 minuti.
+- Ipotesi **scartate** (per non riproporle): `hardenedRuntime` · bug `extendInfo` sull'Info.plist · `identity: "-"` (non supportato da app-builder-lib 25.1.8: fa fallire la build).
+- ⚠️ **Seconda causa, indipendente**: la memoria del rifiuto in `localStorage` blocca `getUserMedia` a monte → nessun prompt possibile. Sopravvive a `tccutil reset`, ri-firma e reinstallazione. Vedi `MEMO.md` §15.
+- Pubblicato: tag **`v0.12.6`**. ⏳ **Da confermare su un Mac reale**: installare, poi `tccutil reset Microphone com.jinglemachine.app` **e** `rm -rf ~/Library/Application Support/JingleMachine` (servono entrambi: un fix maschera l'altro).
 
 **Prossimo passo — opzioni:**
 1. **Scheduler a finestra chiusa** (consigliato): tray + background + (opz.) avvio automatico nello standalone Electron → oggi la programmazione suona solo ad app aperta. Vedi `MEMO.md` §14/§13.
