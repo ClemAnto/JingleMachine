@@ -78,6 +78,20 @@ jobs:
         run: yarn dist --publish never
         working-directory: server
 
+      # The microphone (voice trigger) depends on two things that are invisible
+      # until a user runs the app: macOS attributes a privacy grant to the app's
+      # code signature, and it only prompts if NSMicrophoneUsageDescription sits
+      # at the ROOT of Info.plist (extendInfo has been known to nest it wrongly).
+      # Print both so a broken bundle shows up here, not on a colleague's Mac.
+      - name: Inspect the Mac bundle (signature + microphone key)
+        if: runner.os == 'macOS'
+        run: |
+          app=$(find server/dist-electron -maxdepth 2 -name "*.app" | head -1)
+          echo "App bundle: $app"
+          codesign -dv --verbose=2 "$app" 2>&1 | head -8 || echo "NOT SIGNED"
+          plutil -p "$app/Contents/Info.plist" | grep -i "NSMicrophoneUsageDescription" \
+            || echo "MISSING NSMicrophoneUsageDescription at the Info.plist root!"
+
       # ── 5. Upload installers ────────────────────────────────────────────
       - uses: actions/upload-artifact@v7
         with:
