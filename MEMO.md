@@ -562,6 +562,23 @@ Feature (v0.12.0): un jingle parte quando si pronuncia la sua *trigger phrase* (
 - ❌ Scartata anche l'ipotesi del bug di `extendInfo`: `NSMicrophoneUsageDescription` è sempre risultata
   alla radice dell'Info.plist.
 
+### ⚠️ vosk-browser: rotto SOLO nelle build di produzione (v0.12.9, 2026-07-30)
+Sintomo: `TypeError: i is not a function` premendo «Prova» (e, in silenzio, anche all'avvio del motore).
+**Il riconoscimento vocale non ha mai funzionato in un pacchetto**, su nessuna piattaforma — solo in dev.
+
+- **Causa**: `vosk-browser@0.0.8` distribuisce un bundle **UMD** ma nel suo `package.json` si dichiara ESM
+  (`"module": "./dist/vosk.js"`). Il dev server pre-bundla la dipendenza e **sintetizza gli export
+  nominati**, quindi `import { createModel }` funziona; la build di produzione emette invece un chunk che
+  finisce con `export default …` e **nessun export nominato** → il destructuring dà `undefined`, e la
+  chiamata esplode con il nome minificato (`i`).
+- **Fix**: `loadCreateModel()` in `voice-trigger.service.ts` legge `createModel` dall'export nominato
+  **oppure** da `default`, con errore esplicito se manca.
+- 🔎 **Come verificarlo senza browser**: nella dist, `grep -ao "export[{ ][^;]*" chunk-<vosk>.js` deve
+  mostrare solo `export default`; nel chunk consumatore deve comparire `s.createModel??s.default?.createModel`.
+- 💡 **Lezione generalizzabile**: una libreria che funziona in dev **non è provata**. Ogni dipendenza UMD/CJS
+  va verificata anche nel bundle di produzione — `ng build` non segnala nulla, il tipo TS è corretto e
+  l'errore appare solo a runtime, minificato.
+
 ### ⚠️ La memoria del rifiuto sopravvive a tutto
 `localStorage` (`jingle-machine:mic-permission`): quando vale `denied`, `startEngine()` **non chiama
 `getUserMedia`** → macOS non può mostrare alcun prompt. Vive in `~/Library/Application Support/JingleMachine`

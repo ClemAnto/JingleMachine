@@ -226,7 +226,7 @@ export class VoiceTriggerService {
       });
       let model = this.model;
       if (!model) {
-        const { createModel } = await import('vosk-browser');
+        const createModel = await loadCreateModel();
         model = await createModel(environment.voice.modelUrl);
         this.model = model;
       }
@@ -314,7 +314,7 @@ export class VoiceTriggerService {
       this.setMic('granted'); // getUserMedia resolved → permission is granted here
       let model = this.model;
       if (!model) {
-        const { createModel } = await import('vosk-browser');
+        const createModel = await loadCreateModel();
         model = await createModel(environment.voice.modelUrl);
         this.model = model;
       }
@@ -584,6 +584,31 @@ export function microphoneErrorMessage(err: unknown): string {
   // "TypeError" says nothing), so carry it through — trimmed to stay readable.
   const detail = [name, message.slice(0, 140)].filter(Boolean).join(': ');
   return `Impossibile avviare il riconoscimento vocale.${detail ? ` (${detail})` : ''}`;
+}
+
+/**
+ * Loads vosk-browser's model factory, whichever shape the bundle takes.
+ *
+ * The package ships a **UMD** bundle but its package.json advertises it as ESM
+ * (`"module": "./dist/vosk.js"`). The dev server pre-bundles it and synthesizes
+ * the named exports, so `import { createModel }` works there — but the
+ * production build emits a chunk ending in `export default …` with **no named
+ * exports**, so that same destructuring yields `undefined`. Calling it then
+ * failed with a minified "i is not a function", i.e. the voice trigger never
+ * worked in ANY packaged build, on any platform, while working fine in dev.
+ */
+type CreateModel = (url: string) => Promise<Model>;
+/** Both shapes the bundle can take: named export (dev) or default only (prod). */
+interface VoskModule {
+  createModel?: CreateModel;
+  default?: { createModel?: CreateModel };
+}
+
+async function loadCreateModel(): Promise<CreateModel> {
+  const loaded = (await import('vosk-browser')) as unknown as VoskModule;
+  const factory = loaded.createModel ?? loaded.default?.createModel;
+  if (!factory) throw new TypeError('vosk-browser: createModel export not found');
+  return factory;
 }
 
 /** Pulls the transcript out of a recognizer message (final text or live partial). */
