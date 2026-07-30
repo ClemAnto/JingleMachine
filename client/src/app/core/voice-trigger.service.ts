@@ -210,6 +210,12 @@ export class VoiceTriggerService {
     this.testTranscript.set('');
     this.testMatched.set(false);
     this.testing.set(true); // the engine effect reads this and releases the mic
+    // That effect runs asynchronously, so without this the engine would STILL
+    // hold the input device while we ask for a second capture of it. Windows
+    // tolerates the overlap, CoreAudio refuses it — which is why "Prova" failed
+    // only on macOS, and only while voice mode was on. Idempotent: the effect
+    // then finds nothing left to stop.
+    this.stopEngine();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
@@ -406,7 +412,12 @@ export class VoiceTriggerService {
     const bridge = getBridge();
     if (bridge) {
       const status = await bridge.getMicStatus().catch(() => 'unknown');
-      if (status !== 'unknown') return this.applyStatus(status);
+      // The OS is the ONLY authority in the desktop app: never fall through to
+      // the Permissions API here. In Electron that API doesn't mirror our
+      // handlers (electron#19891) and can report 'denied' for a merely undecided
+      // TCC status — which we would persist as a refusal the user never gave,
+      // locking the engine out of ever calling getUserMedia again.
+      return this.applyStatus(status);
     }
     try {
       const perm = await navigator.permissions?.query(MIC_QUERY);
@@ -538,6 +549,26 @@ export class VoiceTriggerService {
       progress: duration ? (remaining / duration) * 100 : 100,
     });
   }
+}
+
+/**
+ * Turns a failed listening attempt into something the user can act on — and
+ * report. Every cause used to collapse into "microfono negato", so a busy device
+ * or a speech model that failed to load looked like a permission problem; on
+ * macOS that sent a whole debugging session down the wrong path. The error name
+ * travels with the message because the desktop app has no developer console.
+ */
+export function microphoneErrorMessage(err: unknown): string {
+  const name = (err as { name?: string })?.name ?? '';
+  const reason =
+    name === 'NotAllowedError' || name === 'SecurityError'
+      ? 'Permesso microfono negato dal sistema.'
+      : name === 'NotFoundError' || name === 'OverconstrainedError'
+        ? 'Nessun microfono rilevato.'
+        : name === 'NotReadableError' || name === 'AbortError'
+          ? 'Microfono occupato da un’altra applicazione.'
+          : 'Impossibile avviare il riconoscimento vocale.';
+  return name ? `${reason} (${name})` : reason;
 }
 
 /** Pulls the transcript out of a recognizer message (final text or live partial). */
