@@ -67,6 +67,10 @@ export class VoiceTriggerService {
   readonly status = signal<VoiceStatus>('off');
   /** Last transcript heard (a hint shown in the UI while listening). */
   readonly lastHeard = signal('');
+  /** Why the engine last failed to start, ready to show ('' when fine). The
+   *  microphone button alone can't say: a failed engine looks exactly like an
+   *  idle one, which is how a broken speech model passed for "working". */
+  readonly lastError = signal('');
 
   // --- Test mode (used by the create/edit modal to try a trigger phrase) ---
   /** True while a test session is listening (suspends the main engine). */
@@ -344,6 +348,7 @@ export class VoiceTriggerService {
       this.processor.connect(this.audioContext.destination);
 
       this.status.set('listening');
+      this.lastError.set('');
     } catch (err) {
       this.teardownAudio();
       // An explicit denial: remember it per-device and STOP (re-calling getUserMedia
@@ -356,6 +361,9 @@ export class VoiceTriggerService {
       } else {
         console.error('Voice trigger failed to start:', err);
         this.status.set('error');
+        // Same text on every retry → the signal doesn't change → the view
+        // notifies once, not every RETRY_MS.
+        this.lastError.set(microphoneErrorMessage(err));
         this.scheduleRetry(); // transient failure → retry while still applicable
       }
     } finally {
@@ -559,16 +567,23 @@ export class VoiceTriggerService {
  * travels with the message because the desktop app has no developer console.
  */
 export function microphoneErrorMessage(err: unknown): string {
-  const name = (err as { name?: string })?.name ?? '';
-  const reason =
-    name === 'NotAllowedError' || name === 'SecurityError'
-      ? 'Permesso microfono negato dal sistema.'
-      : name === 'NotFoundError' || name === 'OverconstrainedError'
-        ? 'Nessun microfono rilevato.'
-        : name === 'NotReadableError' || name === 'AbortError'
-          ? 'Microfono occupato da un’altra applicazione.'
-          : 'Impossibile avviare il riconoscimento vocale.';
-  return name ? `${reason} (${name})` : reason;
+  const { name = '', message = '' } = (err ?? {}) as { name?: string; message?: string };
+  switch (name) {
+    case 'NotAllowedError':
+    case 'SecurityError':
+      return `Permesso microfono negato dal sistema. (${name})`;
+    case 'NotFoundError':
+    case 'OverconstrainedError':
+      return `Nessun microfono rilevato. (${name})`;
+    case 'NotReadableError':
+    case 'AbortError':
+      return `Microfono occupato da un’altra applicazione. (${name})`;
+  }
+  // Anything else is a bug, not a device problem: the recognizer, the speech
+  // model or the audio graph. Here the MESSAGE is the whole diagnosis (a bare
+  // "TypeError" says nothing), so carry it through — trimmed to stay readable.
+  const detail = [name, message.slice(0, 140)].filter(Boolean).join(': ');
+  return `Impossibile avviare il riconoscimento vocale.${detail ? ` (${detail})` : ''}`;
 }
 
 /** Pulls the transcript out of a recognizer message (final text or live partial). */

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -125,6 +125,13 @@ export class Library implements OnInit {
 
   /** Reordering is index-based: it only works when the grid shows the full list. */
   protected readonly reorderDisabled = () => this.search().trim().length > 0;
+
+  /** A voice engine that fails to start looks identical to one that is simply
+   *  idle — the icon just doesn't pulse. Say what went wrong instead. */
+  private readonly voiceErrorNotice = effect(() => {
+    const error = this.voice.lastError();
+    if (error) this.message.error(error);
+  });
 
   async ngOnInit() {
     await Promise.all([this.loadJingles(), this.loadSchedules()]);
