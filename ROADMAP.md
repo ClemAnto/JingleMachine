@@ -155,7 +155,7 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - [x] CI `build-packages.yml`: matrix windows/macos → `yarn dist`
 - [x] **Primo build Windows verificato in LOCALE** (2026-06-06): installer NSIS `Jingle Machine Setup 0.4.4.exe` (~79 MB), app avviata, server up, binari scaricati, `/health ready=true`. Risolto bug ESM/CJS di Electron 33 (main → `.cjs` + `createRequire`); vedi `MEMO.md` §10.
 - [x] **Build CI verificata (2026-06-06)**: matrix Win+Mac verde → artifact `jingle-machine-win` (.exe ~79 MB) + `jingle-machine-mac` (.dmg universal ~172 MB). Trappole CI risolte (`--base-href`, `GH_TOKEN`) in `MEMO.md` §10.
-- [ ] **Eseguire il dmg su un Mac reale** (build OK in CI, ma mai avviato su macOS) — verificare Gatekeeper + download binari (yt-dlp_macos/ffmpeg/deno)
+- [x] **Eseguire il dmg su un Mac reale** — fatto il 2026-07-30 (v0.12.9): app avviata, Gatekeeper superato con "apri comunque", **attivazione vocale funzionante**. ⏳ Resta da verificare su Mac il download dei binari (yt-dlp_macos/ffmpeg/deno) per il flusso YouTube.
 - [x] Script di download riscritto → `npm run download` in radice (`scripts/download-packages.mjs`). Resta: aggiornare `server/README.md`
 - [x] **Check aggiornamenti in-app** (2026-06-10, v0.9.0): installer pubblicati su **GitHub Releases** al tag `v*` (link pubblico, niente login) + banner nella Library quando esce una versione più nuova (vedi `MEMO.md` §10)
 - [ ] Icona app (`build/icon.*`) — ora icona Electron di default
@@ -211,7 +211,20 @@ Motivazioni in `MEMO.md` §10 e memoria `project-packaging-decision`.
 - **Step CI "Inspect the Mac bundle"** (job macOS): stampa firma + `NSMicrophoneUsageDescription` ⇒ il packaging si verifica **senza un Mac**, in ~3 minuti.
 - Ipotesi **scartate** (per non riproporle): `hardenedRuntime` · bug `extendInfo` sull'Info.plist · `identity: "-"` (non supportato da app-builder-lib 25.1.8: fa fallire la build).
 - ⚠️ **Seconda causa, indipendente**: la memoria del rifiuto in `localStorage` blocca `getUserMedia` a monte → nessun prompt possibile. Sopravvive a `tccutil reset`, ri-firma e reinstallazione. Vedi `MEMO.md` §15.
-- Pubblicato: tag **`v0.12.6`**. ⏳ **Da confermare su un Mac reale**: installare, poi `tccutil reset Microphone com.jinglemachine.app` **e** `rm -rf ~/Library/Application Support/JingleMachine` (servono entrambi: un fix maschera l'altro).
+- Pubblicato: tag **`v0.12.6`**.
+
+**Aggiornamento (sessione 2026-07-30, v0.12.7→v0.12.9) — ✅ ATTIVAZIONE VOCALE FUNZIONANTE SU MAC:**
+Confermato dall'utente su Mac reale il **2026-07-30** con la **v0.12.9**. Erano **tre bug distinti** che si mascheravano a vicenda — finché c'era il #1, il #3 non poteva nemmeno manifestarsi.
+
+| # | Bug | Sintomo | Fix |
+|---|-----|---------|-----|
+| 1 | Bundle Mac **non firmato** | Permesso microfono mai agganciato da TCC | hook `afterPack` (**v0.12.6**) |
+| 2 | **Doppia cattura** del microfono | Solo «Prova», solo su Mac, solo a voce attiva | `stopEngine()` sincrono (**v0.12.7**) |
+| 3 | Interop **UMD/ESM** di `vosk-browser` | Modello mai caricato *in produzione* | `loadCreateModel()` (**v0.12.9**) |
+
+- Il **#3 non era platform-specific**: il riconoscimento vocale non ha mai funzionato in un pacchetto, su **nessuna** piattaforma (in dev sì). È emerso sul Mac solo perché è lì che è stato provato.
+- Abilitante decisivo: la **v0.12.8** ha reso onesti i messaggi d'errore (testo dell'errore, non solo il nome) e ha smesso di far fallire il motore in silenzio. Il #3 è caduto in dieci minuti dopo mezza giornata di ipotesi sbagliate sui permessi.
+- ⚠️ Resta per progetto: la firma ad-hoc cambia il cdhash a ogni build → **il permesso microfono va riconcesso dopo ogni aggiornamento** (solo un Developer ID Apple a 99 $/anno lo eviterebbe → scartato).
 
 **Prossimo passo — opzioni:**
 1. **Scheduler a finestra chiusa** (consigliato): tray + background + (opz.) avvio automatico nello standalone Electron → oggi la programmazione suona solo ad app aperta. Vedi `MEMO.md` §14/§13.

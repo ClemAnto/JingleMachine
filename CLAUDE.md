@@ -66,6 +66,24 @@ Non tirare a indovinare a colpi di release: **far dimostrare il fatto alla CI**.
 ⚠️ L'app desktop **non ha DevTools** (`Menu.setApplicationMenu(null)`): sul Mac non si legge nessuna
 console. Gli errori vanno resi **visibili nella UI**, altrimenti si debugga alla cieca.
 
+### Messaggi d'errore: mai collassare cause diverse (lezione 2026-07-30)
+Un `catch` che risponde «Microfono non disponibile o permesso negato» a *qualunque* fallimento ha
+mandato mezza giornata di indagini sui permessi macOS, mentre la causa era una libreria che non
+caricava. Regole:
+- **Un messaggio per causa**, distinte dal nome dell'errore (`NotAllowedError` ≠ `NotReadableError` ≠ bug).
+- Per gli errori **non previsti**, portare nel messaggio anche `err.message` (troncato): in un
+  `TypeError` l'informazione sta tutta lì, il nome da solo non dice niente.
+- **Nessun fallimento silenzioso**: uno stato `error` senza UI è indistinguibile da "inattivo" —
+  è così che un motore rotto è passato per funzionante.
+
+### Una dipendenza che funziona in dev NON è provata
+`ng serve` pre-bundla le dipendenze e **sintetizza gli export nominati** delle librerie UMD/CJS;
+`ng build` no. Una libreria può quindi funzionare in dev e rompersi **solo nel pacchetto**, a runtime,
+con un nome minificato (`i is not a function`) — TypeScript non se ne accorge, la build passa.
+Per le dipendenze UMD/CJS verificare nel bundle costruito:
+`grep -ao "export[{ ][^;]*" dist/.../chunk-<lib>.js` → se mostra solo `export default`, il
+destructuring `import { x }` darà `undefined`. Caso reale: `vosk-browser`, vedi `MEMO.md` §15.
+
 ## Cos'è il progetto
 Webapp Angular per creare una **libreria di jingle PER-UTENTE**: audio caricati o **estratti da YouTube**, tagliati in MP3.
 Due canali: **app desktop standalone (Electron)** con tutte le funzioni, e **GitHub Pages** (stessa webapp ma **senza** YouTube). Dettagli in `MEMO.md`.

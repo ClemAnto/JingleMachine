@@ -592,4 +592,13 @@ debugga: può **mascherare** un fix del packaging (e viceversa).
 - **Client**: memoria del permesso **PER-DEVICE** (`localStorage`, **mai** per-account: il mic è hardware-locale e l'account è condiviso); su rifiuto **niente retry** (era un altro vettore di loop); re-richiesta guidata (`requestPermission()`: apre le Impostazioni se già negato — mac/win **non** ri-promptano dopo un "no"); **recupero automatico** su `focus` + Permissions API `onchange`. Banner "Consenti microfono" in `library.html`.
 
 ### ⚠️ Non testabile da Windows
-Il bug è **macOS-specifico** → da Windows non riproducibile. Lezione: per bug platform-specific **verificare la causa via fonti autorevoli PRIMA di taggare** (la fix "a memoria" della v0.12.2 non ha risolto — mancava il pezzo di **packaging**, l'hardened runtime). ⏳ **Ancora da confermare su un Mac reale** che la v0.12.3 chiuda il problema.
+✅ **RISOLTO e confermato su Mac reale il 2026-07-30 (v0.12.9).** Erano **tre** bug distinti, non uno:
+firma del bundle assente (v0.12.6) · doppia cattura del microfono in «Prova» (v0.12.7) · interop UMD/ESM
+di `vosk-browser` (v0.12.9, **non** macOS-specifico). Dettaglio e lezioni nelle sottosezioni qui sopra;
+quadro d'insieme in `ROADMAP.md`.
+
+Lezione di metodo, la più costosa della vicenda: **non erano permessi**. Il primo messaggio d'errore
+diceva «Microfono non disponibile o permesso negato» per *qualunque* fallimento, e quella bugia ha
+indirizzato mezza giornata di indagini su TCC, firma ed entitlement. Rendere onesti i messaggi (testo
+dell'errore, non solo il nome) + far emergere i fallimenti silenziosi del motore ha chiuso il caso in
+dieci minuti. **In un'app senza DevTools, un messaggio d'errore preciso vale più di dieci ipotesi.**
